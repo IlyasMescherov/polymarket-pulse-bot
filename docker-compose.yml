@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: pulsemarket
+      POSTGRES_USER: pulse
+      POSTGRES_PASSWORD: pulse
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulse -d pulsemarket"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  bot:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    command:
+      - sh
+      - -c
+      - >
+        set -a;
+        . /run/secrets/pulsemarket.env;
+        set +a;
+        export DATABASE_URL="postgresql+asyncpg://pulse:pulse@db:5432/pulsemarket";
+        alembic upgrade head && python -m bot.main
+    volumes:
+      - ./.env:/run/secrets/pulsemarket.env:ro
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
