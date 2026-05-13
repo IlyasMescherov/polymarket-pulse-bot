@@ -1,7 +1,8 @@
 # PulseMarket Bot
 
 **Status:** Live MVP  
-**Telegram bot:** [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
+**Telegram bot:** [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)  
+**GitHub repo:** [IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
 
 PulseMarket Bot is a Telegram analytics bot for Polymarket discovery. It helps users find active prediction markets, understand market probabilities in plain language, and receive alerts when probabilities move sharply.
 
@@ -153,6 +154,8 @@ PATH=.venv/bin:$PATH alembic upgrade head --sql
 
 ## Production Deployment
 
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the full VPS deployment guide.
+
 Recommended production setup:
 
 - A small VPS or managed app host
@@ -166,7 +169,7 @@ Recommended production setup:
 For a simple Docker-based deployment:
 
 ```bash
-docker compose up --build
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 The bot container runs Alembic migrations before starting the Telegram polling process.
@@ -207,4 +210,3 @@ Suggested path:
 ```text
 docs/demo/pulsemarket-bot-demo.mp4
 ```
-

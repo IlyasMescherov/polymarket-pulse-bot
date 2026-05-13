@@ -35,6 +35,8 @@ class Settings:
     project_public_url: str | None
     project_telegram_handle: str | None
     log_level: str
+    app_host: str = "0.0.0.0"
+    app_port: int = 8080
     market_poll_interval_seconds: int = 900
     movement_threshold: float = 0.10
     openai_model: str = "gpt-4o-mini"
@@ -56,6 +58,8 @@ def load_settings() -> Settings:
         project_public_url=_optional(os.getenv("PROJECT_PUBLIC_URL")),
         project_telegram_handle=_optional(os.getenv("PROJECT_TELEGRAM_HANDLE")),
         log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
+        app_host=os.getenv("APP_HOST", "0.0.0.0"),
+        app_port=int(os.getenv("APP_PORT", "8080")),
         market_poll_interval_seconds=int(
             os.getenv("MARKET_POLL_INTERVAL_SECONDS", "900")
         ),

@@ -10,6 +10,7 @@ from bot.config import load_settings
 from bot.database.db import create_engine, create_session_factory, ping_database
 from bot.handlers import markets, menu, settings as settings_handlers, start
 from bot.services.ai_explainer import AIExplainer
+from bot.services.health_server import HealthServer
 from bot.services.market_analyzer import MarketAnalyzer
 from bot.services.notifier import Notifier
 from bot.services.polymarket_client import PolymarketClient
@@ -50,6 +51,7 @@ async def main() -> None:
         notifier,
         interval_seconds=settings.market_poll_interval_seconds,
     )
+    health_server = HealthServer(settings.app_host, settings.app_port, engine)
 
     dp = Dispatcher()
     dp.include_router(start.router)
@@ -63,6 +65,7 @@ async def main() -> None:
     dp["market_analyzer"] = market_analyzer
     dp["ai_explainer"] = ai_explainer
 
+    await health_server.start()
     scheduler_task = asyncio.create_task(scheduler.run())
     try:
         logger.info("PulseMarket Bot started")
@@ -76,9 +79,9 @@ async def main() -> None:
             pass
         await polymarket_client.close()
         await bot.session.close()
+        await health_server.stop()
         await engine.dispose()
 
 
 if __name__ == "__main__":
     asyncio.run(main())
-

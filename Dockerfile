@@ -9,6 +9,6 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+RUN chmod +x scripts/start.sh
 
-CMD ["sh", "-c", "alembic upgrade head && python -m bot.main"]
-
+CMD ["scripts/start.sh"]
