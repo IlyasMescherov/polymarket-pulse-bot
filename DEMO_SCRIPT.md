@@ -7,7 +7,11 @@
 - Production health: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
 - Status: Live MVP
 
-## Safety scope to mention
+## Safety note
+
+Do not show private `.env`, tokens, server terminal, personal chats, or unrelated windows in the demo.
+
+PulseMarket AI is analytics only:
 
 - No trading
 - No wallet management
@@ -15,117 +19,103 @@
 - No private keys
 - No custody
 - No financial advice
-- Public Polymarket data only
 
 Builder code is prepared for future official trading integration, but the current MVP uses public Polymarket market data only.
 
-## Feature coverage for screenshots
-
-- Hot markets
-- New markets
-- Sharp moves
-- Pulse Score
-- Market Health
-- Risk flags
-- Search
-- Categories
-- Watchlist
-- Topic alerts
-- Smart alerts
-- Daily digest
-- Beginner mode
-- Resolution explainer
-- Share cards
-- Inline search
-- Admin stats
-- Link click tracking
-
 ## 45-second demo video
 
-### 0-5 seconds: Open Telegram
+### 0-5 sec: Start
 
-Open Telegram and show the live bot handle:
-
-```text
-@PulseMarketAIBot
-```
-
-Briefly show that this is the live Telegram bot.
-
-### 5-10 seconds: Start the bot
-
-Send:
+Open [@PulseMarketAIBot](https://t.me/PulseMarketAIBot) and send:
 
 ```text
 /start
 ```
 
-Show the welcome message and main menu.
+### 5-10 sec: Main menu
 
-### 10-18 seconds: Hot Markets
+Show the main menu in English mode if possible.
 
-Tap:
+Highlight:
 
-```text
-Hot Markets / Горячие рынки
-```
+- Analytics only
+- No wallets
+- No deposits
+- No trading
 
-Show a market card with probability, volume, end date, and the Polymarket link button.
-
-### 18-25 seconds: New Markets
-
-Go back to the menu or use the main buttons, then tap:
-
-```text
-New Markets / Новые рынки
-```
-
-Show the list of newly created markets.
-
-### 25-32 seconds: Sharp Moves
+### 10-17 sec: Hot Markets
 
 Tap:
 
 ```text
-Sharp Moves / Резкие движения
+Hot
 ```
 
-Show the sharp movement result or the message explaining that the bot has saved snapshots and will compare them on the next check.
+Show a market card with:
 
-### 32-38 seconds: Notifications
+- Probability
+- Volume
+- Pulse Score
+- Market Health
+- Risk flags if present
+
+### 17-23 sec: Search
+
+Use Search and type:
+
+```text
+bitcoin
+```
+
+Show the search result cards.
+
+### 23-28 sec: Open Polymarket link
 
 Tap:
 
 ```text
-My Notifications / Мои уведомления
+Open
 ```
 
-Enable notifications and show the confirmation message.
+Show that the bot sends a direct Polymarket market link.
 
-### 38-42 seconds: Open market link
+### 28-33 sec: Resolution Explainer
 
 Tap:
 
 ```text
-Open Market / Открыть рынок
+Rules
 ```
 
-Show that the link opens Polymarket.
+Show the resolution guidance.
 
-### 42-45 seconds: Closing screen
+### 33-38 sec: Inline search
 
-End on:
+In any Telegram chat field, type:
+
+```text
+@PulseMarketAIBot bitcoin
+```
+
+Show inline results.
+
+### 38-43 sec: Admin stats
+
+Send:
+
+```text
+/admin_stats
+```
+
+Show the admin stats screen. Crop the screenshot or recording so no private chats are visible.
+
+### 43-45 sec: Final screen
+
+Show:
 
 ```text
 Telegram: @PulseMarketAIBot
 GitHub: https://github.com/IlyasMescherov/polymarket-pulse-bot
 Health: http://2.26.80.27:8080/health
 Status: Live MVP
-```
-
-Mention the scope clearly:
-
-```text
-Public Polymarket data only.
-No trading. No wallet management. No deposits. No private keys. No custody. No financial advice.
 ```

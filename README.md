@@ -1,13 +1,26 @@
 # PulseMarket Bot
 
-**Status:** Live MVP  
-**Telegram bot:** [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)  
-**GitHub repo:** [IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
-**Production health:** [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
+- **Status:** Live MVP
+- **Telegram bot:** [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
+- **GitHub repo:** [IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
+- **Production health:** [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
 
 PulseMarket AI is a Telegram analytics bot for Polymarket discovery. It helps users find active prediction markets, understand market probabilities in plain language, save markets to a watchlist, and receive alerts when probabilities move sharply.
 
 This project is prepared for a Polymarket Builders Program submission. The current MVP is intentionally scoped around analytics, notifications, and public market links.
+
+## Submission Ready
+
+PulseMarket AI is live on Telegram as [@PulseMarketAIBot](https://t.me/PulseMarketAIBot) and deployed on a VPS with a health endpoint.
+
+Builder submission package:
+
+- [SUBMISSION_CHECKLIST.md](SUBMISSION_CHECKLIST.md)
+- [BUILDER_SUBMISSION_TEXT.md](BUILDER_SUBMISSION_TEXT.md)
+- [BUILDER_APPLICATION.md](BUILDER_APPLICATION.md)
+- [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
+- [docs/SCREENSHOT_GUIDE.md](docs/SCREENSHOT_GUIDE.md)
+- [docs/screenshots/](docs/screenshots/)
 
 ## What is PulseMarket Bot
 

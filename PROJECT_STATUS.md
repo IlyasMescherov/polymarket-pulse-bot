@@ -51,7 +51,6 @@ The current version focuses on public Polymarket market discovery, market moveme
 - Webhook production mode
 - Public landing page
 - Demo video and final screenshots
-- `ADMIN_TELEGRAM_IDS` must be set manually in production before `/admin_stats` is usable by the owner
 
 ## Phase 3 Completed
 
@@ -83,6 +82,17 @@ Phase 4 adds Builder Program readiness:
 - `BUILDER_APPLICATION.md`
 - README sections for Builders Program alignment and safety scope
 
+## Phase 4 Builder Submission Package Ready
+
+The submission package is ready for final screenshots and demo recording:
+
+- [SUBMISSION_CHECKLIST.md](SUBMISSION_CHECKLIST.md)
+- [BUILDER_SUBMISSION_TEXT.md](BUILDER_SUBMISSION_TEXT.md)
+- [BUILDER_APPLICATION.md](BUILDER_APPLICATION.md)
+- [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
+- [docs/SCREENSHOT_GUIDE.md](docs/SCREENSHOT_GUIDE.md)
+- [docs/screenshots/](docs/screenshots/)
+
 ## What is live on VPS
 
 - Production VPS health endpoint: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
@@ -94,11 +104,15 @@ Phase 4 adds Builder Program readiness:
 
 ## What still requires manual setup
 
-1. Add screenshots to the repository.
-2. Record a 45-second demo video.
-3. Set `ADMIN_TELEGRAM_IDS` in production `.env` and restart the bot before using `/admin_stats`.
-4. Submit the builder application.
-5. Add `POLYMARKET_REFERRAL_URL` only if the project becomes eligible for Polymarket referrals.
+1. Switch bot UI to English for screenshots.
+2. Take clean screenshots.
+3. Record a 45-second demo video.
+4. Paste [BUILDER_SUBMISSION_TEXT.md](BUILDER_SUBMISSION_TEXT.md) into the application.
+5. Attach GitHub repo.
+6. Include Telegram bot handle.
+7. Include demo video link.
+8. Include admin stats screenshot.
+9. Add `POLYMARKET_REFERRAL_URL` only if the project becomes eligible for Polymarket referrals.
 
 ## Next Milestones
 

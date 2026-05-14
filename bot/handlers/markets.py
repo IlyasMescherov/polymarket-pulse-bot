@@ -63,6 +63,7 @@ class MarketSearchStates(StatesGroup):
 async def inline_market_search(
     inline_query: InlineQuery,
     market_analyzer: MarketAnalyzer,
+    session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     query = (inline_query.query or "").strip()
     log_user_action(logger, inline_query.from_user, "search_query", query=query[:80], source="inline")
@@ -77,15 +78,17 @@ async def inline_market_search(
         await inline_query.answer([], cache_time=5, is_personal=True)
         return
 
+    language = await _language(session_factory, inline_query.from_user)
     results = [
         InlineQueryResultArticle(
             id=market.id,
             title=market.question[:90],
-            description=f"Probability: {format_probability(market.yes_probability)}",
+            description=f"Probability: {format_probability(market.yes_probability, language)}",
             input_message_content=InputTextMessageContent(
                 message_text=format_share_market_card(
                     market,
                     pulse_score=calculate_pulse_score(market),
+                    language=language,
                 ),
                 disable_web_page_preview=True,
             ),
@@ -117,7 +120,11 @@ async def _send_market_cards(
     source: str = "hot",
 ) -> None:
     if not markets:
-        await message.answer("Пока не нашёл подходящих рынков. Попробуйте позже.")
+        await message.answer(
+            "No matching markets yet. Please try again later."
+            if language == "en"
+            else "Пока не нашёл подходящих рынков. Попробуйте позже."
+        )
         return
 
     for market in markets[:5]:
@@ -148,6 +155,7 @@ async def _send_market_cards(
                 pulse_score=pulse_score,
                 market_health=market_health,
                 risk_flags=risk_flags,
+                language=language,
             ),
             reply_markup=market_actions_keyboard(
                 market.url,
@@ -169,7 +177,11 @@ async def _send_movement_cards(
 ) -> None:
     if not movements:
         await message.answer(
-            "Пока не вижу резких движений. Если это первый запуск, я уже сохранил снимок рынков и смогу сравнить его со следующим."
+            (
+                "No sharp moves yet. If this is the first run, I saved a market snapshot and will compare it with the next one."
+                if language == "en"
+                else "Пока не вижу резких движений. Если это первый запуск, я уже сохранил снимок рынков и смогу сравнить его со следующим."
+            )
         )
         return
 
@@ -193,6 +205,7 @@ async def _send_movement_cards(
                 pulse_score=pulse_score,
                 market_health=market_health,
                 risk_flags=risk_flags,
+                language=language,
             ),
             reply_markup=market_actions_keyboard(
                 movement.market.url,
@@ -212,10 +225,10 @@ async def hot_markets(
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     log_callback_action(logger, callback, "hot_markets")
-    await callback.answer("Ищу горячие рынки")
+    language = await _language(session_factory, callback.from_user)
+    await callback.answer("Searching hot markets" if language == "en" else "Ищу горячие рынки")
     if not callback.message:
         return
-    language = await _language(session_factory, callback.from_user)
     try:
         markets = await market_analyzer.get_hot_markets(limit=5)
     except PolymarketAPIError:
@@ -228,7 +241,7 @@ async def hot_markets(
         ai_explainer,
         language,
         session_factory,
-        heading="🔥 Горячий рынок",
+        heading="🔥 Hot market" if language == "en" else "🔥 Горячий рынок",
         source="hot",
     )
 
@@ -254,7 +267,7 @@ async def hot_markets_command(
         ai_explainer,
         language,
         session_factory,
-        heading="🔥 Горячий рынок",
+        heading="🔥 Hot market" if language == "en" else "🔥 Горячий рынок",
         source="hot",
     )
 
@@ -267,10 +280,10 @@ async def new_markets(
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     log_callback_action(logger, callback, "new_markets")
-    await callback.answer("Ищу новые рынки")
+    language = await _language(session_factory, callback.from_user)
+    await callback.answer("Searching new markets" if language == "en" else "Ищу новые рынки")
     if not callback.message:
         return
-    language = await _language(session_factory, callback.from_user)
     try:
         markets = await market_analyzer.get_new_markets(limit=5)
     except PolymarketAPIError:
@@ -283,7 +296,7 @@ async def new_markets(
         ai_explainer,
         language,
         session_factory,
-        heading="🆕 Новый рынок",
+        heading="🆕 New market" if language == "en" else "🆕 Новый рынок",
         source="new",
     )
 
@@ -309,7 +322,7 @@ async def new_markets_command(
         ai_explainer,
         language,
         session_factory,
-        heading="🆕 Новый рынок",
+        heading="🆕 New market" if language == "en" else "🆕 Новый рынок",
         source="new",
     )
 
@@ -322,10 +335,12 @@ async def sharp_moves(
     ai_explainer: AIExplainer,
 ) -> None:
     log_callback_action(logger, callback, "sharp_moves")
-    await callback.answer("Сравниваю снимки рынков")
+    language = await _language(session_factory, callback.from_user)
+    await callback.answer(
+        "Comparing market snapshots" if language == "en" else "Сравниваю снимки рынков"
+    )
     if not callback.message:
         return
-    language = await _language(session_factory, callback.from_user)
     try:
         async with session_factory() as session:
             user = await upsert_user(session, callback.from_user)
@@ -340,7 +355,9 @@ async def sharp_moves(
     except Exception:
         logger.exception("Could not detect market movements")
         await callback.message.answer(
-            "Не смог сравнить рынки. Я уже записал ошибку в лог, попробуйте позже."
+            "Could not compare markets. Please try again later."
+            if language == "en"
+            else "Не смог сравнить рынки. Я уже записал ошибку в лог, попробуйте позже."
         )
         return
 
@@ -377,7 +394,9 @@ async def sharp_moves_command(
     except Exception:
         logger.exception("Could not detect market movements")
         await message.answer(
-            "Не смог сравнить рынки. Я уже записал ошибку в лог, попробуйте позже."
+            "Could not compare markets. Please try again later."
+            if language == "en"
+            else "Не смог сравнить рынки. Я уже записал ошибку в лог, попробуйте позже."
         )
         return
     await _send_movement_cards(
@@ -454,7 +473,11 @@ async def market_search_query(
 
     if not markets:
         await message.answer(
-            "Ничего не нашёл по этому запросу. Попробуйте другую тему.",
+            (
+                "No markets found for this query. Try another topic."
+                if language == "en"
+                else "Ничего не нашёл по этому запросу. Попробуйте другую тему."
+            ),
             reply_markup=main_menu_keyboard(language),
         )
         return
@@ -465,7 +488,7 @@ async def market_search_query(
         ai_explainer,
         language,
         session_factory,
-        heading="🔍 Найден рынок",
+        heading="🔍 Found market" if language == "en" else "🔍 Найден рынок",
         source="search",
     )
 
@@ -480,7 +503,7 @@ async def categories_menu(
     if callback.message:
         language = await _language(session_factory, callback.from_user)
         await callback.message.answer(
-            "Выберите категорию:",
+            "Choose a category:" if language == "en" else "Выберите категорию:",
             reply_markup=categories_keyboard(language),
         )
 
@@ -494,11 +517,13 @@ async def category_selected(
 ) -> None:
     category = (callback.data or "").removeprefix(CATEGORY_PREFIX)
     log_callback_action(logger, callback, "category_selected", category=category)
-    await callback.answer("Ищу рынки в категории")
+    language = await _language(session_factory, callback.from_user)
+    await callback.answer(
+        "Searching category markets" if language == "en" else "Ищу рынки в категории"
+    )
     if not callback.message:
         return
 
-    language = await _language(session_factory, callback.from_user)
     try:
         markets = await market_analyzer.get_category_markets(category, limit=5)
     except PolymarketAPIError:
@@ -546,7 +571,9 @@ async def open_market_link(
         await callback.message.answer(t("api_error", language))
         return
     if market is None:
-        await callback.message.answer("Не смог найти этот рынок.")
+        await callback.message.answer(
+            "Could not find this market." if language == "en" else "Не смог найти этот рынок."
+        )
         return
 
     async with session_factory() as session:
@@ -564,7 +591,12 @@ async def open_market_link(
             logger.exception("Could not save market link click")
 
     await callback.message.answer(
-        "🔗 Открыть рынок на Polymarket:\n\n" + market.url,
+        (
+            "🔗 Open this market on Polymarket:\n\n"
+            if language == "en"
+            else "🔗 Открыть рынок на Polymarket:\n\n"
+        )
+        + market.url,
         disable_web_page_preview=True,
     )
 
@@ -590,12 +622,14 @@ async def explain_market(
         await callback.message.answer(t("api_error", language))
         return
     if market is None:
-        await callback.message.answer("Не смог найти этот рынок.")
+        await callback.message.answer(
+            "Could not find this market." if language == "en" else "Не смог найти этот рынок."
+        )
         return
 
     ai_brief = await ai_explainer.explain_market(market)
     await callback.message.answer(
-        format_beginner_explanation(market, ai_brief=ai_brief),
+        format_beginner_explanation(market, ai_brief=ai_brief, language=language),
         disable_web_page_preview=True,
     )
 
@@ -621,10 +655,12 @@ async def explain_resolution(
         await callback.message.answer(t("api_error", language))
         return
     if market is None:
-        await callback.message.answer("Не смог найти этот рынок.")
+        await callback.message.answer(
+            "Could not find this market." if language == "en" else "Не смог найти этот рынок."
+        )
         return
 
-    explanation = await ResolutionExplainer().explain(market, ai_explainer)
+    explanation = await ResolutionExplainer().explain(market, ai_explainer, language=language)
     await callback.message.answer(explanation, disable_web_page_preview=True)
 
 
@@ -644,9 +680,15 @@ async def market_timeline(
             snapshots = await get_recent_snapshots(session, market_id, limit=8)
         except Exception:
             logger.exception("Could not load market timeline")
-            await callback.message.answer("Не смог загрузить динамику. Попробуйте позже.")
+            language = await _language(session_factory, callback.from_user)
+            await callback.message.answer(
+                "Could not load the timeline. Please try again later."
+                if language == "en"
+                else "Не смог загрузить динамику. Попробуйте позже."
+            )
             return
-    await callback.message.answer(format_market_timeline(snapshots))
+    language = await _language(session_factory, callback.from_user)
+    await callback.message.answer(format_market_timeline(snapshots, language=language))
 
 
 @router.callback_query(F.data.startswith(SHARE_MARKET_PREFIX))
@@ -669,11 +711,13 @@ async def share_market(
         await callback.message.answer(t("api_error", language))
         return
     if market is None:
-        await callback.message.answer("Не смог найти этот рынок.")
+        await callback.message.answer(
+            "Could not find this market." if language == "en" else "Не смог найти этот рынок."
+        )
         return
 
     pulse_score = calculate_pulse_score(market)
     await callback.message.answer(
-        format_share_market_card(market, pulse_score=pulse_score),
+        format_share_market_card(market, pulse_score=pulse_score, language=language),
         disable_web_page_preview=True,
     )

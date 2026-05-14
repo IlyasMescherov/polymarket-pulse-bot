@@ -67,7 +67,11 @@ async def _send_watchlist(
         except Exception:
             await session.rollback()
             logger.exception("Could not load watchlist")
-            await message.answer("Не смог открыть Watchlist. Попробуйте позже.")
+            await message.answer(
+                "Could not open Watchlist. Please try again later."
+                if language == "en"
+                else "Не смог открыть Watchlist. Попробуйте позже."
+            )
             return
 
     if not items:
@@ -79,7 +83,7 @@ async def _send_watchlist(
 
     for item in items[:10]:
         await message.answer(
-            format_watchlist_card(item),
+            format_watchlist_card(item, language=language),
             reply_markup=watchlist_item_keyboard(
                 item.id,
                 item.market_id,
@@ -139,7 +143,11 @@ async def watchlist_add(
 
     if market is None:
         await callback.message.answer(
-            "Не смог найти этот рынок. Попробуйте добавить его через поиск ещё раз."
+            (
+                "Could not find this market. Try adding it from search again."
+                if language == "en"
+                else "Не смог найти этот рынок. Попробуйте добавить его через поиск ещё раз."
+            )
         )
         return
 
@@ -154,10 +162,17 @@ async def watchlist_add(
         except Exception:
             await session.rollback()
             logger.exception("Could not add market to watchlist")
-            await callback.message.answer("Не смог добавить рынок. Попробуйте позже.")
+            await callback.message.answer(
+                "Could not add the market. Please try again later."
+                if language == "en"
+                else "Не смог добавить рынок. Попробуйте позже."
+            )
             return
 
-    text = "Добавил рынок в Watchlist." if created else "Этот рынок уже есть в Watchlist."
+    if language == "en":
+        text = "Added market to Watchlist." if created else "This market is already in Watchlist."
+    else:
+        text = "Добавил рынок в Watchlist." if created else "Этот рынок уже есть в Watchlist."
     await callback.message.answer(text, reply_markup=main_menu_keyboard(language))
 
 
@@ -180,7 +195,12 @@ async def watchlist_remove(
     try:
         item_id = int(item_id_text)
     except ValueError:
-        await callback.message.answer("Не смог удалить этот пункт Watchlist.")
+        language = await _language(session_factory, callback.from_user)
+        await callback.message.answer(
+            "Could not remove this Watchlist item."
+            if language == "en"
+            else "Не смог удалить этот пункт Watchlist."
+        )
         return
 
     language = await _language(session_factory, callback.from_user)
@@ -191,8 +211,19 @@ async def watchlist_remove(
         except Exception:
             await session.rollback()
             logger.exception("Could not remove watchlist item")
-            await callback.message.answer("Не смог удалить рынок. Попробуйте позже.")
+            await callback.message.answer(
+                "Could not remove the market. Please try again later."
+                if language == "en"
+                else "Не смог удалить рынок. Попробуйте позже."
+            )
             return
 
-    text = "Удалил рынок из Watchlist." if removed else "Этот рынок уже не найден в Watchlist."
+    if language == "en":
+        text = (
+            "Removed market from Watchlist."
+            if removed
+            else "This market is no longer in Watchlist."
+        )
+    else:
+        text = "Удалил рынок из Watchlist." if removed else "Этот рынок уже не найден в Watchlist."
     await callback.message.answer(text, reply_markup=main_menu_keyboard(language))

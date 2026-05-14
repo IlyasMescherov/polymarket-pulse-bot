@@ -50,3 +50,22 @@ def test_resolution_explainer_falls_back_safely() -> None:
 
     assert "проверь правила разрешения" in explanation.lower()
     assert "данных пока нет" in explanation
+
+
+def test_resolution_explainer_supports_english_demo_text() -> None:
+    market = Market(
+        id="1",
+        question="Will CPI be above 3%?",
+        slug=None,
+        yes_probability=0.42,
+        volume=50_000,
+        end_date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+        url="https://polymarket.com",
+        raw={"rules": "Use the official BLS release."},
+    )
+
+    explanation = build_resolution_explanation(market, language="en")
+
+    assert "📜 Resolution rules" in explanation
+    assert "What this market means" in explanation
+    assert "not a promised result" in explanation
