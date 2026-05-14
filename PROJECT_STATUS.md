@@ -105,12 +105,13 @@ Phase 5 adds the public traction layer for first users and Builders Program revi
 - Channel digest text generation for `@PulseMarketAI`
 - User feedback collection
 - Admin feedback review
-- Static landing page in [landing/](landing/)
+- Public landing page served from [http://2.26.80.27:8080](http://2.26.80.27:8080) and sourced from [landing/](landing/)
 - Competitor analysis in [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md)
 
 ## What is live on VPS
 
 - Production VPS health endpoint: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
+- Public landing page: [http://2.26.80.27:8080](http://2.26.80.27:8080)
 - Telegram bot: [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
 - Public channel: [@PulseMarketAI](https://t.me/PulseMarketAI)
 - Support: [@PulseMarketAISupport](https://t.me/PulseMarketAISupport)
@@ -125,7 +126,7 @@ Phase 5 adds the public traction layer for first users and Builders Program revi
 1. Switch bot UI to English for screenshots.
 2. Take clean screenshots.
 3. Record a 45-second demo video if the application form asks for one.
-4. Publish the static landing page through GitHub Pages, Nginx, or another simple host.
+4. Keep the public landing page updated at [http://2.26.80.27:8080](http://2.26.80.27:8080).
 5. Post the first manual digest in [@PulseMarketAI](https://t.me/PulseMarketAI).
 6. Paste [BUILDER_SUBMISSION_TEXT.md](BUILDER_SUBMISSION_TEXT.md) into the application.
 7. Attach GitHub repo.

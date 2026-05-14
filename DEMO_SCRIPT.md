@@ -4,6 +4,7 @@
 
 - Telegram handle: [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
 - GitHub repo: [https://github.com/IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
+- Landing page: [http://2.26.80.27:8080](http://2.26.80.27:8080)
 - Production health: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
 - Status: Live MVP
 
@@ -132,6 +133,7 @@ Show:
 ```text
 Telegram: @PulseMarketAIBot
 GitHub: https://github.com/IlyasMescherov/polymarket-pulse-bot
+Landing: http://2.26.80.27:8080
 Health: http://2.26.80.27:8080/health
 Status: Live MVP
 ```

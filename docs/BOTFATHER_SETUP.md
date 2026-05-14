@@ -67,15 +67,14 @@ Paste this into `/setcommands`:
 
 ```text
 start - Main menu
+today - Today's Pulse
 hot - Hot markets
 new - New markets
-today - Today's Pulse
 moves - Sharp movements
 search - Search markets
 watchlist - My watchlist
-settings - Settings
 feedback - Send feedback
-whoami - Show my Telegram ID
+settings - Settings
 about - About PulseMarket AI
 ```
 

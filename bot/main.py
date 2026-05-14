@@ -38,7 +38,6 @@ PUBLIC_BOT_COMMANDS = [
     BotCommand(command="watchlist", description="My watchlist"),
     BotCommand(command="settings", description="Settings"),
     BotCommand(command="feedback", description="Send feedback"),
-    BotCommand(command="whoami", description="Show my Telegram ID"),
     BotCommand(command="about", description="About PulseMarket AI"),
 ]
 

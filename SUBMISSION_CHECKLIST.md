@@ -5,6 +5,7 @@
 - Product: PulseMarket AI
 - Telegram: [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
 - GitHub: [https://github.com/IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
+- Landing page: [http://2.26.80.27:8080](http://2.26.80.27:8080)
 - Production health: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
 - Channel: [@PulseMarketAI](https://t.me/PulseMarketAI)
 - Support: [@PulseMarketAISupport](https://t.me/PulseMarketAISupport)
@@ -90,7 +91,7 @@ PulseMarket AI does not execute trades, manage wallets, hold funds, request priv
 - Inline search
 - Admin stats
 - Link click tracking
-- Static landing page
+- Public landing page
 - Competitor analysis doc
 
 ## Polymarket ecosystem value

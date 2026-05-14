@@ -8,6 +8,7 @@ def test_public_commands_include_traction_commands_without_admin_commands() -> N
 
     assert "today" in command_names
     assert "feedback" in command_names
+    assert "whoami" not in command_names
     assert "admin_stats" not in command_names
     assert "admin_digest" not in command_names
     assert "admin_feedback" not in command_names

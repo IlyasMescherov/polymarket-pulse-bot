@@ -3,6 +3,7 @@
 - **Status:** Live MVP
 - **Telegram bot:** [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
 - **GitHub repo:** [IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
+- **Landing page:** [http://2.26.80.27:8080](http://2.26.80.27:8080)
 - **Production health:** [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
 
 PulseMarket AI is a Telegram analytics bot for Polymarket discovery. It helps users find active prediction markets, understand market probabilities in plain language, save markets to a watchlist, and receive alerts when probabilities move sharply.
@@ -12,6 +13,8 @@ This project is prepared for a Polymarket Builders Program submission. The curre
 ## Submission Ready
 
 PulseMarket AI is live on Telegram as [@PulseMarketAIBot](https://t.me/PulseMarketAIBot) and deployed on a VPS with a health endpoint.
+
+Public landing page: [http://2.26.80.27:8080](http://2.26.80.27:8080)
 
 Builder submission package:
 
@@ -86,7 +89,7 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - Optional AI explanations: when `OPENAI_API_KEY` is configured, the bot adds short plain-language explanations.
 - No-AI fallback: when `OPENAI_API_KEY` is missing, the bot still works normally.
 - Public market links: every market card links users back to Polymarket.
-- Static landing page: a no-build page is included under [landing/](landing/) for public launch and Builders Program packaging.
+- Public landing page: a no-build page is served from [http://2.26.80.27:8080](http://2.26.80.27:8080) and kept in [landing/](landing/).
 
 ## How it works
 
@@ -251,7 +254,7 @@ Phase 5 adds a lightweight traction layer for public launch:
 - Why it moved explains market movement without giving buy/sell advice.
 - `/admin_digest` generates a channel-ready post for [@PulseMarketAI](https://t.me/PulseMarketAI).
 - `/feedback` gives early users a direct product feedback loop.
-- The static landing page in [landing/](landing/) gives the project a public website starting point.
+- The static landing page in [landing/](landing/) gives the project a public website, currently served at [http://2.26.80.27:8080](http://2.26.80.27:8080).
 - [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md) explains how PulseMarket AI differs from trading terminals and copy-trading tools.
 
 ## Roadmap

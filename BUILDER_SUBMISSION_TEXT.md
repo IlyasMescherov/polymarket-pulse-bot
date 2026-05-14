@@ -14,6 +14,8 @@ PulseMarket AI
 
 ## Website / Health
 
+[http://2.26.80.27:8080](http://2.26.80.27:8080)
+
 [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
 
 ## Short Description
@@ -52,7 +54,7 @@ PulseMarket AI gives users a simple Telegram interface for hot markets, new mark
 - Inline search
 - Admin stats
 - Link click tracking
-- Static landing page
+- Public landing page
 - Competitor analysis
 
 ## Safety Scope

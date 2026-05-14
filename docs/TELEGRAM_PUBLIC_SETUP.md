@@ -88,6 +88,28 @@ Try the bot:
 @PulseMarketAIBot
 ```
 
+## Second Channel Post EN
+
+```text
+📰 Today’s Pulse is live
+
+PulseMarket AI now shows a short daily market digest:
+- interesting Polymarket markets
+- sharp movements
+- Pulse Score
+- Market Health
+- simple “why it matters” explanations
+
+Try it in the bot:
+/today
+
+Bot:
+@PulseMarketAIBot
+
+Analytics only.
+No trading. No wallets. No financial advice.
+```
+
 ## Текст первого поста RU
 
 ```text
