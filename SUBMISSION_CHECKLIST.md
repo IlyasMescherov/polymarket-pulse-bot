@@ -6,6 +6,7 @@
 - Telegram: [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
 - GitHub: [https://github.com/IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
 - Landing page: [http://2.26.80.27:8080](http://2.26.80.27:8080)
+- Mini App preview: [http://2.26.80.27:8080/app](http://2.26.80.27:8080/app)
 - Production health: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
 - Channel: [@PulseMarketAI](https://t.me/PulseMarketAI)
 - Support: [@PulseMarketAISupport](https://t.me/PulseMarketAISupport)
@@ -15,6 +16,7 @@
 - Smart Money analytics: [docs/SMART_MONEY_ANALYTICS.md](docs/SMART_MONEY_ANALYTICS.md)
 - Auto publishing: [docs/AUTO_PUBLISHING.md](docs/AUTO_PUBLISHING.md)
 - Telegram comments setup: [docs/TELEGRAM_COMMENTS_SETUP.md](docs/TELEGRAM_COMMENTS_SETUP.md)
+- Telegram Mini App setup: [docs/MINI_APP_SETUP.md](docs/MINI_APP_SETUP.md)
 - Status: Live MVP
 
 ## Demo video placeholder
@@ -101,6 +103,7 @@ PulseMarket AI does not execute trades, manage wallets, hold funds, request priv
 - Admin stats
 - Link click tracking
 - Public landing page
+- Telegram Mini App Dashboard preview
 - Competitor analysis doc
 - Smart Money analytics doc
 - Auto publishing doc
@@ -126,12 +129,14 @@ It also tracks engagement metrics such as searches, watchlist activity, topic al
 - Feedback loop for product improvement
 - Read-only public activity intelligence
 - Future builder-code readiness
+- Mini App readiness with HTTPS requirement documented
 
 Builder code is prepared for future official trading integration, but the current MVP uses public Polymarket market data only.
 
 ## Future roadmap
 
 - Publish landing page
+- Connect a domain and HTTPS for the Telegram Mini App
 - Group mode for community discovery
 - Better manual channel digest workflow
 - Optional Telegram channel autoposting after admin verification

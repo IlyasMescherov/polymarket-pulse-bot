@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PulseMarket AI Dashboard</title>
+    <meta
+      name="description"
+      content="Telegram Mini App preview for Polymarket discovery and market intelligence."
+    />
+    <link rel="stylesheet" href="/app/styles.css" />
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Research only · No trade execution</p>
+          <h1>PulseMarket AI</h1>
+          <p class="subtitle">
+            Polymarket discovery and market intelligence dashboard.
+          </p>
+        </div>
+        <a class="ghost-link" href="https://t.me/PulseMarketAIBot">Bot</a>
+      </header>
+
+      <section class="hero-card">
+        <div>
+          <span class="pill">Today's Pulse</span>
+          <h2>See the markets that deserve a closer look.</h2>
+          <p>
+            Pulse Score, Market Health, public activity, and movement summaries
+            in one mobile-friendly view.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="today-title">
+        <div class="section-heading">
+          <h2 id="today-title">Today's Pulse</h2>
+          <button type="button" class="icon-button" data-refresh="today">Refresh</button>
+        </div>
+        <div id="today" class="card-grid" aria-live="polite"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="smart-title">
+        <div class="section-heading">
+          <h2 id="smart-title">Smart Money Radar</h2>
+          <span class="muted">Public activity only</span>
+        </div>
+        <div id="smart" class="card-grid" aria-live="polite"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="hot-title">
+        <div class="section-heading">
+          <h2 id="hot-title">Hot Markets</h2>
+          <span class="muted">Volume-led discovery</span>
+        </div>
+        <div id="hot" class="card-grid" aria-live="polite"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="moves-title">
+        <div class="section-heading">
+          <h2 id="moves-title">Sharp Moves</h2>
+          <span class="muted">When snapshot data is available</span>
+        </div>
+        <div id="moves" class="card-grid" aria-live="polite"></div>
+      </section>
+
+      <section class="panel search-panel" aria-labelledby="search-title">
+        <div class="section-heading">
+          <h2 id="search-title">Search</h2>
+          <span class="muted">Try bitcoin, trump, fed, openai</span>
+        </div>
+        <form id="search-form" class="search-form">
+          <input
+            id="search-input"
+            name="q"
+            type="search"
+            placeholder="Search Polymarket markets"
+            autocomplete="off"
+          />
+          <button type="submit">Search</button>
+        </form>
+        <div id="search-results" class="card-grid" aria-live="polite"></div>
+      </section>
+
+      <section class="panel watchlist-preview">
+        <div class="section-heading">
+          <h2>Watchlist</h2>
+          <span class="muted">Coming soon in Mini App</span>
+        </div>
+        <p>
+          Watchlist management is already available in the Telegram bot. The Mini
+          App preview focuses on discovery screens first.
+        </p>
+      </section>
+
+      <section class="safety-note">
+        <h2>Safety Scope</h2>
+        <ul>
+          <li>No trading.</li>
+          <li>No wallets.</li>
+          <li>No deposits.</li>
+          <li>No private keys.</li>
+          <li>No financial advice.</li>
+        </ul>
+      </section>
+
+      <footer>
+        Research only · No trade execution
+      </footer>
+    </main>
+    <script src="/app/app.js"></script>
+  </body>
+</html>

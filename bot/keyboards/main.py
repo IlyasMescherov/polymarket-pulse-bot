@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from bot.services.market_analyzer import CATEGORY_LABELS
@@ -13,6 +13,7 @@ HOT_MARKETS = "markets:hot"
 NEW_MARKETS = "markets:new"
 TODAY_PULSE = "markets:today"
 SMART_MONEY = "smart:menu"
+DASHBOARD = "miniapp:dashboard"
 SHARP_MOVES = "markets:moves"
 MARKET_SEARCH = "markets:search"
 WATCHLIST_VIEW = "watchlist:view"
@@ -62,6 +63,7 @@ LABELS: dict[str, dict[str, str]] = {
         "new": "🆕 Новые",
         "today": "📰 Пульс дня",
         "smart_money": "🧠 Радар активности",
+        "dashboard": "📊 Дашборд",
         "moves": "📈 Движения",
         "search": "🔍 Поиск",
         "watchlist": "⭐ Watchlist",
@@ -94,6 +96,7 @@ LABELS: dict[str, dict[str, str]] = {
         "new": "🆕 New",
         "today": "📰 Today’s Pulse",
         "smart_money": "🧠 Smart Money",
+        "dashboard": "📊 Dashboard",
         "moves": "📈 Moves",
         "search": "🔍 Search",
         "watchlist": "⭐ Watchlist",
@@ -128,12 +131,24 @@ def label(key: str, language: str | None = None) -> str:
     return LABELS[normalized].get(key, LABELS["ru"].get(key, key))
 
 
-def main_menu_keyboard(language: str | None = None) -> InlineKeyboardMarkup:
+def main_menu_keyboard(
+    language: str | None = None,
+    mini_app_url: str | None = None,
+) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text=label("hot", language), callback_data=HOT_MARKETS)
     builder.button(text=label("new", language), callback_data=NEW_MARKETS)
     builder.button(text=label("today", language), callback_data=TODAY_PULSE)
     builder.button(text=label("smart_money", language), callback_data=SMART_MONEY)
+    if mini_app_url and mini_app_url.startswith("https://"):
+        builder.add(
+            InlineKeyboardButton(
+                text=label("dashboard", language),
+                web_app=WebAppInfo(url=mini_app_url),
+            )
+        )
+    else:
+        builder.button(text=label("dashboard", language), callback_data=DASHBOARD)
     builder.button(text=label("moves", language), callback_data=SHARP_MOVES)
     builder.button(text=label("search", language), callback_data=MARKET_SEARCH)
     builder.button(text=label("watchlist", language), callback_data=WATCHLIST_VIEW)

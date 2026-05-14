@@ -142,10 +142,23 @@ The project now includes a conservative publishing workflow:
 - Documentation in [docs/AUTO_PUBLISHING.md](docs/AUTO_PUBLISHING.md)
 - Comments and translation setup in [docs/TELEGRAM_COMMENTS_SETUP.md](docs/TELEGRAM_COMMENTS_SETUP.md)
 
+## Telegram Mini App Dashboard Preview Completed
+
+The project now includes a static Telegram Mini App preview:
+
+- Mini App route: [http://2.26.80.27:8080/app](http://2.26.80.27:8080/app)
+- Static source: [miniapp/](miniapp/)
+- Setup docs: [docs/MINI_APP_SETUP.md](docs/MINI_APP_SETUP.md)
+- Read-only API endpoints for Today's Pulse, hot markets, new markets, sharp moves, Smart Money Radar, public traders, and search
+- Dashboard button in the Telegram main menu
+
+Telegram requires HTTPS for a real Mini App URL in BotFather. The current HTTP route is a browser preview until a domain and HTTPS are configured.
+
 ## What is live on VPS
 
 - Production VPS health endpoint: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
 - Public landing page: [http://2.26.80.27:8080](http://2.26.80.27:8080)
+- Mini App preview: [http://2.26.80.27:8080/app](http://2.26.80.27:8080/app)
 - Telegram bot: [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
 - Public channel: [@PulseMarketAI](https://t.me/PulseMarketAI)
 - Support: [@PulseMarketAISupport](https://t.me/PulseMarketAISupport)
@@ -173,6 +186,7 @@ The project now includes a conservative publishing workflow:
 11. Include Telegram bot handle.
 12. Include admin stats screenshot.
 13. Add `POLYMARKET_REFERRAL_URL` only if the project becomes eligible for Polymarket referrals.
+14. Add a domain with HTTPS before enabling the Mini App in BotFather.
 
 ## Before First Users
 
@@ -184,6 +198,7 @@ The project now includes a conservative publishing workflow:
 - Add `PROJECT_CHANNEL_URL`.
 - Add `PROJECT_SUPPORT_URL`.
 - Add `PROJECT_X_URL`.
+- Add `MINI_APP_URL` after HTTPS is ready.
 - Record a clean demo video.
 - Invite the first 20 to 50 users.
 - Run `/admin_digest` and publish the first channel digest manually.

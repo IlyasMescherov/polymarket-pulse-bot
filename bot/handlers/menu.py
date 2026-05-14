@@ -12,6 +12,7 @@ from bot.handlers.common import load_user, user_language
 from bot.keyboards.main import (
     ABOUT_PROJECT,
     BACK_TO_MENU,
+    DASHBOARD,
     QUICK_START,
     QUICK_START_OK,
     SHARE_BOT,
@@ -44,6 +45,25 @@ def _telegram_bot_url(settings: Settings) -> str:
     if handle.startswith(("http://", "https://")):
         return handle
     return f"https://t.me/{handle.lstrip('@')}"
+
+
+def _mini_app_preview_url(settings: Settings) -> str:
+    if settings.project_public_url:
+        return f"{settings.project_public_url.rstrip('/')}/app"
+    return "http://2.26.80.27:8080/app"
+
+
+def _mini_app_preview_text(settings: Settings, language: str) -> str:
+    preview_url = _mini_app_preview_url(settings)
+    if language == "ru":
+        return (
+            "Mini App подготовлен, но Telegram требует HTTPS. Текущий preview:\n"
+            f"{preview_url}"
+        )
+    return (
+        "Mini App is prepared, but Telegram requires HTTPS. Current preview:\n"
+        f"{preview_url}"
+    )
 
 
 def _share_lines(settings: Settings, language: str) -> list[str]:
@@ -112,6 +132,7 @@ def _about_lines(settings: Settings, language: str) -> list[str]:
 @router.callback_query(F.data == BACK_TO_MENU)
 async def back_to_menu(
     callback: CallbackQuery,
+    settings: Settings,
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     await callback.answer()
@@ -119,7 +140,7 @@ async def back_to_menu(
         language = await _language(session_factory, callback.from_user)
         await callback.message.answer(
             t("dashboard", language),
-            reply_markup=main_menu_keyboard(language),
+            reply_markup=main_menu_keyboard(language, settings.mini_app_url),
         )
 
 
@@ -141,6 +162,7 @@ async def quick_start(
 @router.callback_query(F.data == QUICK_START_OK)
 async def quick_start_ok(
     callback: CallbackQuery,
+    settings: Settings,
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     await callback.answer()
@@ -148,7 +170,24 @@ async def quick_start_ok(
         language = await _language(session_factory, callback.from_user)
         await callback.message.answer(
             t("dashboard", language),
-            reply_markup=main_menu_keyboard(language),
+            reply_markup=main_menu_keyboard(language, settings.mini_app_url),
+        )
+
+
+@router.callback_query(F.data == DASHBOARD)
+async def dashboard_preview(
+    callback: CallbackQuery,
+    settings: Settings,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    log_callback_action(logger, callback, "dashboard_opened")
+    await callback.answer()
+    if callback.message:
+        language = await _language(session_factory, callback.from_user)
+        await callback.message.answer(
+            _mini_app_preview_text(settings, language),
+            reply_markup=main_menu_keyboard(language, settings.mini_app_url),
+            disable_web_page_preview=True,
         )
 
 
@@ -165,7 +204,7 @@ async def share_bot(
         lines = _share_lines(settings, language)
         await callback.message.answer(
             "\n".join(lines),
-            reply_markup=main_menu_keyboard(language),
+            reply_markup=main_menu_keyboard(language, settings.mini_app_url),
             disable_web_page_preview=True,
         )
 
@@ -184,7 +223,7 @@ async def about_project(
     if callback.message:
         await callback.message.answer(
             "\n".join(lines),
-            reply_markup=main_menu_keyboard(language),
+            reply_markup=main_menu_keyboard(language, settings.mini_app_url),
             disable_web_page_preview=True,
         )
 
@@ -200,6 +239,6 @@ async def about_command(
     lines = _about_lines(settings, language)
     await message.answer(
         "\n".join(lines),
-        reply_markup=main_menu_keyboard(language),
+        reply_markup=main_menu_keyboard(language, settings.mini_app_url),
         disable_web_page_preview=True,
     )

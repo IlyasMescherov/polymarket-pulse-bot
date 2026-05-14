@@ -71,6 +71,7 @@ class Settings:
     project_channel_url: str | None
     project_support_url: str | None
     project_x_url: str | None
+    mini_app_url: str | None
     project_channel_id: str | None
     admin_telegram_ids: frozenset[int]
     log_level: str
@@ -118,6 +119,7 @@ def load_settings() -> Settings:
         project_support_url=_optional(os.getenv("PROJECT_SUPPORT_URL")),
         project_x_url=_optional(os.getenv("PROJECT_X_URL"))
         or _optional(os.getenv("PROJECT_TWITTER_URL")),
+        mini_app_url=_optional(os.getenv("MINI_APP_URL")),
         project_channel_id=_telegram_channel_id(os.getenv("PROJECT_CHANNEL_ID"))
         or _telegram_channel_id(os.getenv("PROJECT_CHANNEL_URL")),
         admin_telegram_ids=_int_set(os.getenv("ADMIN_TELEGRAM_IDS")),

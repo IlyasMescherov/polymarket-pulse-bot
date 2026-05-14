@@ -18,6 +18,10 @@ PulseMarket AI
 
 [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
 
+Mini App preview:
+
+[http://2.26.80.27:8080/app](http://2.26.80.27:8080/app)
+
 ## Short Description
 
 PulseMarket AI is a Telegram discovery and analytics assistant for Polymarket. It helps users discover markets, understand probabilities, track sharp movements, and open markets directly on Polymarket.
@@ -29,6 +33,8 @@ New users often struggle to find relevant Polymarket markets and understand prob
 ## Solution
 
 PulseMarket AI gives users a simple Telegram interface for hot markets, new markets, Today's Pulse, Smart Money Radar, search, watchlists, smart alerts, beginner explanations, resolution guidance, and direct links to Polymarket.
+
+It also includes a Telegram Mini App dashboard preview for Today's Pulse, Smart Money Radar, hot markets, sharp moves, and search. A full Telegram Mini App launch requires an HTTPS domain.
 
 ## Current MVP
 
@@ -58,6 +64,7 @@ PulseMarket AI gives users a simple Telegram interface for hot markets, new mark
 - Admin stats
 - Link click tracking
 - Public landing page
+- Telegram Mini App Dashboard preview
 - Competitor analysis
 - Telegram comments and translation setup docs
 

@@ -106,7 +106,14 @@ async def main() -> None:
         interval_seconds=settings.market_poll_interval_seconds,
         daily_publishing_job=daily_publishing_job,
     )
-    health_server = HealthServer(settings.app_host, settings.app_port, engine)
+    health_server = HealthServer(
+        settings.app_host,
+        settings.app_port,
+        engine,
+        market_analyzer=market_analyzer,
+        smart_money_analyzer=smart_money_analyzer,
+        session_factory=session_factory,
+    )
 
     dp = Dispatcher(storage=MemoryStorage())
     dp.include_router(start.router)

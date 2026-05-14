@@ -4,6 +4,7 @@
 - **Telegram bot:** [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
 - **GitHub repo:** [IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
 - **Landing page:** [http://2.26.80.27:8080](http://2.26.80.27:8080)
+- **Mini App preview:** [http://2.26.80.27:8080/app](http://2.26.80.27:8080/app)
 - **Production health:** [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
 
 PulseMarket AI is a Telegram analytics bot for Polymarket discovery. It helps users find active prediction markets, understand market probabilities in plain language, save markets to a watchlist, and receive alerts when probabilities move sharply.
@@ -24,6 +25,7 @@ Builder submission package:
 - [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
 - [docs/SCREENSHOT_GUIDE.md](docs/SCREENSHOT_GUIDE.md)
 - [docs/screenshots/](docs/screenshots/)
+- [docs/MINI_APP_SETUP.md](docs/MINI_APP_SETUP.md)
 
 ## Public Telegram Setup
 
@@ -35,10 +37,12 @@ Builder submission package:
 - Public Telegram setup doc: [docs/TELEGRAM_PUBLIC_SETUP.md](docs/TELEGRAM_PUBLIC_SETUP.md)
 - Auto publishing doc: [docs/AUTO_PUBLISHING.md](docs/AUTO_PUBLISHING.md)
 - Telegram comments setup: [docs/TELEGRAM_COMMENTS_SETUP.md](docs/TELEGRAM_COMMENTS_SETUP.md)
+- Telegram Mini App setup: [docs/MINI_APP_SETUP.md](docs/MINI_APP_SETUP.md)
 - X/Twitter setup doc: [docs/X_PUBLIC_SETUP.md](docs/X_PUBLIC_SETUP.md)
 - X/Twitter launch thread: [docs/X_LAUNCH_THREAD.md](docs/X_LAUNCH_THREAD.md)
 - Competitor analysis: [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md)
 - Static landing page: [landing/](landing/)
+- Telegram Mini App preview: [miniapp/](miniapp/)
 - Avatar guide: [docs/brand/AVATAR_GUIDE.md](docs/brand/AVATAR_GUIDE.md)
 
 Recommended public channel username: `@PulseMarketAI`. If unavailable, use `@PulseMarketNews`, `@PulseMarketAlerts`, `@PulseMarketSignal`, `@PulseMarketRadar`, or `@PulseMarketDigest`.
@@ -97,6 +101,7 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - No-AI fallback: when `OPENAI_API_KEY` is missing, the bot still works normally.
 - Public market links: every market card links users back to Polymarket.
 - Public landing page: a no-build page is served from [http://2.26.80.27:8080](http://2.26.80.27:8080) and kept in [landing/](landing/).
+- Telegram Mini App Dashboard: a no-build mobile dashboard preview is served from [http://2.26.80.27:8080/app](http://2.26.80.27:8080/app). Telegram Mini App launch requires an HTTPS domain.
 
 ## How it works
 
@@ -115,6 +120,16 @@ https://data-api.polymarket.com
 ```
 
 The current integration uses public trades, public leaderboard data, and public positions endpoints with graceful fallback. If the Data API is unavailable or returns an unexpected format, the bot keeps running and shows a friendly unavailable state.
+
+The same lightweight web server exposes read-only JSON endpoints for the Mini App preview:
+
+- `/api/today`
+- `/api/markets/hot`
+- `/api/markets/new`
+- `/api/markets/moves`
+- `/api/smart-money/active`
+- `/api/smart-money/traders`
+- `/api/search?q=bitcoin`
 
 For Yes/No markets, the Yes outcome price is displayed as the implied event probability. If the data is incomplete, the bot does not fail; it shows a friendly "data is not available yet" message.
 

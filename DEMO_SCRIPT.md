@@ -5,6 +5,7 @@
 - Telegram handle: [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
 - GitHub repo: [https://github.com/IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
 - Landing page: [http://2.26.80.27:8080](http://2.26.80.27:8080)
+- Mini App preview: [http://2.26.80.27:8080/app](http://2.26.80.27:8080/app)
 - Production health: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
 - Status: Live MVP
 
@@ -70,7 +71,19 @@ Today's Pulse
 
 Show the ranked daily discovery card.
 
-### 21-27 sec: Search
+### 21-25 sec: Mini App preview
+
+Open:
+
+```text
+http://2.26.80.27:8080/app
+```
+
+Show the dashboard preview with Today's Pulse, Smart Money Radar, and Hot Markets.
+
+Note: full Telegram Mini App launch requires HTTPS.
+
+### 25-30 sec: Search
 
 Use Search and type:
 
@@ -80,7 +93,7 @@ bitcoin
 
 Show the search result cards.
 
-### 27-31 sec: Open Polymarket link
+### 30-34 sec: Open Polymarket link
 
 Tap:
 
@@ -90,7 +103,7 @@ Open
 
 Show that the bot sends a direct Polymarket market link.
 
-### 31-35 sec: Resolution Explainer and Why It Moved
+### 34-38 sec: Resolution Explainer and Why It Moved
 
 Tap:
 
@@ -106,7 +119,7 @@ Why it moved
 
 Show the resolution guidance and movement explanation.
 
-### 35-39 sec: Inline search
+### 38-41 sec: Inline search
 
 In any Telegram chat field, type:
 
@@ -116,7 +129,7 @@ In any Telegram chat field, type:
 
 Show inline results.
 
-### 39-43 sec: Admin stats
+### 41-44 sec: Admin stats
 
 Send:
 
@@ -126,7 +139,7 @@ Send:
 
 Show the admin stats screen. Crop the screenshot or recording so no private chats are visible.
 
-### 43-45 sec: Final screen
+### 44-45 sec: Final screen
 
 Show:
 
@@ -134,6 +147,7 @@ Show:
 Telegram: @PulseMarketAIBot
 GitHub: https://github.com/IlyasMescherov/polymarket-pulse-bot
 Landing: http://2.26.80.27:8080
+Mini App preview: http://2.26.80.27:8080/app
 Health: http://2.26.80.27:8080/health
 Status: Live MVP
 ```
