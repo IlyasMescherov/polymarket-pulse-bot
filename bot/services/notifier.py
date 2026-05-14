@@ -30,8 +30,18 @@ class Notifier:
 
     async def check_and_notify(self) -> None:
         async with self._session_factory() as session:
+            users = await get_notification_users(session)
+
+        threshold = min(
+            (user.movement_threshold for user in users),
+            default=0.10,
+        )
+        async with self._session_factory() as session:
             try:
-                movements = await self._market_analyzer.detect_movements(session)
+                movements = await self._market_analyzer.detect_movements(
+                    session,
+                    threshold=threshold,
+                )
             except Exception:
                 await session.rollback()
                 raise
@@ -39,9 +49,6 @@ class Notifier:
         if not movements:
             logger.info("No sharp market movements detected")
             return
-
-        async with self._session_factory() as session:
-            users = await get_notification_users(session)
 
         if not users:
             logger.info("Sharp movements found, but no users have notifications enabled")
@@ -54,7 +61,12 @@ class Notifier:
             )
 
         for user in users:
-            for movement in movements[:5]:
+            user_movements = [
+                movement
+                for movement in movements
+                if abs(movement.delta) >= user.movement_threshold
+            ][:5]
+            for movement in user_movements:
                 try:
                     await self._bot.send_message(
                         chat_id=user.telegram_id,
@@ -71,4 +83,3 @@ class Notifier:
                         user.telegram_id,
                         exc,
                     )
-

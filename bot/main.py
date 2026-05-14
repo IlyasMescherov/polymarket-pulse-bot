@@ -4,11 +4,12 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
-from aiogram.types import ErrorEvent
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import BotCommand, ErrorEvent
 
 from bot.config import load_settings
 from bot.database.db import create_engine, create_session_factory, ping_database
-from bot.handlers import markets, menu, settings as settings_handlers, start
+from bot.handlers import markets, menu, settings as settings_handlers, start, watchlist
 from bot.services.ai_explainer import AIExplainer
 from bot.services.health_server import HealthServer
 from bot.services.market_analyzer import MarketAnalyzer
@@ -23,6 +24,21 @@ logger = logging.getLogger(__name__)
 async def on_error(event: ErrorEvent) -> bool:
     logger.exception("Update failed", exc_info=event.exception)
     return True
+
+
+async def set_bot_commands(bot: Bot) -> None:
+    await bot.set_my_commands(
+        [
+            BotCommand(command="start", description="Main menu"),
+            BotCommand(command="hot", description="Hot markets"),
+            BotCommand(command="new", description="New markets"),
+            BotCommand(command="moves", description="Sharp movements"),
+            BotCommand(command="search", description="Search markets"),
+            BotCommand(command="watchlist", description="My watchlist"),
+            BotCommand(command="settings", description="Settings"),
+            BotCommand(command="about", description="About project"),
+        ]
+    )
 
 
 async def main() -> None:
@@ -53,10 +69,11 @@ async def main() -> None:
     )
     health_server = HealthServer(settings.app_host, settings.app_port, engine)
 
-    dp = Dispatcher()
+    dp = Dispatcher(storage=MemoryStorage())
     dp.include_router(start.router)
     dp.include_router(menu.router)
     dp.include_router(markets.router)
+    dp.include_router(watchlist.router)
     dp.include_router(settings_handlers.router)
     dp.errors.register(on_error)
 
@@ -70,6 +87,7 @@ async def main() -> None:
     try:
         logger.info("PulseMarket Bot started")
         await bot.delete_webhook(drop_pending_updates=True)
+        await set_bot_commands(bot)
         await dp.start_polling(bot)
     finally:
         scheduler_task.cancel()

@@ -144,6 +144,41 @@ class PolymarketClient:
         markets = [market for item in payload if (market := parse_market(item))]
         return markets
 
+    async def fetch_markets(
+        self,
+        limit: int = 100,
+        order: str = "volume24hr",
+        ascending: bool = False,
+    ) -> list[Market]:
+        return await self._get_markets(
+            {
+                "limit": limit,
+                "active": "true",
+                "closed": "false",
+                "order": order,
+                "ascending": str(ascending).lower(),
+            }
+        )
+
+    async def find_market_by_id(self, market_id: str) -> Market | None:
+        direct_matches = await self._get_markets(
+            {
+                "id": market_id,
+                "limit": 1,
+                "active": "true",
+                "closed": "false",
+            }
+        )
+        for market in direct_matches:
+            if market.id == market_id:
+                return market
+
+        markets = await self.fetch_markets(limit=250)
+        for market in markets:
+            if market.id == market_id:
+                return market
+        return None
+
     async def fetch_hot_markets(self, limit: int = 5) -> list[Market]:
         return await self._get_markets(
             {
@@ -177,4 +212,3 @@ class PolymarketClient:
             }
         )
         return [market for market in markets if market.yes_probability is not None]
-

@@ -24,13 +24,22 @@ def log_callback_action(
     **fields: Any,
 ) -> None:
     telegram_user = getattr(callback, "from_user", None)
+    log_user_action(logger, telegram_user, action, **fields)
+
+
+def log_user_action(
+    logger: logging.Logger,
+    telegram_user: Any,
+    action: str,
+    **fields: Any,
+) -> None:
     user_id = getattr(telegram_user, "id", None)
     username = getattr(telegram_user, "username", None) or "-"
     timestamp = datetime.now(timezone.utc).isoformat()
     extra_fields = " ".join(f"{key}={value}" for key, value in fields.items())
     suffix = f" {extra_fields}" if extra_fields else ""
     logger.info(
-        "telegram_callback timestamp=%s user_id=%s username=%s action=%s%s",
+        "telegram_action timestamp=%s user_id=%s username=%s action=%s%s",
         timestamp,
         user_id,
         username,

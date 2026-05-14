@@ -4,7 +4,7 @@
 **Telegram bot:** [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)  
 **GitHub repo:** [IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
 
-PulseMarket Bot is a Telegram analytics bot for Polymarket discovery. It helps users find active prediction markets, understand market probabilities in plain language, and receive alerts when probabilities move sharply.
+PulseMarket AI is a Telegram analytics bot for Polymarket discovery. It helps users find active prediction markets, understand market probabilities in plain language, save markets to a watchlist, and receive alerts when probabilities move sharply.
 
 This project is prepared for a Polymarket Builders Program submission. The current MVP is intentionally scoped around analytics, notifications, and public market links.
 
@@ -26,8 +26,14 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 
 - Hot markets: shows 5 active Polymarket markets ranked by recent volume.
 - New markets: shows 5 newly created active markets.
-- Sharp movements: compares stored market snapshots and surfaces probability changes above 10 percentage points.
-- Notifications: users can enable or disable sharp movement alerts.
+- Sharp movements: compares stored market snapshots and surfaces probability changes above each user's selected threshold.
+- Market search: users can search public Polymarket markets by topic, such as `bitcoin`, `fed`, `election`, or `ai`.
+- Watchlist: users can save interesting markets and remove them later.
+- Categories: politics, crypto, AI / tech, sports, and economy filters are available from the main menu.
+- Quick start: a short guided onboarding screen explains how to use the bot.
+- Settings: users can manage sharp move alerts, daily digest preference, language, and movement threshold.
+- RU/EN language: core product screens support Russian and English through a simple internal dictionary.
+- Share link: users can share the bot without any financial referral program, rewards, or payments.
 - Optional AI explanations: when `OPENAI_API_KEY` is configured, the bot adds short plain-language explanations.
 - No-AI fallback: when `OPENAI_API_KEY` is missing, the bot still works normally.
 - Public market links: every market card links users back to Polymarket.
@@ -45,6 +51,8 @@ The bot reads public market fields such as `question`, `outcomePrices`, `volume`
 For Yes/No markets, the Yes outcome price is displayed as the implied event probability. If the data is incomplete, the bot does not fail; it shows a friendly "data is not available yet" message.
 
 Sharp movement detection works by saving market snapshots to PostgreSQL, then comparing the latest public probability against the previously stored probability for the same market.
+
+Search and categories use public Gamma API market data. If a direct search field is not available, the bot loads active markets and filters locally by market title, question, category, and simple topic keywords.
 
 ## Tech Stack
 
@@ -74,7 +82,7 @@ The current MVP has strict safety boundaries:
 - No order signing
 - Public Polymarket data only
 
-The bot provides market discovery and notifications. It does not provide financial advice.
+The bot provides market discovery, watchlists, alerts, and links back to Polymarket. PulseMarket AI does not execute trades, manage wallets, hold funds, or provide financial advice.
 
 ## Builder Program Notes
 
@@ -88,14 +96,14 @@ The MVP is useful for the Builders Program because it demonstrates:
 - Public data integration with the Gamma API
 - Beginner-friendly market presentation
 - User-level notification settings
+- Market search, categories, and user watchlists
 - Snapshot-based market movement detection
 - A clear safety boundary before any trading integration
 
 ## Roadmap
 
-- Add category filters for politics, crypto, sports, culture, and macro.
-- Add user watchlists for specific markets.
 - Add saved keywords and topic alerts.
+- Add real scheduled daily digest delivery for users who enabled it.
 - Add richer market movement summaries.
 - Add a public landing page with screenshots and demo video.
 - Add production monitoring and health checks.
@@ -180,9 +188,13 @@ Add screenshots before submitting:
 
 - `/start` welcome screen
 - Main menu
+- Quick Start screen
 - Hot Markets result
 - New Markets result
 - Sharp Movement result
+- Market Search result
+- Watchlist view
+- Categories view
 - Notification settings
 - Polymarket market link opened from Telegram
 
@@ -201,6 +213,8 @@ Add a 45-second demo video showing the live Telegram bot flow:
 - Open Hot Markets
 - Open New Markets
 - Open Sharp Moves
+- Search for a market
+- Add a market to Watchlist
 - Enable notifications
 - Open a Polymarket market link
 - End on GitHub repository and [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)

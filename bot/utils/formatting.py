@@ -34,9 +34,13 @@ def format_date(value: datetime | None) -> str:
     return value.date().isoformat()
 
 
-def format_market_card(market: Market, explanation: str | None = None) -> str:
+def format_market_card(
+    market: Market,
+    explanation: str | None = None,
+    heading: str = "🔥 Рынок:",
+) -> str:
     lines = [
-        "🔥 Рынок:",
+        heading,
         market.question,
         "",
         "Вероятность:",
@@ -51,6 +55,15 @@ def format_market_card(market: Market, explanation: str | None = None) -> str:
     if explanation:
         lines.extend(["", "Короткое объяснение:", explanation])
     return "\n".join(lines)
+
+
+def format_watchlist_card(title: str) -> str:
+    return "\n".join(
+        [
+            "⭐ Watchlist:",
+            title,
+        ]
+    )
 
 
 def format_movement_card(
@@ -77,4 +90,3 @@ def format_movement_card(
     if explanation:
         lines.extend(["", "Короткое объяснение:", explanation])
     return "\n".join(lines)
-

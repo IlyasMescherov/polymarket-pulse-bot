@@ -3,8 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import BigInteger, Boolean, DateTime, Float, Index, Integer, JSON
-from sqlalchemy import String, Text, func, text
+from sqlalchemy import BigInteger, Boolean, DateTime, Float, ForeignKey, Index, Integer, JSON
+from sqlalchemy import String, Text, UniqueConstraint, func, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -29,6 +29,24 @@ class User(Base):
         nullable=False,
         default=False,
         server_default=text("false"),
+    )
+    daily_digest_enabled: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("false"),
+    )
+    language: Mapped[str] = mapped_column(
+        String(8),
+        nullable=False,
+        default="ru",
+        server_default=text("'ru'"),
+    )
+    movement_threshold: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+        default=0.10,
+        server_default=text("0.10"),
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -63,4 +81,27 @@ class MarketSnapshot(Base):
         nullable=False,
         server_default=func.now(),
         index=True,
+    )
+
+
+class UserWatchlist(Base):
+    __tablename__ = "user_watchlist"
+    __table_args__ = (
+        UniqueConstraint("user_id", "market_id", name="uq_user_watchlist_user_market"),
+        Index("ix_user_watchlist_user_created", "user_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    market_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    market_title: Mapped[str] = mapped_column(Text, nullable=False)
+    market_url: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
     )

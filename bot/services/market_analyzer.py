@@ -7,6 +7,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot.database.repositories import get_latest_snapshots, save_market_snapshots
 from bot.services.polymarket_client import Market, PolymarketClient
 
+CATEGORY_KEYWORDS: dict[str, tuple[str, ...]] = {
+    "politics": ("trump", "election", "president", "senate", "congress"),
+    "crypto": ("bitcoin", "ethereum", "solana", "crypto", "btc", "eth"),
+    "ai_tech": ("ai", "openai", "nvidia", "tesla", "apple", "google"),
+    "sports": ("nba", "nfl", "ufc", "soccer", "football"),
+    "economy": ("fed", "inflation", "rates", "recession", "cpi"),
+}
+
+CATEGORY_LABELS: dict[str, str] = {
+    "politics": "Politics",
+    "crypto": "Crypto",
+    "ai_tech": "AI / Tech",
+    "sports": "Sports",
+    "economy": "Economy",
+}
+
 
 @dataclass(frozen=True, slots=True)
 class MarketMovement:
@@ -31,6 +47,37 @@ def is_sharp_move(
     return delta is not None and abs(delta) >= threshold
 
 
+def _category_text(market: Market) -> str:
+    raw_category = market.raw.get("category")
+    if isinstance(raw_category, dict):
+        category = " ".join(str(value) for value in raw_category.values())
+    else:
+        category = str(raw_category or "")
+    return f"{market.question} {category}".lower()
+
+
+def filter_markets_by_query(markets: list[Market], query: str) -> list[Market]:
+    tokens = [token for token in query.lower().split() if token]
+    if not tokens:
+        return []
+    return [
+        market
+        for market in markets
+        if all(token in _category_text(market) for token in tokens)
+    ]
+
+
+def filter_markets_by_category(markets: list[Market], category: str) -> list[Market]:
+    keywords = CATEGORY_KEYWORDS.get(category, ())
+    if not keywords:
+        return []
+    return [
+        market
+        for market in markets
+        if any(keyword in _category_text(market) for keyword in keywords)
+    ]
+
+
 class MarketAnalyzer:
     def __init__(self, client: PolymarketClient, movement_threshold: float = 0.10) -> None:
         self._client = client
@@ -42,13 +89,26 @@ class MarketAnalyzer:
     async def get_new_markets(self, limit: int = 5) -> list[Market]:
         return await self._client.fetch_new_markets(limit=limit)
 
+    async def search_markets(self, query: str, limit: int = 5) -> list[Market]:
+        markets = await self._client.fetch_markets(limit=150)
+        return filter_markets_by_query(markets, query)[:limit]
+
+    async def get_category_markets(self, category: str, limit: int = 5) -> list[Market]:
+        markets = await self._client.fetch_markets(limit=150)
+        return filter_markets_by_category(markets, category)[:limit]
+
+    async def find_market_by_id(self, market_id: str) -> Market | None:
+        return await self._client.find_market_by_id(market_id)
+
     async def detect_movements(
         self,
         session: AsyncSession,
         limit: int = 50,
+        threshold: float | None = None,
     ) -> list[MarketMovement]:
         markets = await self._client.fetch_snapshot_markets(limit=limit)
         latest = await get_latest_snapshots(session, [market.id for market in markets])
+        movement_threshold = threshold or self._movement_threshold
 
         movements: list[MarketMovement] = []
         for market in markets:
@@ -57,7 +117,7 @@ class MarketAnalyzer:
                 continue
 
             delta = probability_delta(snapshot.yes_probability, market.yes_probability)
-            if delta is None or abs(delta) < self._movement_threshold:
+            if delta is None or abs(delta) < movement_threshold:
                 continue
 
             movements.append(
@@ -72,4 +132,3 @@ class MarketAnalyzer:
         await save_market_snapshots(session, markets)
         await session.commit()
         return sorted(movements, key=lambda item: abs(item.delta), reverse=True)
-
