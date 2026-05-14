@@ -12,3 +12,7 @@ logs/
 .idea/
 .vscode/
 docs/screenshots/final/*.png
+docs/screenshots/final/*.jpg
+docs/screenshots/final/*.jpeg
+submission_assets/
+*.zip
