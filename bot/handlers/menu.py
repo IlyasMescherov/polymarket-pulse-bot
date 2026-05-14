@@ -70,6 +70,17 @@ def _share_lines(settings: Settings, language: str) -> list[str]:
                 ),
             ]
         )
+    if settings.project_x_url:
+        lines.extend(
+            [
+                "",
+                (
+                    f"X/Twitter: {settings.project_x_url}"
+                    if language == "ru"
+                    else f"X/Twitter: {settings.project_x_url}"
+                ),
+            ]
+        )
     return lines
 
 
@@ -93,6 +104,8 @@ def _about_lines(settings: Settings, language: str) -> list[str]:
             if language == "ru"
             else f"Support: {settings.project_support_url}"
         )
+    if settings.project_x_url:
+        lines.append(f"X/Twitter: {settings.project_x_url}")
     return lines
 
 

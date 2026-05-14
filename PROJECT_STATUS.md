@@ -120,8 +120,10 @@ The submission package is ready for final screenshots and demo recording:
 - Set BotFather name, description, about text, commands, and inline placeholder.
 - Create a public Telegram channel.
 - Create a support contact or support group.
+- Finish the X/Twitter profile and pin the launch post.
 - Add `PROJECT_CHANNEL_URL`.
 - Add `PROJECT_SUPPORT_URL`.
+- Add `PROJECT_X_URL`.
 - Record a clean demo video.
 - Invite the first 20 to 50 users.
 
