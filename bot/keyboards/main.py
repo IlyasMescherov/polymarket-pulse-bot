@@ -53,6 +53,7 @@ SMART_UNUSUAL = "smart:unusual"
 SMART_TRADERS = "smart:traders"
 SMART_ACTIVE_MARKETS = "smart:active_markets"
 SMART_TRACK_WALLET = "smart:track_wallet"
+SMART_TRACK_WALLET_PREFIX = "smart:tw:"
 
 LABELS: dict[str, dict[str, str]] = {
     "ru": {
@@ -60,7 +61,7 @@ LABELS: dict[str, dict[str, str]] = {
         "hot": "🔥 Горячие",
         "new": "🆕 Новые",
         "today": "📰 Пульс дня",
-        "smart_money": "🧠 Smart Money",
+        "smart_money": "🧠 Радар активности",
         "moves": "📈 Движения",
         "search": "🔍 Поиск",
         "watchlist": "⭐ Watchlist",
@@ -81,6 +82,11 @@ LABELS: dict[str, dict[str, str]] = {
         "back": "Назад в меню",
         "topics": "🎯 Мои темы",
         "add_topic": "➕ Добавить тему",
+        "smart_unusual": "🐋 Необычная активность",
+        "smart_traders": "🏆 Публичные участники",
+        "smart_active": "📊 Активные рынки",
+        "smart_track_wallet": "👀 Ввести адрес",
+        "track_this_wallet": "👀 Следить за кошельком",
     },
     "en": {
         "quick_start": "🚀 Quick Start",
@@ -108,6 +114,11 @@ LABELS: dict[str, dict[str, str]] = {
         "back": "Back to Menu",
         "topics": "🎯 My topics",
         "add_topic": "➕ Add topic",
+        "smart_unusual": "🐋 Unusual Activity",
+        "smart_traders": "🏆 Public Traders",
+        "smart_active": "📊 Active Markets",
+        "smart_track_wallet": "👀 Track Public Wallet",
+        "track_this_wallet": "👀 Track this wallet",
     },
 }
 
@@ -270,37 +281,56 @@ def categories_keyboard(language: str | None = None) -> InlineKeyboardMarkup:
 
 
 def settings_keyboard(user: Any, language: str | None = None) -> InlineKeyboardMarkup:
-    notifications_status = "ON" if user.notifications_enabled else "OFF"
-    daily_status = "ON" if user.daily_digest_enabled else "OFF"
-    smart_money_status = "ON" if getattr(user, "smart_money_alerts_enabled", False) else "OFF"
+    normalized = normalize_language(language)
+    on_label = "ON" if normalized == "en" else "ВКЛ"
+    off_label = "OFF" if normalized == "en" else "ВЫКЛ"
+    notifications_status = on_label if user.notifications_enabled else off_label
+    daily_status = on_label if user.daily_digest_enabled else off_label
+    smart_money_status = (
+        on_label if getattr(user, "smart_money_alerts_enabled", False) else off_label
+    )
     threshold = int(user.movement_threshold * 100)
+    sharp_label = (
+        "Sharp moves alerts"
+        if normalized == "en"
+        else "Уведомления о движениях"
+    )
+    daily_label = "Daily digest" if normalized == "en" else "Ежедневный дайджест"
+    smart_label = (
+        "Smart Money alerts"
+        if normalized == "en"
+        else "Уведомления радара"
+    )
+    language_label = "Language" if normalized == "en" else "Язык"
+    threshold_label = "Movement threshold" if normalized == "en" else "Порог движения"
+    min_volume_label = "Min alert volume" if normalized == "en" else "Мин. объём"
 
     builder = InlineKeyboardBuilder()
     builder.button(
-        text=f"🔔 Sharp moves alerts: {notifications_status}",
+        text=f"🔔 {sharp_label}: {notifications_status}",
         callback_data=NOTIFICATIONS_OFF
         if user.notifications_enabled
         else NOTIFICATIONS_ON,
     )
     builder.button(
-        text=f"📰 Daily digest: {daily_status}",
+        text=f"📰 {daily_label}: {daily_status}",
         callback_data=DAILY_DIGEST_OFF
         if user.daily_digest_enabled
         else DAILY_DIGEST_ON,
     )
     builder.button(
-        text=f"🧠 Smart Money alerts: {smart_money_status}",
+        text=f"🧠 {smart_label}: {smart_money_status}",
         callback_data=SMART_MONEY_ALERTS_OFF
         if getattr(user, "smart_money_alerts_enabled", False)
         else SMART_MONEY_ALERTS_ON,
     )
     builder.button(text=label("topics", language), callback_data=TOPICS_MENU)
-    builder.button(text="🌍 Language: RU", callback_data=LANGUAGE_RU)
-    builder.button(text="🌍 Language: EN", callback_data=LANGUAGE_EN)
+    builder.button(text=f"🌍 {language_label}: RU", callback_data=LANGUAGE_RU)
+    builder.button(text=f"🌍 {language_label}: EN", callback_data=LANGUAGE_EN)
     for value in (5, 10, 15, 20):
         marker = "✓ " if threshold == value else ""
         builder.button(
-            text=f"📊 {marker}Movement threshold: {value}%",
+            text=f"📊 {marker}{threshold_label}: {value}%",
             callback_data=f"{THRESHOLD_PREFIX}{value}",
         )
     min_volume = int(getattr(user, "min_volume_for_alerts", 0) or 0)
@@ -308,7 +338,7 @@ def settings_keyboard(user: Any, language: str | None = None) -> InlineKeyboardM
         marker = "✓ " if min_volume == value else ""
         label_value = "$0" if value == 0 else f"${value // 1000}K"
         builder.button(
-            text=f"🔎 {marker}Min alert volume: {label_value}",
+            text=f"🔎 {marker}{min_volume_label}: {label_value}",
             callback_data=f"{MIN_VOLUME_PREFIX}{value}",
         )
     builder.button(text=label("back", language), callback_data=BACK_TO_MENU)
@@ -319,11 +349,24 @@ def settings_keyboard(user: Any, language: str | None = None) -> InlineKeyboardM
 def smart_money_keyboard(language: str | None = None) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🐋 Unusual Activity", callback_data=SMART_UNUSUAL)],
-            [InlineKeyboardButton(text="🏆 Public Traders", callback_data=SMART_TRADERS)],
-            [InlineKeyboardButton(text="📊 Active Markets", callback_data=SMART_ACTIVE_MARKETS)],
-            [InlineKeyboardButton(text="👀 Track Public Wallet", callback_data=SMART_TRACK_WALLET)],
+            [InlineKeyboardButton(text=label("smart_unusual", language), callback_data=SMART_UNUSUAL)],
+            [InlineKeyboardButton(text=label("smart_traders", language), callback_data=SMART_TRADERS)],
+            [InlineKeyboardButton(text=label("smart_active", language), callback_data=SMART_ACTIVE_MARKETS)],
+            [InlineKeyboardButton(text=label("smart_track_wallet", language), callback_data=SMART_TRACK_WALLET)],
             [InlineKeyboardButton(text=label("back", language), callback_data=BACK_TO_MENU)],
+        ]
+    )
+
+
+def public_trader_keyboard(wallet_address: str, language: str | None = None) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=label("track_this_wallet", language),
+                    callback_data=f"{SMART_TRACK_WALLET_PREFIX}{wallet_address}",
+                )
+            ]
         ]
     )
 

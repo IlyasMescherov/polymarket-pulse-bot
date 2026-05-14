@@ -72,10 +72,8 @@ async def _open_settings(
             await message.answer("Не смог открыть настройки. Попробуйте позже.")
             return
 
-    await message.answer(
-        "⚙️ Настройки PulseMarket AI",
-        reply_markup=settings_keyboard(user, user.language),
-    )
+    title = "⚙️ PulseMarket AI Settings" if user.language == "en" else "⚙️ Настройки PulseMarket AI"
+    await message.answer(title, reply_markup=settings_keyboard(user, user.language))
 
 
 @router.callback_query(F.data == SETTINGS_MENU)

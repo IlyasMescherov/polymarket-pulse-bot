@@ -148,7 +148,25 @@ def aggregate_market_activity(
     )[:limit]
 
 
-def explain_large_trade(signal: LargeTradeSignal) -> str:
+def explain_large_trade(signal: LargeTradeSignal, language: str | None = None) -> str:
+    if language == "ru":
+        return "\n".join(
+            [
+                "🐋 Необычная активность",
+                "",
+                "PulseMarket обнаружил:",
+                f"Крупную публичную активность около {format_compact_usd(signal.amount_usd, 'ru')}.",
+                "",
+                "Почему это важно:",
+                "Крупная публичная активность может показать, куда смещается внимание рынка.",
+                "",
+                "Взгляд PulseMarket:",
+                "Стоит изучить. Проверь движение и правила рынка перед любыми решениями.",
+                "",
+                "Для анализа · Без сделок",
+            ]
+        )
+
     return "\n".join(
         [
             "🐋 Unusual Activity",

@@ -575,7 +575,7 @@ async def add_tracked_trader(
     label: str | None = None,
 ) -> tuple[TrackedTrader, bool]:
     user = await upsert_user(session, telegram_user)
-    normalized_wallet = wallet_address.strip()
+    normalized_wallet = wallet_address.strip().lower()
     result = await session.execute(
         select(TrackedTrader).where(
             TrackedTrader.telegram_user_id == user.telegram_id,

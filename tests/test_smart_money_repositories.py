@@ -41,7 +41,7 @@ async def test_smart_money_repository_tracks_wallets_and_snapshots() -> None:
     async with session_factory() as session:
         settings_user = await set_smart_money_alerts(session, user, True)
         item, created = await add_tracked_trader(session, user, wallet)
-        duplicate, duplicate_created = await add_tracked_trader(session, user, wallet)
+        duplicate, duplicate_created = await add_tracked_trader(session, user, wallet.upper())
         await create_smart_money_snapshot(
             session,
             "large_trade",
