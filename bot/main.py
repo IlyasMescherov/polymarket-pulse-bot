@@ -20,6 +20,9 @@ from bot.handlers import (
     watchlist,
 )
 from bot.services.ai_explainer import AIExplainer
+from bot.services.auto_publisher import DailyPublishingJob
+from bot.services.channel_publisher import ChannelPublisher
+from bot.services.content_publisher import ContentPublisher
 from bot.services.health_server import HealthServer
 from bot.services.market_analyzer import MarketAnalyzer
 from bot.services.notifier import Notifier
@@ -27,6 +30,7 @@ from bot.services.polymarket_data_client import PolymarketDataClient
 from bot.services.polymarket_client import PolymarketClient
 from bot.services.scheduler import Scheduler
 from bot.services.smart_money_analyzer import SmartMoneyAnalyzer
+from bot.services.x_publisher import XPublisher
 from bot.utils.logging import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -82,9 +86,25 @@ async def main() -> None:
         model=settings.openai_model,
     )
     notifier = Notifier(bot, session_factory, market_analyzer, ai_explainer)
+    content_publisher = ContentPublisher(
+        market_analyzer,
+        smart_money_analyzer,
+        session_factory,
+        bot_handle=settings.project_telegram_handle or "@PulseMarketAIBot",
+    )
+    channel_publisher = ChannelPublisher(bot, session_factory, settings)
+    x_publisher = XPublisher(bot, session_factory, settings)
+    daily_publishing_job = DailyPublishingJob(
+        content_publisher,
+        channel_publisher,
+        x_publisher,
+        settings,
+        interval_seconds=settings.market_poll_interval_seconds,
+    )
     scheduler = Scheduler(
         notifier,
         interval_seconds=settings.market_poll_interval_seconds,
+        daily_publishing_job=daily_publishing_job,
     )
     health_server = HealthServer(settings.app_host, settings.app_port, engine)
 
@@ -104,6 +124,9 @@ async def main() -> None:
     dp["market_analyzer"] = market_analyzer
     dp["smart_money_analyzer"] = smart_money_analyzer
     dp["ai_explainer"] = ai_explainer
+    dp["content_publisher"] = content_publisher
+    dp["channel_publisher"] = channel_publisher
+    dp["x_publisher"] = x_publisher
 
     await health_server.start()
     scheduler_task = asyncio.create_task(scheduler.run())

@@ -13,3 +13,6 @@ def test_public_commands_include_traction_commands_without_admin_commands() -> N
     assert "admin_stats" not in command_names
     assert "admin_digest" not in command_names
     assert "admin_feedback" not in command_names
+    assert "admin_check_channel" not in command_names
+    assert "admin_publish_today" not in command_names
+    assert "admin_x_draft" not in command_names

@@ -13,6 +13,8 @@
 - Landing page source: [landing/](landing/)
 - Competitor analysis: [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md)
 - Smart Money analytics: [docs/SMART_MONEY_ANALYTICS.md](docs/SMART_MONEY_ANALYTICS.md)
+- Auto publishing: [docs/AUTO_PUBLISHING.md](docs/AUTO_PUBLISHING.md)
+- Telegram comments setup: [docs/TELEGRAM_COMMENTS_SETUP.md](docs/TELEGRAM_COMMENTS_SETUP.md)
 - Status: Live MVP
 
 ## Demo video placeholder
@@ -89,6 +91,8 @@ PulseMarket AI does not execute trades, manage wallets, hold funds, request priv
 - Smart alerts
 - Daily digest
 - Admin channel digest
+- Safe Telegram channel publishing with admin preview
+- X/Twitter draft generation
 - Feedback
 - Beginner mode
 - Resolution explainer
@@ -99,6 +103,8 @@ PulseMarket AI does not execute trades, manage wallets, hold funds, request priv
 - Public landing page
 - Competitor analysis doc
 - Smart Money analytics doc
+- Auto publishing doc
+- Telegram comments setup doc
 
 ## Polymarket ecosystem value
 
@@ -115,6 +121,8 @@ It also tracks engagement metrics such as searches, watchlist activity, topic al
 - Safe analytics-only scope
 - Engagement metrics for product learning
 - Public channel workflow for first users
+- Safe English-first channel publishing workflow
+- Manual X/Twitter draft workflow
 - Feedback loop for product improvement
 - Read-only public activity intelligence
 - Future builder-code readiness
@@ -126,6 +134,8 @@ Builder code is prepared for future official trading integration, but the curren
 - Publish landing page
 - Group mode for community discovery
 - Better manual channel digest workflow
+- Optional Telegram channel autoposting after admin verification
+- X/Twitter draft workflow
 - More advanced market health signals
 - More advanced Smart Money Radar summaries
 - Better topic personalization

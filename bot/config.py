@@ -40,6 +40,23 @@ def _int_set(value: str | None) -> frozenset[int]:
     return frozenset(ids)
 
 
+def _bool(value: str | None, default: bool = False) -> bool:
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _telegram_channel_id(value: str | None) -> str | None:
+    normalized = _optional(value)
+    if normalized is None:
+        return None
+    for prefix in ("https://t.me/", "http://t.me/", "t.me/"):
+        if normalized.startswith(prefix):
+            handle = normalized.removeprefix(prefix).strip("/")
+            return f"@{handle}" if handle and not handle.startswith("@") else handle
+    return normalized
+
+
 @dataclass(frozen=True, slots=True)
 class Settings:
     bot_token: str
@@ -54,6 +71,7 @@ class Settings:
     project_channel_url: str | None
     project_support_url: str | None
     project_x_url: str | None
+    project_channel_id: str | None
     admin_telegram_ids: frozenset[int]
     log_level: str
     app_host: str = "0.0.0.0"
@@ -61,6 +79,18 @@ class Settings:
     market_poll_interval_seconds: int = 900
     movement_threshold: float = 0.10
     smart_money_active_market_min_usd: float = 1000.0
+    auto_channel_posting_enabled: bool = False
+    auto_channel_posting_time: str = "09:00"
+    auto_channel_posting_timezone: str = "UTC"
+    auto_channel_posting_min_hours_between_posts: int = 20
+    x_drafts_enabled: bool = True
+    x_posting_mode: str = "draft"
+    x_handle: str | None = None
+    auto_x_posting_enabled: bool = False
+    x_api_key: str | None = None
+    x_api_secret: str | None = None
+    x_access_token: str | None = None
+    x_access_token_secret: str | None = None
     openai_model: str = "gpt-4o-mini"
 
 
@@ -88,6 +118,8 @@ def load_settings() -> Settings:
         project_support_url=_optional(os.getenv("PROJECT_SUPPORT_URL")),
         project_x_url=_optional(os.getenv("PROJECT_X_URL"))
         or _optional(os.getenv("PROJECT_TWITTER_URL")),
+        project_channel_id=_telegram_channel_id(os.getenv("PROJECT_CHANNEL_ID"))
+        or _telegram_channel_id(os.getenv("PROJECT_CHANNEL_URL")),
         admin_telegram_ids=_int_set(os.getenv("ADMIN_TELEGRAM_IDS")),
         log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
         app_host=os.getenv("APP_HOST", "0.0.0.0"),
@@ -99,5 +131,25 @@ def load_settings() -> Settings:
         smart_money_active_market_min_usd=float(
             os.getenv("SMART_MONEY_ACTIVE_MARKET_MIN_USD", "1000")
         ),
+        auto_channel_posting_enabled=_bool(
+            os.getenv("AUTO_CHANNEL_POSTING_ENABLED"),
+            default=False,
+        ),
+        auto_channel_posting_time=os.getenv("AUTO_CHANNEL_POSTING_TIME", "09:00"),
+        auto_channel_posting_timezone=os.getenv(
+            "AUTO_CHANNEL_POSTING_TIMEZONE",
+            "UTC",
+        ),
+        auto_channel_posting_min_hours_between_posts=int(
+            os.getenv("AUTO_CHANNEL_POSTING_MIN_HOURS_BETWEEN_POSTS", "20")
+        ),
+        x_drafts_enabled=_bool(os.getenv("X_DRAFTS_ENABLED"), default=True),
+        x_posting_mode=os.getenv("X_POSTING_MODE", "draft").strip().lower() or "draft",
+        x_handle=_optional(os.getenv("X_HANDLE")),
+        auto_x_posting_enabled=_bool(os.getenv("AUTO_X_POSTING_ENABLED"), default=False),
+        x_api_key=_optional(os.getenv("X_API_KEY")),
+        x_api_secret=_optional(os.getenv("X_API_SECRET")),
+        x_access_token=_optional(os.getenv("X_ACCESS_TOKEN")),
+        x_access_token_secret=_optional(os.getenv("X_ACCESS_TOKEN_SECRET")),
         openai_model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
     )

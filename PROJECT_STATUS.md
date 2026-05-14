@@ -127,6 +127,21 @@ Phase 6 adds public market intelligence without trading or wallet connection:
 - Public landing page Smart Money Radar section
 - [docs/SMART_MONEY_ANALYTICS.md](docs/SMART_MONEY_ANALYTICS.md)
 
+## Safe Publishing Layer Completed
+
+The project now includes a conservative publishing workflow:
+
+- `published_posts` table for post history, duplicate protection, and cooldown checks
+- English-first Today's Pulse channel post generation
+- Smart Money channel post generation when public activity data exists
+- Telegram channel publish service with `AUTO_CHANNEL_POSTING_ENABLED=false` by default
+- Admin preview flow with `/admin_publish_today`
+- Channel access diagnostic with `/admin_check_channel`
+- X/Twitter draft generation with `/admin_x_draft`
+- X API credentials are future-ready, but automatic X posting is not implemented
+- Documentation in [docs/AUTO_PUBLISHING.md](docs/AUTO_PUBLISHING.md)
+- Comments and translation setup in [docs/TELEGRAM_COMMENTS_SETUP.md](docs/TELEGRAM_COMMENTS_SETUP.md)
+
 ## What is live on VPS
 
 - Production VPS health endpoint: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
@@ -136,6 +151,8 @@ Phase 6 adds public market intelligence without trading or wallet connection:
 - Support: [@PulseMarketAISupport](https://t.me/PulseMarketAISupport)
 - X/Twitter: [@PulseMarketBot](https://x.com/PulseMarketBot)
 - Smart Money Radar is available from `/smart`
+- Admin publishing preview is available from `/admin_publish_today`
+- X draft generation is available from `/admin_x_draft`
 - Inline search is enabled and manually verified with `@PulseMarketAIBot bitcoin`
 - Docker Compose production deployment
 - PostgreSQL-backed persistence
@@ -148,11 +165,14 @@ Phase 6 adds public market intelligence without trading or wallet connection:
 3. Record a 45-second demo video if the application form asks for one.
 4. Keep the public landing page updated at [http://2.26.80.27:8080](http://2.26.80.27:8080).
 5. Post the first manual digest in [@PulseMarketAI](https://t.me/PulseMarketAI).
-6. Paste [BUILDER_SUBMISSION_TEXT.md](BUILDER_SUBMISSION_TEXT.md) into the application.
-7. Attach GitHub repo.
-8. Include Telegram bot handle.
-9. Include admin stats screenshot.
-10. Add `POLYMARKET_REFERRAL_URL` only if the project becomes eligible for Polymarket referrals.
+6. Run `/admin_check_channel` before enabling channel autoposting.
+7. Keep `AUTO_CHANNEL_POSTING_ENABLED=false` until preview publishing is manually verified.
+8. Link `@PulseMarketAISupport` as the discussion group for channel comments if comments are desired.
+9. Paste [BUILDER_SUBMISSION_TEXT.md](BUILDER_SUBMISSION_TEXT.md) into the application.
+10. Attach GitHub repo.
+11. Include Telegram bot handle.
+12. Include admin stats screenshot.
+13. Add `POLYMARKET_REFERRAL_URL` only if the project becomes eligible for Polymarket referrals.
 
 ## Before First Users
 
@@ -167,6 +187,8 @@ Phase 6 adds public market intelligence without trading or wallet connection:
 - Record a clean demo video.
 - Invite the first 20 to 50 users.
 - Run `/admin_digest` and publish the first channel digest manually.
+- Use `/admin_publish_today` for preview-and-publish channel flow.
+- Use `/admin_x_draft` for manual X/Twitter draft generation.
 - Ask first users to send `/feedback`.
 - Ask early users whether Smart Money Radar is understandable without trading terminology.
 

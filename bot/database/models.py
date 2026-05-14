@@ -304,3 +304,41 @@ class SmartMoneyAlertLog(Base):
         server_default=func.now(),
         index=True,
     )
+
+
+class PublishedPost(Base):
+    __tablename__ = "published_posts"
+    __table_args__ = (
+        UniqueConstraint(
+            "platform",
+            "content_hash",
+            name="uq_published_posts_platform_hash",
+        ),
+        Index("ix_published_posts_platform_created", "platform", "created_at"),
+        Index(
+            "ix_published_posts_platform_status_created",
+            "platform",
+            "status",
+            "created_at",
+        ),
+        Index("ix_published_posts_type_created", "post_type", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    platform: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    post_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    content_text: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    published_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        index=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        index=True,
+    )

@@ -33,6 +33,8 @@ Builder submission package:
 - X/Twitter: [@PulseMarketBot](https://x.com/PulseMarketBot)
 - BotFather setup doc: [docs/BOTFATHER_SETUP.md](docs/BOTFATHER_SETUP.md)
 - Public Telegram setup doc: [docs/TELEGRAM_PUBLIC_SETUP.md](docs/TELEGRAM_PUBLIC_SETUP.md)
+- Auto publishing doc: [docs/AUTO_PUBLISHING.md](docs/AUTO_PUBLISHING.md)
+- Telegram comments setup: [docs/TELEGRAM_COMMENTS_SETUP.md](docs/TELEGRAM_COMMENTS_SETUP.md)
 - X/Twitter setup doc: [docs/X_PUBLIC_SETUP.md](docs/X_PUBLIC_SETUP.md)
 - X/Twitter launch thread: [docs/X_LAUNCH_THREAD.md](docs/X_LAUNCH_THREAD.md)
 - Competitor analysis: [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md)
@@ -76,6 +78,9 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - Categories: politics, crypto, AI / tech, sports, and economy filters are available from the main menu.
 - Daily digest: users can opt into a daily digest of high-signal markets, personalized by topics when available.
 - Admin channel digest: admins can generate a ready-to-copy daily post for `@PulseMarketAI` with `/admin_digest`.
+- Safe channel publishing: admins can preview Today’s Pulse, publish to `@PulseMarketAI` only after approval, and rely on duplicate/cooldown protection.
+- X draft generation: admins can generate short X/Twitter drafts without automatic X posting.
+- English-first public posts: channel content is generated in English so Telegram translation works cleanly for international users.
 - Feedback: users can send product feedback with `/feedback`; admins can review recent feedback with `/admin_feedback`.
 - Quick start: a short guided onboarding screen explains how to use the bot.
 - Settings: users can manage sharp move alerts, daily digest preference, language, and movement threshold.
@@ -237,6 +242,14 @@ Market open buttons use an intermediate Telegram callback. When a user taps a ma
 - Timestamp
 
 The bot then sends the direct Polymarket URL. This gives the project safe engagement metrics for the Builders Program without handling funds or secrets.
+
+## Safe public publishing
+
+PulseMarket AI can generate public Today’s Pulse posts for the Telegram channel and X/Twitter drafts.
+
+Telegram channel autoposting is disabled by default with `AUTO_CHANNEL_POSTING_ENABLED=false`. Admins can use `/admin_publish_today` to preview content, publish it to the channel, generate an X draft, or cancel. Published content is tracked in PostgreSQL to prevent duplicates and enforce a cooldown.
+
+X/Twitter support is draft-only by default. The bot can prepare a short post and send it to admins for manual publishing, but it does not post to X automatically.
 
 ## Admin stats
 

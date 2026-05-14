@@ -110,6 +110,41 @@ Analytics only.
 No trading. No wallets. No financial advice.
 ```
 
+## Comments / Discussion
+
+Telegram comments require a linked discussion group.
+
+Recommended setup:
+
+- Channel: `@PulseMarketAI`
+- Discussion / support group: `@PulseMarketAISupport`
+
+See [docs/TELEGRAM_COMMENTS_SETUP.md](TELEGRAM_COMMENTS_SETUP.md) for the exact setup steps.
+
+## Translation strategy
+
+Use English-first channel posts.
+
+Do not mix English and Russian in one public channel post. This keeps Telegram's built-in translation cleaner.
+
+Russian users can enable:
+
+```text
+Settings → Language → Show Translate Button
+```
+
+Telegram channel auto-translate requires boost level 3, but user-side translation does not.
+
+## Automated digest preview
+
+Admins can generate and publish a Today’s Pulse preview from the bot:
+
+```text
+/admin_publish_today
+```
+
+Autoposting is disabled by default. See [docs/AUTO_PUBLISHING.md](AUTO_PUBLISHING.md).
+
 ## Текст первого поста RU
 
 ```text

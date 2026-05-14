@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import logging
 
-from aiogram import Router
+from aiogram import Bot, F, Router
 from aiogram.filters import Command
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from bot.config import Settings
@@ -29,13 +29,45 @@ from bot.database.repositories import (
     get_top_search_queries,
 )
 from bot.services.market_analyzer import MarketAnalyzer
+from bot.services.channel_publisher import ChannelPublisher, check_channel_access
+from bot.services.content_publisher import ContentPublisher
 from bot.services.polymarket_client import PolymarketAPIError
 from bot.services.today_pulse import build_today_pulse_items
+from bot.services.x_publisher import XPublisher
 from bot.utils.formatting import format_channel_digest
 from bot.utils.logging import log_user_action
 
 logger = logging.getLogger(__name__)
 router = Router()
+
+ADMIN_PUBLISH_CHANNEL = "admin:publish_today:channel"
+ADMIN_PUBLISH_X_DRAFT = "admin:publish_today:x_draft"
+ADMIN_PUBLISH_CANCEL = "admin:publish_today:cancel"
+
+
+def _is_admin(settings: Settings, telegram_user: object | None) -> bool:
+    telegram_id = getattr(telegram_user, "id", None)
+    return telegram_id in settings.admin_telegram_ids
+
+
+def _admin_publish_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Publish to channel",
+                    callback_data=ADMIN_PUBLISH_CHANNEL,
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Generate X draft",
+                    callback_data=ADMIN_PUBLISH_X_DRAFT,
+                )
+            ],
+            [InlineKeyboardButton(text="Cancel", callback_data=ADMIN_PUBLISH_CANCEL)],
+        ]
+    )
 
 
 def format_whoami(telegram_user: object | None) -> str:
@@ -161,8 +193,7 @@ async def admin_stats(
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     log_user_action(logger, message.from_user, "admin_stats")
-    telegram_id = message.from_user.id if message.from_user else None
-    if telegram_id not in settings.admin_telegram_ids:
+    if not _is_admin(settings, message.from_user):
         await message.answer("Команда доступна только администратору.")
         return
 
@@ -196,8 +227,7 @@ async def admin_digest(
     market_analyzer: MarketAnalyzer,
 ) -> None:
     log_user_action(logger, message.from_user, "admin_digest")
-    telegram_id = message.from_user.id if message.from_user else None
-    if telegram_id not in settings.admin_telegram_ids:
+    if not _is_admin(settings, message.from_user):
         await message.answer("Команда доступна только администратору.")
         return
 
@@ -239,11 +269,119 @@ async def admin_feedback(
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     log_user_action(logger, message.from_user, "admin_feedback")
-    telegram_id = message.from_user.id if message.from_user else None
-    if telegram_id not in settings.admin_telegram_ids:
+    if not _is_admin(settings, message.from_user):
         await message.answer("Команда доступна только администратору.")
         return
 
     async with session_factory() as session:
         feedback_items = await get_recent_feedback(session, limit=10)
     await message.answer(format_admin_feedback(feedback_items))
+
+
+@router.message(Command("admin_check_channel"))
+async def admin_check_channel(
+    message: Message,
+    settings: Settings,
+    bot: Bot,
+) -> None:
+    log_user_action(logger, message.from_user, "admin_check_channel")
+    if not _is_admin(settings, message.from_user):
+        await message.answer("Команда доступна только администратору.")
+        return
+
+    ok, text = await check_channel_access(bot, settings.project_channel_id)
+    prefix = "✅" if ok else "⚠️"
+    await message.answer(f"{prefix} {text}")
+
+
+@router.message(Command("admin_publish_today"))
+async def admin_publish_today(
+    message: Message,
+    settings: Settings,
+    content_publisher: ContentPublisher,
+) -> None:
+    log_user_action(logger, message.from_user, "admin_publish_today")
+    if not _is_admin(settings, message.from_user):
+        await message.answer("Команда доступна только администратору.")
+        return
+
+    text = await content_publisher.generate_today_pulse_channel_post("en")
+    if not text:
+        await message.answer("Could not generate Today’s Pulse preview right now.")
+        return
+
+    await message.answer(
+        "Preview:\n\n" + text,
+        reply_markup=_admin_publish_keyboard(),
+        disable_web_page_preview=True,
+    )
+
+
+@router.message(Command("admin_x_draft"))
+async def admin_x_draft(
+    message: Message,
+    settings: Settings,
+    content_publisher: ContentPublisher,
+    x_publisher: XPublisher,
+) -> None:
+    log_user_action(logger, message.from_user, "admin_x_draft")
+    if not _is_admin(settings, message.from_user):
+        await message.answer("Команда доступна только администратору.")
+        return
+
+    text = await content_publisher.generate_x_today_pulse_draft("en")
+    if not text:
+        await message.answer("Could not generate X draft right now.")
+        return
+    result = await x_publisher.create_x_draft(text, post_type="today_pulse")
+    await message.answer(f"X draft status: {result.status}. {result.message}")
+
+
+@router.callback_query(F.data == ADMIN_PUBLISH_CHANNEL)
+async def admin_publish_today_channel_callback(
+    callback: CallbackQuery,
+    settings: Settings,
+    content_publisher: ContentPublisher,
+    channel_publisher: ChannelPublisher,
+) -> None:
+    if not _is_admin(settings, callback.from_user):
+        await callback.answer("Admin only", show_alert=True)
+        return
+    await callback.answer("Publishing preview")
+    text = await content_publisher.generate_today_pulse_channel_post("en")
+    if not text or not callback.message:
+        return
+    result = await channel_publisher.publish_to_telegram_channel(
+        text,
+        post_type="today_pulse",
+        bypass_enabled=True,
+    )
+    await callback.message.answer(f"Telegram channel status: {result.status}. {result.message}")
+
+
+@router.callback_query(F.data == ADMIN_PUBLISH_X_DRAFT)
+async def admin_publish_today_x_callback(
+    callback: CallbackQuery,
+    settings: Settings,
+    content_publisher: ContentPublisher,
+    x_publisher: XPublisher,
+) -> None:
+    if not _is_admin(settings, callback.from_user):
+        await callback.answer("Admin only", show_alert=True)
+        return
+    await callback.answer("Generating X draft")
+    text = await content_publisher.generate_x_today_pulse_draft("en")
+    if not text or not callback.message:
+        return
+    result = await x_publisher.create_x_draft(text, post_type="today_pulse")
+    await callback.message.answer(f"X draft status: {result.status}. {result.message}")
+
+
+@router.callback_query(F.data == ADMIN_PUBLISH_CANCEL)
+async def admin_publish_cancel_callback(callback: CallbackQuery, settings: Settings) -> None:
+    if not _is_admin(settings, callback.from_user):
+        await callback.answer("Admin only", show_alert=True)
+        return
+    await callback.answer("Cancelled")
+    if callback.message:
+        await callback.message.answer("Publishing cancelled.")

@@ -48,6 +48,8 @@ PulseMarket AI gives users a simple Telegram interface for hot markets, new mark
 - Smart alerts
 - Daily digest
 - Channel digest text generation
+- Safe Telegram channel publishing with admin preview
+- X/Twitter draft generation
 - User feedback
 - Beginner mode
 - Resolution explainer
@@ -57,6 +59,7 @@ PulseMarket AI gives users a simple Telegram interface for hot markets, new mark
 - Link click tracking
 - Public landing page
 - Competitor analysis
+- Telegram comments and translation setup docs
 
 ## Smart Money Radar
 
@@ -80,7 +83,8 @@ PulseMarket AI helps new users discover Polymarket markets, understand probabili
 
 - Publish the static landing page
 - Group mode for Telegram communities
-- Better channel digest automation with manual approval
+- Safe channel digest automation with manual approval
+- X/Twitter draft workflow for public updates
 - Deeper research-only public activity summaries
 - More advanced market health signals
 - Better topic personalization

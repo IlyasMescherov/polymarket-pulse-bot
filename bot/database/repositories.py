@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot.database.models import (
     MarketLinkClick,
     MarketSnapshot,
+    PublishedPost,
     SearchQuery,
     SmartMoneyAlertLog,
     SmartMoneySnapshot,
@@ -27,6 +28,9 @@ ALLOWED_LANGUAGES = {"ru", "en"}
 ALLOWED_MOVEMENT_THRESHOLDS = {0.05, 0.10, 0.15, 0.20}
 ALLOWED_MIN_ALERT_VOLUMES = {0.0, 10_000.0, 50_000.0, 100_000.0}
 ALLOWED_SMART_SIGNAL_TYPES = {"large_trade", "active_market", "tracked_wallet"}
+ALLOWED_POST_PLATFORMS = {"telegram_channel", "x_draft", "x_api"}
+ALLOWED_POST_TYPES = {"today_pulse", "smart_money", "sharp_moves", "manual"}
+ALLOWED_POST_STATUSES = {"draft", "published", "failed", "skipped"}
 ALLOWED_LINK_SOURCES = {
     "hot",
     "new",
@@ -699,3 +703,99 @@ async def count_large_trades_detected_today(session: AsyncSession) -> int:
         )
     )
     return int(result.scalar_one() or 0)
+
+
+def normalize_post_platform(platform: str) -> str:
+    normalized = platform.strip().lower()
+    if normalized not in ALLOWED_POST_PLATFORMS:
+        raise ValueError(f"Unsupported post platform: {platform}")
+    return normalized
+
+
+def normalize_post_type(post_type: str) -> str:
+    normalized = post_type.strip().lower()
+    if normalized not in ALLOWED_POST_TYPES:
+        raise ValueError(f"Unsupported post type: {post_type}")
+    return normalized
+
+
+def normalize_post_status(status: str) -> str:
+    normalized = status.strip().lower()
+    if normalized not in ALLOWED_POST_STATUSES:
+        raise ValueError(f"Unsupported post status: {status}")
+    return normalized
+
+
+async def create_published_post(
+    session: AsyncSession,
+    platform: str,
+    post_type: str,
+    content_hash: str,
+    content_text: str,
+    status: str,
+    error_message: str | None = None,
+    published_at: datetime | None = None,
+) -> PublishedPost:
+    item = PublishedPost(
+        platform=normalize_post_platform(platform),
+        post_type=normalize_post_type(post_type),
+        content_hash=content_hash,
+        content_text=content_text,
+        status=normalize_post_status(status),
+        error_message=error_message[:1000] if error_message else None,
+        published_at=published_at,
+    )
+    session.add(item)
+    await session.flush()
+    return item
+
+
+async def get_published_post_by_hash(
+    session: AsyncSession,
+    platform: str,
+    content_hash: str,
+) -> PublishedPost | None:
+    result = await session.execute(
+        select(PublishedPost).where(
+            PublishedPost.platform == normalize_post_platform(platform),
+            PublishedPost.content_hash == content_hash,
+        )
+    )
+    return result.scalar_one_or_none()
+
+
+async def content_hash_exists(
+    session: AsyncSession,
+    platform: str,
+    content_hash: str,
+) -> bool:
+    result = await session.execute(
+        select(func.count(PublishedPost.id)).where(
+            PublishedPost.platform == normalize_post_platform(platform),
+            PublishedPost.content_hash == content_hash,
+        )
+    )
+    return int(result.scalar_one() or 0) > 0
+
+
+async def has_recent_published_post(
+    session: AsyncSession,
+    platform: str,
+    post_type: str,
+    min_hours: int,
+    now: datetime | None = None,
+) -> bool:
+    if min_hours <= 0:
+        return False
+    current = now or datetime.now(timezone.utc)
+    cutoff = current - timedelta(hours=min_hours)
+    result = await session.execute(
+        select(func.count(PublishedPost.id)).where(
+            PublishedPost.platform == normalize_post_platform(platform),
+            PublishedPost.post_type == normalize_post_type(post_type),
+            PublishedPost.status == "published",
+            PublishedPost.published_at.is_not(None),
+            PublishedPost.published_at >= cutoff,
+        )
+    )
+    return int(result.scalar_one() or 0) > 0
