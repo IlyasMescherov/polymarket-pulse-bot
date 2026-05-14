@@ -46,6 +46,8 @@ Technology
 
 ## First Post
 
+Use the polished pinned post and thread from [X_LAUNCH_THREAD.md](X_LAUNCH_THREAD.md).
+
 ```text
 🚀 PulseMarket AI is live
 

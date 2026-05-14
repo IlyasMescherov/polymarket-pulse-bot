@@ -31,6 +31,7 @@ Builder submission package:
 - BotFather setup doc: [docs/BOTFATHER_SETUP.md](docs/BOTFATHER_SETUP.md)
 - Public Telegram setup doc: [docs/TELEGRAM_PUBLIC_SETUP.md](docs/TELEGRAM_PUBLIC_SETUP.md)
 - X/Twitter setup doc: [docs/X_PUBLIC_SETUP.md](docs/X_PUBLIC_SETUP.md)
+- X/Twitter launch thread: [docs/X_LAUNCH_THREAD.md](docs/X_LAUNCH_THREAD.md)
 - Avatar guide: [docs/brand/AVATAR_GUIDE.md](docs/brand/AVATAR_GUIDE.md)
 
 Recommended public channel username: `@PulseMarketAI`. If unavailable, use `@PulseMarketNews`, `@PulseMarketAlerts`, `@PulseMarketSignal`, `@PulseMarketRadar`, or `@PulseMarketDigest`.
