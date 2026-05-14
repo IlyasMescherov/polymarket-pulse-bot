@@ -77,6 +77,52 @@ Option C: ngrok for testing only
 Recommendation: for production and Builders Program review, use a real domain
 with HTTPS.
 
+## UX Philosophy
+
+PulseMarket AI Mini App is designed as a market intelligence product, not a
+trading terminal.
+
+The first screen answers one question:
+
+```text
+What matters today?
+```
+
+The dashboard prioritizes:
+
+- Today's Pulse as the main editorial story.
+- Smart Money Radar as public activity context.
+- Hot markets and sharp moves as secondary discovery.
+- Search as a fast way to explore a topic.
+- Safety scope as a visible product boundary.
+
+## Market Intelligence Positioning
+
+Competitors help users trade faster. PulseMarket AI helps users understand
+markets faster.
+
+The Mini App avoids exchange-style tables, dense order screens, balance panels,
+and execution language. It uses larger cards, short explanations, calm
+typography, and direct links back to Polymarket.
+
+## Design References
+
+The visual direction is inspired by:
+
+- Bloomberg-style information hierarchy.
+- Apple Weather-style overview cards.
+- Arc Browser cleanliness.
+- Linear and Notion spacing.
+- Premium fintech dashboards.
+
+## Mobile-First Principles
+
+- One-hand scrolling.
+- Large tap targets.
+- Readable cards without zoom.
+- Dark mode by default.
+- Lightweight static files with no frontend build step.
+
 ## Safety Scope
 
 PulseMarket AI Mini App is analytics-only:
@@ -167,6 +213,52 @@ https://YOUR_DOMAIN/app
 
 Рекомендация: для production и Builders Program лучше использовать настоящий
 домен с HTTPS.
+
+## UX-философия
+
+PulseMarket AI Mini App — это продукт для рыночной аналитики, а не торговый
+терминал.
+
+Первый экран отвечает на один вопрос:
+
+```text
+Что сегодня действительно важно?
+```
+
+Дашборд делает акцент на:
+
+- Пульсе дня как главной истории.
+- Smart Money Radar как контексте публичной активности.
+- Горячих рынках и резких движениях как discovery-слое.
+- Поиске по теме.
+- Видимом safety scope.
+
+## Позиционирование
+
+Конкуренты помогают пользователям быстрее торговать. PulseMarket AI помогает
+быстрее понимать рынки.
+
+Mini App избегает биржевых таблиц, экранов исполнения, блоков баланса и языка
+сделок. Вместо этого используются крупные карточки, короткие объяснения,
+спокойная типографика и прямые ссылки на Polymarket.
+
+## Дизайн-ориентиры
+
+Визуальное направление:
+
+- информационная иерархия в духе Bloomberg;
+- overview-карточки как в Apple Weather;
+- чистота интерфейса Arc Browser;
+- spacing Linear и Notion;
+- premium fintech dashboard.
+
+## Mobile-first принципы
+
+- прокрутка одной рукой;
+- крупные зоны нажатия;
+- карточки читаются без zoom;
+- dark mode по умолчанию;
+- лёгкие static files без frontend build step.
 
 ## Safety Scope
 

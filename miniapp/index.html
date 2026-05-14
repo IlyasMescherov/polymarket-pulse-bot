@@ -2,113 +2,133 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>PulseMarket AI Dashboard</title>
     <meta
       name="description"
-      content="Telegram Mini App preview for Polymarket discovery and market intelligence."
+      content="Premium Telegram Mini App preview for Polymarket market intelligence."
     />
     <link rel="stylesheet" href="/app/styles.css" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
   </head>
   <body>
-    <main class="shell">
-      <header class="topbar">
-        <div>
-          <p class="eyebrow">Research only · No trade execution</p>
+    <main class="app-shell">
+      <header class="masthead fade-in">
+        <div class="brand-mark" aria-hidden="true">P</div>
+        <div class="masthead__copy">
+          <p class="safety-chip">Research only · No trade execution</p>
           <h1>PulseMarket AI</h1>
-          <p class="subtitle">
-            Polymarket discovery and market intelligence dashboard.
-          </p>
+          <p>Polymarket market intelligence dashboard</p>
         </div>
-        <a class="ghost-link" href="https://t.me/PulseMarketAIBot">Bot</a>
+        <a class="bot-link" href="https://t.me/PulseMarketAIBot">Bot</a>
       </header>
 
-      <section class="hero-card">
+      <section class="story-hero fade-in" aria-labelledby="hero-title">
         <div>
-          <span class="pill">Today's Pulse</span>
-          <h2>See the markets that deserve a closer look.</h2>
+          <p class="section-kicker">Market intelligence layer</p>
+          <h2 id="hero-title">Understand what matters today.</h2>
           <p>
-            Pulse Score, Market Health, public activity, and movement summaries
-            in one mobile-friendly view.
+            PulseMarket AI turns public Polymarket data into calm discovery:
+            Today’s Pulse, Smart Money Radar, sharp moves, and clean search.
           </p>
         </div>
       </section>
 
-      <section class="panel" aria-labelledby="today-title">
+      <section class="section-block fade-in" aria-labelledby="today-title">
         <div class="section-heading">
-          <h2 id="today-title">Today's Pulse</h2>
-          <button type="button" class="icon-button" data-refresh="today">Refresh</button>
+          <div>
+            <p class="section-kicker">Daily intelligence</p>
+            <h2 id="today-title">Today’s Pulse</h2>
+          </div>
+          <button class="text-button" type="button" data-refresh>Refresh</button>
         </div>
-        <div id="today" class="card-grid" aria-live="polite"></div>
+        <div id="today-hero" class="pulse-hero skeleton-card"></div>
+        <div id="today-secondary" class="mini-grid"></div>
       </section>
 
-      <section class="panel" aria-labelledby="smart-title">
+      <section class="section-block fade-in" aria-labelledby="smart-title">
         <div class="section-heading">
-          <h2 id="smart-title">Smart Money Radar</h2>
-          <span class="muted">Public activity only</span>
+          <div>
+            <p class="section-kicker">Public activity</p>
+            <h2 id="smart-title">Smart Money Radar</h2>
+          </div>
+          <span class="quiet-label">Market intelligence</span>
         </div>
-        <div id="smart" class="card-grid" aria-live="polite"></div>
+        <div id="smart-hero" class="smart-hero skeleton-card"></div>
       </section>
 
-      <section class="panel" aria-labelledby="hot-title">
+      <section class="section-block fade-in" aria-labelledby="hot-title">
         <div class="section-heading">
-          <h2 id="hot-title">Hot Markets</h2>
-          <span class="muted">Volume-led discovery</span>
+          <div>
+            <p class="section-kicker">High activity</p>
+            <h2 id="hot-title">Hot Markets</h2>
+          </div>
+          <span class="quiet-label">Swipe</span>
         </div>
-        <div id="hot" class="card-grid" aria-live="polite"></div>
+        <div id="hot-strip" class="horizontal-strip" aria-live="polite"></div>
       </section>
 
-      <section class="panel" aria-labelledby="moves-title">
+      <section class="section-block fade-in" aria-labelledby="moves-title">
         <div class="section-heading">
-          <h2 id="moves-title">Sharp Moves</h2>
-          <span class="muted">When snapshot data is available</span>
+          <div>
+            <p class="section-kicker">Probability changes</p>
+            <h2 id="moves-title">Sharp Moves</h2>
+          </div>
+          <span class="quiet-label">Snapshot based</span>
         </div>
-        <div id="moves" class="card-grid" aria-live="polite"></div>
+        <div id="moves-list" class="compact-list" aria-live="polite"></div>
       </section>
 
-      <section class="panel search-panel" aria-labelledby="search-title">
+      <section class="section-block search-block fade-in" aria-labelledby="search-title">
         <div class="section-heading">
-          <h2 id="search-title">Search</h2>
-          <span class="muted">Try bitcoin, trump, fed, openai</span>
+          <div>
+            <p class="section-kicker">Find a topic</p>
+            <h2 id="search-title">Search</h2>
+          </div>
         </div>
         <form id="search-form" class="search-form">
           <input
             id="search-input"
             name="q"
             type="search"
-            placeholder="Search Polymarket markets"
+            placeholder="Search Polymarket markets..."
             autocomplete="off"
           />
           <button type="submit">Search</button>
         </form>
-        <div id="search-results" class="card-grid" aria-live="polite"></div>
-      </section>
-
-      <section class="panel watchlist-preview">
-        <div class="section-heading">
-          <h2>Watchlist</h2>
-          <span class="muted">Coming soon in Mini App</span>
+        <div id="search-results" class="search-results" aria-live="polite">
+          <div class="empty-state">Search Polymarket markets...</div>
         </div>
-        <p>
-          Watchlist management is already available in the Telegram bot. The Mini
-          App preview focuses on discovery screens first.
-        </p>
       </section>
 
-      <section class="safety-note">
-        <h2>Safety Scope</h2>
-        <ul>
-          <li>No trading.</li>
-          <li>No wallets.</li>
-          <li>No deposits.</li>
-          <li>No private keys.</li>
-          <li>No financial advice.</li>
-        </ul>
+      <section class="section-block watchlist-block fade-in" aria-labelledby="watchlist-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">Saved markets</p>
+            <h2 id="watchlist-title">Watchlist</h2>
+          </div>
+          <span class="quiet-label">Preview</span>
+        </div>
+        <div class="watchlist-empty">
+          <strong>Your watchlist is empty.</strong>
+          <p>Add markets from the Telegram bot to keep a simple reading list.</p>
+          <a href="https://t.me/PulseMarketAIBot">Open bot</a>
+        </div>
       </section>
 
-      <footer>
-        Research only · No trade execution
+      <section class="safety-footer fade-in" aria-labelledby="safety-title">
+        <h2 id="safety-title">Safety scope</h2>
+        <div class="safety-grid">
+          <span>No trading.</span>
+          <span>No wallets.</span>
+          <span>No deposits.</span>
+          <span>No private keys.</span>
+          <span>No financial advice.</span>
+        </div>
+      </section>
+
+      <footer class="footer-note">
+        Market intelligence, not trade execution.
       </footer>
     </main>
     <script src="/app/app.js"></script>
