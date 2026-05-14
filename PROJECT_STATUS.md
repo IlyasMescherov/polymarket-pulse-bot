@@ -26,10 +26,11 @@ The current version focuses on public Polymarket market discovery, market moveme
 - Beginner explanation mode
 - Resolution explainer for market rules and settlement context
 - Share bot and share market cards
-- Inline query handler in code
+- Inline query handler in code and BotFather inline mode enabled
 - Link click tracking for market opens
 - Search query tracking for aggregate product stats
 - Admin stats command gated by `ADMIN_TELEGRAM_IDS`
+- `/whoami` command for safe admin id discovery
 - User notification toggle and alert settings for sharp movement alerts
 - PostgreSQL persistence for users and market snapshots
 - Alembic migrations
@@ -50,7 +51,6 @@ The current version focuses on public Polymarket market discovery, market moveme
 - Webhook production mode
 - Public landing page
 - Demo video and final screenshots
-- BotFather inline mode activation may still need to be enabled manually with `/setinline`
 - `ADMIN_TELEGRAM_IDS` must be set manually in production before `/admin_stats` is usable by the owner
 
 ## Phase 3 Completed
@@ -87,29 +87,24 @@ Phase 4 adds Builder Program readiness:
 
 - Production VPS health endpoint: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
 - Telegram bot: [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
+- Inline search is enabled and manually verified with `@PulseMarketAIBot bitcoin`
 - Docker Compose production deployment
 - PostgreSQL-backed persistence
 - Alembic migrations run on container startup
 
 ## What still requires manual setup
 
-1. Enable inline mode in BotFather with `/setinline`.
-2. Choose `@PulseMarketAIBot`.
-3. Set inline placeholder to `Search Polymarket markets`.
-4. Add screenshots to the repository.
-5. Record a 45-second demo video.
-6. Set `ADMIN_TELEGRAM_IDS` in production `.env` and restart the bot before using `/admin_stats`.
-7. Submit the builder application.
-8. Add `POLYMARKET_REFERRAL_URL` only if the project becomes eligible for Polymarket referrals.
+1. Add screenshots to the repository.
+2. Record a 45-second demo video.
+3. Set `ADMIN_TELEGRAM_IDS` in production `.env` and restart the bot before using `/admin_stats`.
+4. Submit the builder application.
+5. Add `POLYMARKET_REFERRAL_URL` only if the project becomes eligible for Polymarket referrals.
 
 ## Next Milestones
 
-- Publish the repository on GitHub.
 - Add screenshots under `docs/screenshots/`.
 - Add a 45-second demo video under `docs/demo/`.
-- Deploy the bot on a production host with persistent PostgreSQL.
 - Add monitoring for bot polling, database connectivity, and Polymarket API failures.
-- Enable inline mode in BotFather if it is not already enabled.
 - Prepare a polished Builders Program submission package.
 
 ## Builder Badge Strategy
@@ -123,6 +118,6 @@ Builder badge submission should emphasize:
 - Beginner-friendly user experience
 - Market discovery and sharp movement alerts
 - PostgreSQL-backed snapshots and notification settings
-- Clear safety scope: no trading, no wallet connection, no private keys, no payments
+- Clear safety scope: no trading, no wallet management, no deposits, no private keys, no custody, no financial advice
 
 `POLYMARKET_BUILDER_CODE` is already present in configuration for future readiness. It is not used in the MVP because this version does not trade or connect wallets.

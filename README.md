@@ -3,6 +3,7 @@
 **Status:** Live MVP  
 **Telegram bot:** [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)  
 **GitHub repo:** [IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
+**Production health:** [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
 
 PulseMarket AI is a Telegram analytics bot for Polymarket discovery. It helps users find active prediction markets, understand market probabilities in plain language, save markets to a watchlist, and receive alerts when probabilities move sharply.
 
@@ -44,8 +45,10 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - RU/EN language: core product screens support Russian and English through a simple internal dictionary.
 - Share cards: users can share the bot or generate a clean text card for a specific market.
 - Inline mode ready: the bot includes an inline query handler for quick market lookup from Telegram chats.
+- Inline search: BotFather inline mode is enabled; `@PulseMarketAIBot bitcoin` returns market results.
 - Link click tracking: Polymarket link opens are tracked as safe product analytics without storing secrets.
 - Admin stats: project admins can view aggregate usage stats with `/admin_stats`.
+- Admin diagnostics: `/whoami` shows a user's Telegram id for safe admin setup.
 - Optional referral URL: an optional referral URL can be configured only if the project becomes eligible for Polymarket referrals.
 - Optional AI explanations: when `OPENAI_API_KEY` is configured, the bot adds short plain-language explanations.
 - No-AI fallback: when `OPENAI_API_KEY` is missing, the bot still works normally.
@@ -99,11 +102,14 @@ The current MVP has strict safety boundaries:
 
 - No trading
 - No wallet connection
+- No wallet management
+- No deposits
 - No private keys
 - No seed phrases
 - No payments
 - No custody
 - No order signing
+- No financial advice
 - Public Polymarket data only
 
 The bot provides market discovery, watchlists, alerts, and links back to Polymarket. PulseMarket AI does not execute trades, manage wallets, hold funds, or provide financial advice.
@@ -213,7 +219,7 @@ The MVP is useful for the Builders Program because it demonstrates:
 
 ## Inline Mode
 
-PulseMarket AI includes inline query support in code. To enable inline mode for the public Telegram bot, open BotFather and run:
+PulseMarket AI includes inline query support in code, and inline mode is enabled for the live bot. If it ever needs to be re-enabled in BotFather, run:
 
 ```text
 /setinline

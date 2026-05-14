@@ -1,5 +1,45 @@
 # PulseMarket Bot Demo Script
 
+## Submission facts
+
+- Telegram handle: [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
+- GitHub repo: [https://github.com/IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
+- Production health: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
+- Status: Live MVP
+
+## Safety scope to mention
+
+- No trading
+- No wallet management
+- No deposits
+- No private keys
+- No custody
+- No financial advice
+- Public Polymarket data only
+
+Builder code is prepared for future official trading integration, but the current MVP uses public Polymarket market data only.
+
+## Feature coverage for screenshots
+
+- Hot markets
+- New markets
+- Sharp moves
+- Pulse Score
+- Market Health
+- Risk flags
+- Search
+- Categories
+- Watchlist
+- Topic alerts
+- Smart alerts
+- Daily digest
+- Beginner mode
+- Resolution explainer
+- Share cards
+- Inline search
+- Admin stats
+- Link click tracking
+
 ## 45-second demo video
 
 ### 0-5 seconds: Open Telegram
@@ -78,13 +118,14 @@ End on:
 
 ```text
 Telegram: @PulseMarketAIBot
-GitHub: <repository URL>
+GitHub: https://github.com/IlyasMescherov/polymarket-pulse-bot
+Health: http://2.26.80.27:8080/health
 Status: Live MVP
 ```
 
 Mention the scope clearly:
 
 ```text
-Public Polymarket data only. No trading. No wallet connection.
+Public Polymarket data only.
+No trading. No wallet management. No deposits. No private keys. No custody. No financial advice.
 ```
-

@@ -43,9 +43,10 @@ The live MVP includes:
 - Beginner mode
 - Resolution explainer
 - Share cards
-- Inline search handler in code, pending BotFather inline-mode activation if not already enabled
+- Inline search enabled and manually verified with `@PulseMarketAIBot bitcoin`
 - Link click tracking for product engagement metrics
 - Admin stats for usage overview
+- `/whoami` for safe admin id discovery
 
 ## 8. User flow
 

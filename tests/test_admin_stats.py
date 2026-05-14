@@ -1,6 +1,15 @@
 from __future__ import annotations
 
-from bot.handlers.admin import format_admin_stats
+from dataclasses import dataclass
+
+from bot.handlers.admin import format_admin_stats, format_whoami
+
+
+@dataclass(slots=True)
+class TelegramUser:
+    id: int
+    username: str | None = "tester"
+    first_name: str | None = "Test"
 
 
 def test_format_admin_stats_handles_empty_tracking_sections() -> None:
@@ -40,3 +49,19 @@ def test_format_admin_stats_includes_top_markets_and_queries() -> None:
 
     assert "1. Bitcoin market" in text
     assert "1. bitcoin" in text
+
+
+def test_format_whoami_shows_user_identity_without_secrets() -> None:
+    text = format_whoami(TelegramUser(id=123456789, username="pulse", first_name="Ilyas"))
+
+    assert "👤 Your Telegram ID:\n123456789" in text
+    assert "Username:\n@pulse" in text
+    assert "First name:\nIlyas" in text
+    assert "BOT_TOKEN" not in text
+
+
+def test_format_whoami_handles_missing_username() -> None:
+    text = format_whoami(TelegramUser(id=1, username=None, first_name=None))
+
+    assert "Username:\nnot set" in text
+    assert "First name:\nnot set" in text

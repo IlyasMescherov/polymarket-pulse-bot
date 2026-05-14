@@ -27,6 +27,26 @@ logger = logging.getLogger(__name__)
 router = Router()
 
 
+def format_whoami(telegram_user: object | None) -> str:
+    if telegram_user is None:
+        return "Не смог определить Telegram пользователя."
+
+    username = getattr(telegram_user, "username", None)
+    first_name = getattr(telegram_user, "first_name", None)
+    return "\n".join(
+        [
+            "👤 Your Telegram ID:",
+            str(getattr(telegram_user, "id", "unknown")),
+            "",
+            "Username:",
+            f"@{username}" if username else "not set",
+            "",
+            "First name:",
+            str(first_name or "not set"),
+        ]
+    )
+
+
 def format_admin_stats(
     total_users: int,
     notifications_users: int,
@@ -73,6 +93,12 @@ def format_admin_stats(
         lines.append("not tracked yet")
 
     return "\n".join(lines)
+
+
+@router.message(Command("whoami"))
+async def whoami(message: Message) -> None:
+    log_user_action(logger, message.from_user, "whoami")
+    await message.answer(format_whoami(message.from_user))
 
 
 @router.message(Command("admin_stats"))

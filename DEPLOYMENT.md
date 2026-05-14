@@ -6,9 +6,19 @@ The production deployment keeps the current MVP scope:
 
 - No trading
 - No wallet connection
+- No wallet management
+- No deposits
 - No private keys
+- No custody
 - No payments
+- No financial advice
 - Public Polymarket data only
+
+Live project references:
+
+- Telegram handle: [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
+- GitHub repo: [https://github.com/IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
+- Production health: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
 
 ## Requirements
 
@@ -55,6 +65,7 @@ BOT_TOKEN=
 POSTGRES_PASSWORD=
 DATABASE_URL=postgresql+asyncpg://pulse:<same_password>@db:5432/pulsemarket
 PROJECT_TELEGRAM_HANDLE=@PulseMarketAIBot
+ADMIN_TELEGRAM_IDS=
 APP_HOST=0.0.0.0
 APP_PORT=8080
 ```
@@ -65,6 +76,7 @@ Important:
 - Keep `DATABASE_URL` password in sync with `POSTGRES_PASSWORD`.
 - Keep `.env` private. It is ignored by git.
 - `OPENAI_API_KEY` is optional.
+- Use `/whoami` in Telegram to find your Telegram id, then set `ADMIN_TELEGRAM_IDS` if you need `/admin_stats`.
 
 ## Docker Compose production launch
 
@@ -220,4 +232,3 @@ docker compose -f docker-compose.prod.yml ps
 Polymarket API errors:
 
 Check network connectivity from the server and inspect bot logs.
-

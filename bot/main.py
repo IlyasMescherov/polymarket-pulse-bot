@@ -37,6 +37,7 @@ async def set_bot_commands(bot: Bot) -> None:
             BotCommand(command="watchlist", description="My watchlist"),
             BotCommand(command="settings", description="Settings"),
             BotCommand(command="about", description="About project"),
+            BotCommand(command="whoami", description="Show my Telegram ID"),
             BotCommand(command="admin_stats", description="Admin stats"),
         ]
     )
