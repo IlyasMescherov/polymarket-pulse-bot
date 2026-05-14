@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -63,7 +64,12 @@ def _category_text(market: Market) -> str:
         )
     else:
         tags = str(raw_tags or "")
-    return f"{market.question} {category} {tags}".lower()
+    description = str(
+        market.raw.get("description")
+        or market.raw.get("marketDescription")
+        or ""
+    )
+    return f"{market.question} {description} {category} {tags}".lower()
 
 
 def market_matches_topics(market: Market, topics: list[str]) -> bool:
@@ -84,15 +90,21 @@ def filter_markets_by_query(markets: list[Market], query: str) -> list[Market]:
     ]
 
 
+def _contains_keyword(text: str, keyword: str) -> bool:
+    pattern = rf"(?<![a-z0-9]){re.escape(keyword.lower())}(?![a-z0-9])"
+    return re.search(pattern, text) is not None
+
+
 def filter_markets_by_category(markets: list[Market], category: str) -> list[Market]:
     keywords = CATEGORY_KEYWORDS.get(category, ())
     if not keywords:
         return []
-    return [
-        market
-        for market in markets
-        if any(keyword in _category_text(market) for keyword in keywords)
-    ]
+    filtered: list[Market] = []
+    for market in markets:
+        text = _category_text(market)
+        if any(_contains_keyword(text, keyword) for keyword in keywords):
+            filtered.append(market)
+    return filtered
 
 
 class MarketAnalyzer:
@@ -107,10 +119,17 @@ class MarketAnalyzer:
         return await self._client.fetch_new_markets(limit=limit)
 
     async def search_markets(self, query: str, limit: int = 5) -> list[Market]:
+        public_results = await self._client.public_search(query, limit=limit)
+        if public_results:
+            return public_results[:limit]
         markets = await self._client.fetch_markets(limit=150)
         return filter_markets_by_query(markets, query)[:limit]
 
     async def get_category_markets(self, category: str, limit: int = 5) -> list[Market]:
+        if category == "sports":
+            sports_markets = await self._client.get_sports_markets(limit=limit)
+            if sports_markets:
+                return sports_markets[:limit]
         markets = await self._client.fetch_markets(limit=150)
         return filter_markets_by_category(markets, category)[:limit]
 

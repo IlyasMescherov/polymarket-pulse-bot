@@ -25,6 +25,21 @@ def _database_url(value: str | None) -> str:
     return url
 
 
+def _int_set(value: str | None) -> frozenset[int]:
+    if not value:
+        return frozenset()
+    ids: set[int] = set()
+    for item in value.split(","):
+        item = item.strip()
+        if not item:
+            continue
+        try:
+            ids.add(int(item))
+        except ValueError:
+            continue
+    return frozenset(ids)
+
+
 @dataclass(frozen=True, slots=True)
 class Settings:
     bot_token: str
@@ -32,8 +47,10 @@ class Settings:
     openai_api_key: str | None
     polymarket_base_url: str
     polymarket_builder_code: str | None
+    polymarket_referral_url: str | None
     project_public_url: str | None
     project_telegram_handle: str | None
+    admin_telegram_ids: frozenset[int]
     log_level: str
     app_host: str = "0.0.0.0"
     app_port: int = 8080
@@ -55,8 +72,10 @@ def load_settings() -> Settings:
             "https://gamma-api.polymarket.com",
         ).rstrip("/"),
         polymarket_builder_code=_optional(os.getenv("POLYMARKET_BUILDER_CODE")),
+        polymarket_referral_url=_optional(os.getenv("POLYMARKET_REFERRAL_URL")),
         project_public_url=_optional(os.getenv("PROJECT_PUBLIC_URL")),
         project_telegram_handle=_optional(os.getenv("PROJECT_TELEGRAM_HANDLE")),
+        admin_telegram_ids=_int_set(os.getenv("ADMIN_TELEGRAM_IDS")),
         log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
         app_host=os.getenv("APP_HOST", "0.0.0.0"),
         app_port=int(os.getenv("APP_PORT", "8080")),

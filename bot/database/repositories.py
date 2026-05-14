@@ -7,13 +7,33 @@ from typing import Any
 from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.database.models import MarketSnapshot, User, UserAlertLog, UserTopic, UserWatchlist
+from bot.database.models import (
+    MarketLinkClick,
+    MarketSnapshot,
+    SearchQuery,
+    User,
+    UserAlertLog,
+    UserTopic,
+    UserWatchlist,
+)
 from bot.services.polymarket_client import Market
 
 
 ALLOWED_LANGUAGES = {"ru", "en"}
 ALLOWED_MOVEMENT_THRESHOLDS = {0.05, 0.10, 0.15, 0.20}
 ALLOWED_MIN_ALERT_VOLUMES = {0.0, 10_000.0, 50_000.0, 100_000.0}
+ALLOWED_LINK_SOURCES = {
+    "hot",
+    "new",
+    "moves",
+    "search",
+    "watchlist",
+    "category",
+    "digest",
+    "share",
+    "timeline",
+    "explain",
+}
 
 
 def _full_name(telegram_user: Any) -> str | None:
@@ -365,3 +385,126 @@ async def log_alert_sent(
     session.add(item)
     await session.flush()
     return item
+
+
+async def create_market_link_click(
+    session: AsyncSession,
+    telegram_user_id: int,
+    market_id: str,
+    market_title: str,
+    source: str,
+) -> MarketLinkClick:
+    normalized_source = source if source in ALLOWED_LINK_SOURCES else "unknown"
+    item = MarketLinkClick(
+        telegram_user_id=telegram_user_id,
+        market_id=market_id,
+        market_title=market_title,
+        source=normalized_source,
+    )
+    session.add(item)
+    await session.flush()
+    return item
+
+
+async def count_market_link_clicks(session: AsyncSession) -> int:
+    result = await session.execute(select(func.count(MarketLinkClick.id)))
+    return int(result.scalar_one() or 0)
+
+
+async def count_market_link_clicks_today(session: AsyncSession) -> int:
+    start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    result = await session.execute(
+        select(func.count(MarketLinkClick.id)).where(MarketLinkClick.created_at >= start)
+    )
+    return int(result.scalar_one() or 0)
+
+
+async def get_top_clicked_markets(
+    session: AsyncSession,
+    limit: int = 5,
+) -> list[tuple[str, str, int]]:
+    result = await session.execute(
+        select(
+            MarketLinkClick.market_id,
+            func.max(MarketLinkClick.market_title),
+            func.count(MarketLinkClick.id),
+        )
+        .group_by(MarketLinkClick.market_id)
+        .order_by(desc(func.count(MarketLinkClick.id)))
+        .limit(limit)
+    )
+    return [
+        (str(market_id), str(title), int(count))
+        for market_id, title, count in result.all()
+    ]
+
+
+async def create_search_query(
+    session: AsyncSession,
+    telegram_user_id: int,
+    query: str,
+    results_count: int,
+) -> SearchQuery:
+    item = SearchQuery(
+        telegram_user_id=telegram_user_id,
+        query=query.strip().lower()[:255],
+        results_count=max(0, int(results_count)),
+    )
+    session.add(item)
+    await session.flush()
+    return item
+
+
+async def get_top_search_queries(
+    session: AsyncSession,
+    limit: int = 5,
+) -> list[tuple[str, int]]:
+    result = await session.execute(
+        select(SearchQuery.query, func.count(SearchQuery.id))
+        .group_by(SearchQuery.query)
+        .order_by(desc(func.count(SearchQuery.id)))
+        .limit(limit)
+    )
+    return [(str(query), int(count)) for query, count in result.all()]
+
+
+async def count_total_users(session: AsyncSession) -> int:
+    result = await session.execute(select(func.count(User.id)))
+    return int(result.scalar_one() or 0)
+
+
+async def count_users_with_notifications(session: AsyncSession) -> int:
+    result = await session.execute(
+        select(func.count(User.id)).where(User.notifications_enabled.is_(True))
+    )
+    return int(result.scalar_one() or 0)
+
+
+async def count_users_with_daily_digest(session: AsyncSession) -> int:
+    result = await session.execute(
+        select(func.count(User.id)).where(User.daily_digest_enabled.is_(True))
+    )
+    return int(result.scalar_one() or 0)
+
+
+async def count_watchlist_items(session: AsyncSession) -> int:
+    result = await session.execute(select(func.count(UserWatchlist.id)))
+    return int(result.scalar_one() or 0)
+
+
+async def count_topics(session: AsyncSession) -> int:
+    result = await session.execute(select(func.count(UserTopic.id)))
+    return int(result.scalar_one() or 0)
+
+
+async def count_alerts_sent_today(session: AsyncSession) -> int:
+    start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    result = await session.execute(
+        select(func.count(UserAlertLog.id)).where(UserAlertLog.sent_at >= start)
+    )
+    return int(result.scalar_one() or 0)
+
+
+async def count_snapshots(session: AsyncSession) -> int:
+    result = await session.execute(select(func.count(MarketSnapshot.id)))
+    return int(result.scalar_one() or 0)

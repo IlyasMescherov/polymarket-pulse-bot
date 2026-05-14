@@ -9,7 +9,7 @@ from aiogram.types import BotCommand, ErrorEvent
 
 from bot.config import load_settings
 from bot.database.db import create_engine, create_session_factory, ping_database
-from bot.handlers import markets, menu, settings as settings_handlers, start, watchlist
+from bot.handlers import admin, markets, menu, settings as settings_handlers, start, watchlist
 from bot.services.ai_explainer import AIExplainer
 from bot.services.health_server import HealthServer
 from bot.services.market_analyzer import MarketAnalyzer
@@ -37,6 +37,7 @@ async def set_bot_commands(bot: Bot) -> None:
             BotCommand(command="watchlist", description="My watchlist"),
             BotCommand(command="settings", description="Settings"),
             BotCommand(command="about", description="About project"),
+            BotCommand(command="admin_stats", description="Admin stats"),
         ]
     )
 
@@ -71,6 +72,7 @@ async def main() -> None:
 
     dp = Dispatcher(storage=MemoryStorage())
     dp.include_router(start.router)
+    dp.include_router(admin.router)
     dp.include_router(menu.router)
     dp.include_router(markets.router)
     dp.include_router(watchlist.router)

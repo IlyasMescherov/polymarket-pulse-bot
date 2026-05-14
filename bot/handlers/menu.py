@@ -82,14 +82,24 @@ async def quick_start_ok(
 @router.callback_query(F.data == SHARE_BOT)
 async def share_bot(
     callback: CallbackQuery,
+    settings: Settings,
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     log_callback_action(logger, callback, "share_bot")
     await callback.answer()
     if callback.message:
         language = await _language(session_factory, callback.from_user)
+        lines = [t("share", language)]
+        if settings.polymarket_referral_url:
+            lines.extend(
+                [
+                    "",
+                    "Optional Polymarket link:",
+                    settings.polymarket_referral_url,
+                ]
+            )
         await callback.message.answer(
-            t("share", language),
+            "\n".join(lines),
             reply_markup=main_menu_keyboard(language),
             disable_web_page_preview=True,
         )
@@ -109,6 +119,13 @@ async def about_project(
         lines.extend(["", f"Public URL: {settings.project_public_url}"])
     if settings.project_telegram_handle:
         lines.append(f"Telegram: {settings.project_telegram_handle}")
+    if settings.polymarket_referral_url:
+        lines.extend(
+            [
+                "",
+                f"Optional Polymarket referral URL: {settings.polymarket_referral_url}",
+            ]
+        )
 
     if callback.message:
         await callback.message.answer(
@@ -131,6 +148,13 @@ async def about_command(
         lines.extend(["", f"Public URL: {settings.project_public_url}"])
     if settings.project_telegram_handle:
         lines.append(f"Telegram: {settings.project_telegram_handle}")
+    if settings.polymarket_referral_url:
+        lines.extend(
+            [
+                "",
+                f"Optional Polymarket referral URL: {settings.polymarket_referral_url}",
+            ]
+        )
     await message.answer(
         "\n".join(lines),
         reply_markup=main_menu_keyboard(language),

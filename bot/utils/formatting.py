@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 from bot.database.models import MarketSnapshot, UserWatchlist
 from bot.services.market_analyzer import MarketMovement
+from bot.services.market_health import MarketHealth
 from bot.services.polymarket_client import Market
 from bot.services.pulse_score import PulseScore
 
@@ -68,6 +69,7 @@ def format_market_card(
     heading: str = "🔥 Горячий рынок",
     movement_delta: float | None = None,
     pulse_score: PulseScore | None = None,
+    market_health: MarketHealth | None = None,
     risk_flags: list[str] | None = None,
 ) -> str:
     lines = [
@@ -96,6 +98,14 @@ def format_market_card(
                 "",
                 "⚡ Pulse Score:",
                 f"{pulse_score.value}/100 · {pulse_score.label}",
+            ]
+        )
+    if market_health is not None:
+        lines.extend(
+            [
+                "",
+                "🩺 Market Health:",
+                f"{market_health.value}/100 · {market_health.label}",
             ]
         )
     if risk_flags:
@@ -132,6 +142,7 @@ def format_movement_card(
     movement: MarketMovement,
     explanation: str | None = None,
     pulse_score: PulseScore | None = None,
+    market_health: MarketHealth | None = None,
     risk_flags: list[str] | None = None,
 ) -> str:
     direction = "выросла" if movement.delta > 0 else "снизилась"
@@ -153,6 +164,8 @@ def format_movement_card(
     ]
     if pulse_score is not None:
         lines.extend(["", "⚡ Pulse Score:", f"{pulse_score.value}/100 · {pulse_score.label}"])
+    if market_health is not None:
+        lines.extend(["", "🩺 Market Health:", f"{market_health.value}/100 · {market_health.label}"])
     if risk_flags:
         lines.extend(["", "Риски:", *risk_flags[:3]])
     if explanation:

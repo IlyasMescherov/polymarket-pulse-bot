@@ -78,3 +78,56 @@ class AIExplainer:
 
         return content or None
 
+    async def explain_resolution(self, market: Market) -> str | None:
+        if not self._api_key:
+            return None
+
+        prompt = (
+            "Explain how this Polymarket market is likely resolved for a beginner in Russian. "
+            "Use exactly 4 short bullet points. Do not give financial advice or trading advice.\n\n"
+            f"Market: {market.question}\n"
+            f"Description: {market.raw.get('description')}\n"
+            f"Rules: {market.raw.get('rules')}\n"
+            f"Resolution source: {market.raw.get('resolutionSource') or market.raw.get('resolution_source')}\n"
+            f"Ends: {market.end_date}\n"
+        )
+        payload = {
+            "model": self._model,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "You explain prediction market resolution rules in simple Russian. "
+                        "Never provide buy/sell advice."
+                    ),
+                },
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": 0.2,
+            "max_tokens": 220,
+        }
+        headers = {
+            "Authorization": f"Bearer {self._api_key}",
+            "Content-Type": "application/json",
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                response = await client.post(
+                    "https://api.openai.com/v1/chat/completions",
+                    headers=headers,
+                    json=payload,
+                )
+                response.raise_for_status()
+                data = response.json()
+        except (httpx.HTTPError, ValueError) as exc:
+            logger.warning("OpenAI resolution explanation failed: %s", exc)
+            return None
+
+        try:
+            content = data["choices"][0]["message"]["content"].strip()
+        except (KeyError, IndexError, TypeError, AttributeError):
+            logger.warning("Unexpected OpenAI response shape for resolution")
+            return None
+
+        return content or None

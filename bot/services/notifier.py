@@ -17,6 +17,7 @@ from bot.database.repositories import (
 from bot.keyboards.main import market_actions_keyboard
 from bot.services.ai_explainer import AIExplainer
 from bot.services.market_analyzer import MarketAnalyzer, market_matches_topics
+from bot.services.market_health import calculate_market_health
 from bot.services.pulse_score import calculate_pulse_score
 from bot.services.risk_flags import count_strong_snapshot_moves, market_risk_flags
 from bot.utils.formatting import format_movement_card, format_probability
@@ -102,6 +103,7 @@ class Notifier:
 
             for movement in user_movements:
                 pulse_score = calculate_pulse_score(movement.market, delta=movement.delta)
+                market_health = calculate_market_health(movement.market)
                 async with self._session_factory() as session:
                     recent = await get_recent_snapshots(session, movement.market.id, limit=8)
                 risk_flags = market_risk_flags(
@@ -120,12 +122,14 @@ class Notifier:
                             movement,
                             explanation=explanations.get(movement.market.id),
                             pulse_score=pulse_score,
+                            market_health=market_health,
                             risk_flags=risk_flags,
                         ),
                         reply_markup=market_actions_keyboard(
                             movement.market.url,
                             movement.market.id,
                             user.language,
+                            source="moves",
                         ),
                         disable_web_page_preview=True,
                     )

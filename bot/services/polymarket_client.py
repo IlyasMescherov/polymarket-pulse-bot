@@ -90,7 +90,7 @@ def _probability_from_outcomes(raw: Mapping[str, Any]) -> float | None:
 
 def parse_market(raw: Mapping[str, Any]) -> Market | None:
     market_id = str(raw.get("id") or "").strip()
-    question = str(raw.get("question") or "").strip()
+    question = str(raw.get("question") or raw.get("title") or raw.get("name") or "").strip()
     if not market_id or not question:
         return None
 
@@ -144,6 +144,40 @@ class PolymarketClient:
         markets = [market for item in payload if (market := parse_market(item))]
         return markets
 
+    async def _get_payload(self, path: str, params: Mapping[str, Any] | None = None) -> Any:
+        response = await self._client.get(path, params=params or {})
+        response.raise_for_status()
+        return response.json()
+
+    def _markets_from_payload(self, payload: Any) -> list[Market]:
+        raw_items: list[Any] = []
+        if isinstance(payload, list):
+            raw_items = payload
+        elif isinstance(payload, dict):
+            for key in ("markets", "data", "results", "items"):
+                value = payload.get(key)
+                if isinstance(value, list):
+                    raw_items.extend(value)
+            events = payload.get("events")
+            if isinstance(events, list):
+                for event in events:
+                    if isinstance(event, dict):
+                        markets = event.get("markets")
+                        if isinstance(markets, list):
+                            raw_items.extend(markets)
+
+        markets: list[Market] = []
+        for item in raw_items:
+            if not isinstance(item, Mapping):
+                continue
+            if market := parse_market(item):
+                markets.append(market)
+            else:
+                nested = item.get("market") or item.get("markets")
+                if isinstance(nested, Mapping) and (market := parse_market(nested)):
+                    markets.append(market)
+        return markets
+
     async def fetch_markets(
         self,
         limit: int = 100,
@@ -157,6 +191,66 @@ class PolymarketClient:
                 "closed": "false",
                 "order": order,
                 "ascending": str(ascending).lower(),
+            }
+        )
+
+    async def public_search(self, query: str, limit: int = 5) -> list[Market]:
+        if not query.strip():
+            return []
+        attempts = (
+            ("/public-search", {"q": query, "limit": limit}),
+            ("/public-search", {"query": query, "limit": limit}),
+            ("/search", {"q": query, "limit": limit}),
+            ("/search", {"query": query, "limit": limit}),
+        )
+        for path, params in attempts:
+            try:
+                payload = await self._get_payload(path, params)
+            except (httpx.HTTPError, ValueError):
+                continue
+            markets = self._markets_from_payload(payload)
+            if markets:
+                return markets[:limit]
+        return []
+
+    async def get_tags(self) -> list[Mapping[str, Any]]:
+        try:
+            payload = await self._get_payload("/tags")
+        except (httpx.HTTPError, ValueError):
+            logger.info("Polymarket tags endpoint unavailable")
+            return []
+        if isinstance(payload, list):
+            return [item for item in payload if isinstance(item, Mapping)]
+        if isinstance(payload, dict) and isinstance(payload.get("tags"), list):
+            return [item for item in payload["tags"] if isinstance(item, Mapping)]
+        return []
+
+    async def get_series(self) -> list[Mapping[str, Any]]:
+        try:
+            payload = await self._get_payload("/series")
+        except (httpx.HTTPError, ValueError):
+            logger.info("Polymarket series endpoint unavailable")
+            return []
+        if isinstance(payload, list):
+            return [item for item in payload if isinstance(item, Mapping)]
+        if isinstance(payload, dict) and isinstance(payload.get("series"), list):
+            return [item for item in payload["series"] if isinstance(item, Mapping)]
+        return []
+
+    async def get_sports_markets(self, limit: int = 5) -> list[Market]:
+        try:
+            payload = await self._get_payload("/sports", {"limit": limit})
+        except (httpx.HTTPError, ValueError):
+            payload = None
+        markets = self._markets_from_payload(payload) if payload is not None else []
+        if markets:
+            return markets[:limit]
+        return await self._get_markets(
+            {
+                "limit": limit,
+                "active": "true",
+                "closed": "false",
+                "category": "Sports",
             }
         )
 

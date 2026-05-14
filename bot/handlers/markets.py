@@ -10,6 +10,8 @@ from aiogram.types import CallbackQuery, InlineQuery, InlineQueryResultArticle, 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from bot.database.repositories import (
+    create_market_link_click,
+    create_search_query,
     get_latest_snapshots,
     get_recent_snapshots,
     upsert_user,
@@ -22,6 +24,8 @@ from bot.keyboards.main import (
     HOT_MARKETS,
     MARKET_SEARCH,
     NEW_MARKETS,
+    OPEN_MARKET_PREFIX,
+    RESOLUTION_PREFIX,
     SHARE_MARKET_PREFIX,
     SHARP_MOVES,
     TIMELINE_PREFIX,
@@ -31,9 +35,11 @@ from bot.keyboards.main import (
 )
 from bot.services.ai_explainer import AIExplainer
 from bot.services.market_analyzer import CATEGORY_LABELS, MarketAnalyzer, MarketMovement
+from bot.services.market_health import calculate_market_health
 from bot.services.polymarket_client import Market, PolymarketAPIError
 from bot.services.pulse_score import calculate_pulse_score
 from bot.services.risk_flags import count_strong_snapshot_moves, market_risk_flags
+from bot.services.resolution_explainer import ResolutionExplainer
 from bot.utils.formatting import (
     format_beginner_explanation,
     format_market_card,
@@ -108,6 +114,7 @@ async def _send_market_cards(
     session_factory: async_sessionmaker[AsyncSession],
     threshold: float = 0.10,
     heading: str = "🔥 Рынок:",
+    source: str = "hot",
 ) -> None:
     if not markets:
         await message.answer("Пока не нашёл подходящих рынков. Попробуйте позже.")
@@ -130,6 +137,7 @@ async def _send_market_cards(
             threshold=threshold,
             strong_moves_count=strong_moves,
         )
+        market_health = calculate_market_health(market)
         explanation = await ai_explainer.explain_market(market)
         await message.answer(
             format_market_card(
@@ -138,9 +146,15 @@ async def _send_market_cards(
                 heading=heading,
                 movement_delta=delta,
                 pulse_score=pulse_score,
+                market_health=market_health,
                 risk_flags=risk_flags,
             ),
-            reply_markup=market_actions_keyboard(market.url, market.id, language),
+            reply_markup=market_actions_keyboard(
+                market.url,
+                market.id,
+                language,
+                source=source,
+            ),
             disable_web_page_preview=True,
         )
 
@@ -170,18 +184,21 @@ async def _send_movement_cards(
             threshold=threshold,
             strong_moves_count=strong_moves,
         )
+        market_health = calculate_market_health(movement.market)
         explanation = await ai_explainer.explain_market(movement.market)
         await message.answer(
             format_movement_card(
                 movement,
                 explanation=explanation,
                 pulse_score=pulse_score,
+                market_health=market_health,
                 risk_flags=risk_flags,
             ),
             reply_markup=market_actions_keyboard(
                 movement.market.url,
                 movement.market.id,
                 language,
+                source="moves",
             ),
             disable_web_page_preview=True,
         )
@@ -212,6 +229,7 @@ async def hot_markets(
         language,
         session_factory,
         heading="🔥 Горячий рынок",
+        source="hot",
     )
 
 
@@ -237,6 +255,7 @@ async def hot_markets_command(
         language,
         session_factory,
         heading="🔥 Горячий рынок",
+        source="hot",
     )
 
 
@@ -265,6 +284,7 @@ async def new_markets(
         language,
         session_factory,
         heading="🆕 Новый рынок",
+        source="new",
     )
 
 
@@ -290,6 +310,7 @@ async def new_markets_command(
         language,
         session_factory,
         heading="🆕 Новый рынок",
+        source="new",
     )
 
 
@@ -417,6 +438,19 @@ async def market_search_query(
         logger.exception("Could not search markets")
         await message.answer(t("api_error", language))
         return
+    if message.from_user is not None:
+        async with session_factory() as session:
+            try:
+                await create_search_query(
+                    session,
+                    message.from_user.id,
+                    query,
+                    len(markets),
+                )
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                logger.exception("Could not save search query")
 
     if not markets:
         await message.answer(
@@ -432,6 +466,7 @@ async def market_search_query(
         language,
         session_factory,
         heading="🔍 Найден рынок",
+        source="search",
     )
 
 
@@ -479,6 +514,58 @@ async def category_selected(
         language,
         session_factory,
         heading=heading,
+        source="category",
+    )
+
+
+@router.callback_query(F.data.startswith(OPEN_MARKET_PREFIX))
+async def open_market_link(
+    callback: CallbackQuery,
+    market_analyzer: MarketAnalyzer,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    payload = (callback.data or "").removeprefix(OPEN_MARKET_PREFIX)
+    source, _, market_id = payload.partition(":")
+    source = source or "hot"
+    log_callback_action(
+        logger,
+        callback,
+        "market_open",
+        market_id=market_id,
+        source=source,
+    )
+    await callback.answer()
+    if not callback.message or callback.from_user is None or not market_id:
+        return
+
+    language = await _language(session_factory, callback.from_user)
+    try:
+        market = await market_analyzer.find_market_by_id(market_id)
+    except PolymarketAPIError:
+        logger.exception("Could not fetch market for open tracking")
+        await callback.message.answer(t("api_error", language))
+        return
+    if market is None:
+        await callback.message.answer("Не смог найти этот рынок.")
+        return
+
+    async with session_factory() as session:
+        try:
+            await create_market_link_click(
+                session,
+                callback.from_user.id,
+                market.id,
+                market.question,
+                source,
+            )
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            logger.exception("Could not save market link click")
+
+    await callback.message.answer(
+        "🔗 Открыть рынок на Polymarket:\n\n" + market.url,
+        disable_web_page_preview=True,
     )
 
 
@@ -511,6 +598,34 @@ async def explain_market(
         format_beginner_explanation(market, ai_brief=ai_brief),
         disable_web_page_preview=True,
     )
+
+
+@router.callback_query(F.data.startswith(RESOLUTION_PREFIX))
+async def explain_resolution(
+    callback: CallbackQuery,
+    market_analyzer: MarketAnalyzer,
+    ai_explainer: AIExplainer,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    market_id = (callback.data or "").removeprefix(RESOLUTION_PREFIX)
+    log_callback_action(logger, callback, "resolution_explain", market_id=market_id)
+    await callback.answer()
+    if not callback.message:
+        return
+
+    language = await _language(session_factory, callback.from_user)
+    try:
+        market = await market_analyzer.find_market_by_id(market_id)
+    except PolymarketAPIError:
+        logger.exception("Could not fetch market for resolution explanation")
+        await callback.message.answer(t("api_error", language))
+        return
+    if market is None:
+        await callback.message.answer("Не смог найти этот рынок.")
+        return
+
+    explanation = await ResolutionExplainer().explain(market, ai_explainer)
+    await callback.message.answer(explanation, disable_web_page_preview=True)
 
 
 @router.callback_query(F.data.startswith(TIMELINE_PREFIX))

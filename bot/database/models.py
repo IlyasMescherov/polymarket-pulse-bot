@@ -161,3 +161,47 @@ class UserAlertLog(Base):
         server_default=func.now(),
         index=True,
     )
+
+
+class MarketLinkClick(Base):
+    __tablename__ = "market_link_clicks"
+    __table_args__ = (
+        Index("ix_market_link_clicks_market_created", "market_id", "created_at"),
+        Index("ix_market_link_clicks_user_created", "telegram_user_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    telegram_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    market_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    market_title: Mapped[str] = mapped_column(Text, nullable=False)
+    source: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        index=True,
+    )
+
+
+class SearchQuery(Base):
+    __tablename__ = "search_queries"
+    __table_args__ = (
+        Index("ix_search_queries_query_created", "query", "created_at"),
+        Index("ix_search_queries_user_created", "telegram_user_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    telegram_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    query: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    results_count: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default=text("0"),
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        index=True,
+    )

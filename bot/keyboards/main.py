@@ -26,8 +26,10 @@ BACK_TO_MENU = "menu:back"
 WATCHLIST_ADD_PREFIX = "watchlist:add:"
 WATCHLIST_REMOVE_PREFIX = "watchlist:remove:"
 EXPLAIN_PREFIX = "market:explain:"
+RESOLUTION_PREFIX = "market:resolution:"
 TIMELINE_PREFIX = "market:timeline:"
 SHARE_MARKET_PREFIX = "market:share:"
+OPEN_MARKET_PREFIX = "market:open:"
 CATEGORY_PREFIX = "categories:select:"
 TOPICS_MENU = "settings:topics"
 TOPIC_ADD = "topics:add"
@@ -59,6 +61,7 @@ LABELS: dict[str, dict[str, str]] = {
         "open_market": "🔗 Открыть Polymarket",
         "add_watchlist": "⭐ В Watchlist",
         "explain": "🧠 Объяснить проще",
+        "resolution": "📜 Как решится рынок?",
         "timeline": "📊 Динамика",
         "share_market": "📤 Поделиться рынком",
         "remove": "🗑 Удалить",
@@ -82,6 +85,7 @@ LABELS: dict[str, dict[str, str]] = {
         "open_market": "🔗 Open Polymarket",
         "add_watchlist": "⭐ Watchlist",
         "explain": "🧠 Explain simply",
+        "resolution": "📜 Resolution rules",
         "timeline": "📊 Timeline",
         "share_market": "📤 Share market",
         "remove": "🗑 Remove",
@@ -131,10 +135,16 @@ def market_actions_keyboard(
     url: str,
     market_id: str,
     language: str | None = None,
+    source: str = "hot",
 ) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text=label("open_market", language), url=url)],
+            [
+                InlineKeyboardButton(
+                    text=label("open_market", language),
+                    callback_data=f"{OPEN_MARKET_PREFIX}{source}:{market_id}",
+                )
+            ],
             [
                 InlineKeyboardButton(
                     text=label("add_watchlist", language),
@@ -145,6 +155,12 @@ def market_actions_keyboard(
                 InlineKeyboardButton(
                     text=label("explain", language),
                     callback_data=f"{EXPLAIN_PREFIX}{market_id}",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=label("resolution", language),
+                    callback_data=f"{RESOLUTION_PREFIX}{market_id}",
                 )
             ],
             [
@@ -186,11 +202,22 @@ def watchlist_item_keyboard(
 ) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text=label("open_market", language), url=url)],
+            [
+                InlineKeyboardButton(
+                    text=label("open_market", language),
+                    callback_data=f"{OPEN_MARKET_PREFIX}watchlist:{market_id}",
+                )
+            ],
             [
                 InlineKeyboardButton(
                     text=label("explain", language),
                     callback_data=f"{EXPLAIN_PREFIX}{market_id}",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=label("resolution", language),
+                    callback_data=f"{RESOLUTION_PREFIX}{market_id}",
                 )
             ],
             [
