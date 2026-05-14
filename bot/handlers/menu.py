@@ -24,6 +24,9 @@ from bot.utils.logging import log_callback_action, log_user_action
 logger = logging.getLogger(__name__)
 router = Router()
 
+GITHUB_URL = "https://github.com/IlyasMescherov/polymarket-pulse-bot"
+DEFAULT_BOT_HANDLE = "@PulseMarketAIBot"
+
 
 async def _language(
     session_factory: async_sessionmaker[AsyncSession],
@@ -34,6 +37,63 @@ async def _language(
     except Exception:
         logger.exception("Could not load user language")
         return "ru"
+
+
+def _telegram_bot_url(settings: Settings) -> str:
+    handle = settings.project_telegram_handle or DEFAULT_BOT_HANDLE
+    if handle.startswith(("http://", "https://")):
+        return handle
+    return f"https://t.me/{handle.lstrip('@')}"
+
+
+def _share_lines(settings: Settings, language: str) -> list[str]:
+    lines = [t("share", language)]
+    if settings.project_channel_url:
+        lines.extend(
+            [
+                "",
+                (
+                    f"Обновления: {settings.project_channel_url}"
+                    if language == "ru"
+                    else f"Updates: {settings.project_channel_url}"
+                ),
+            ]
+        )
+    if settings.project_support_url:
+        lines.extend(
+            [
+                "",
+                (
+                    f"Поддержка: {settings.project_support_url}"
+                    if language == "ru"
+                    else f"Support: {settings.project_support_url}"
+                ),
+            ]
+        )
+    return lines
+
+
+def _about_lines(settings: Settings, language: str) -> list[str]:
+    lines = [
+        t("about", language),
+        "",
+        "Ссылки:" if language == "ru" else "Links:",
+        f"GitHub: {GITHUB_URL}",
+        f"Bot: {_telegram_bot_url(settings)}",
+    ]
+    if settings.project_channel_url:
+        lines.append(
+            f"Канал: {settings.project_channel_url}"
+            if language == "ru"
+            else f"Channel: {settings.project_channel_url}"
+        )
+    if settings.project_support_url:
+        lines.append(
+            f"Поддержка: {settings.project_support_url}"
+            if language == "ru"
+            else f"Support: {settings.project_support_url}"
+        )
+    return lines
 
 
 @router.callback_query(F.data == BACK_TO_MENU)
@@ -89,15 +149,7 @@ async def share_bot(
     await callback.answer()
     if callback.message:
         language = await _language(session_factory, callback.from_user)
-        lines = [t("share", language)]
-        if settings.polymarket_referral_url:
-            lines.extend(
-                [
-                    "",
-                    "Optional Polymarket link:",
-                    settings.polymarket_referral_url,
-                ]
-            )
+        lines = _share_lines(settings, language)
         await callback.message.answer(
             "\n".join(lines),
             reply_markup=main_menu_keyboard(language),
@@ -114,18 +166,7 @@ async def about_project(
     log_callback_action(logger, callback, "about_opened")
     await callback.answer()
     language = await _language(session_factory, callback.from_user)
-    lines = [t("about", language)]
-    if settings.project_public_url:
-        lines.extend(["", f"Public URL: {settings.project_public_url}"])
-    if settings.project_telegram_handle:
-        lines.append(f"Telegram: {settings.project_telegram_handle}")
-    if settings.polymarket_referral_url:
-        lines.extend(
-            [
-                "",
-                f"Optional Polymarket referral URL: {settings.polymarket_referral_url}",
-            ]
-        )
+    lines = _about_lines(settings, language)
 
     if callback.message:
         await callback.message.answer(
@@ -143,18 +184,7 @@ async def about_command(
 ) -> None:
     log_user_action(logger, message.from_user, "about_opened")
     language = await _language(session_factory, message.from_user)
-    lines = [t("about", language)]
-    if settings.project_public_url:
-        lines.extend(["", f"Public URL: {settings.project_public_url}"])
-    if settings.project_telegram_handle:
-        lines.append(f"Telegram: {settings.project_telegram_handle}")
-    if settings.polymarket_referral_url:
-        lines.extend(
-            [
-                "",
-                f"Optional Polymarket referral URL: {settings.polymarket_referral_url}",
-            ]
-        )
+    lines = _about_lines(settings, language)
     await message.answer(
         "\n".join(lines),
         reply_markup=main_menu_keyboard(language),

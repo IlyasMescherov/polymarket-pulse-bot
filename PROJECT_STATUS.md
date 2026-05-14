@@ -114,6 +114,17 @@ The submission package is ready for final screenshots and demo recording:
 8. Include admin stats screenshot.
 9. Add `POLYMARKET_REFERRAL_URL` only if the project becomes eligible for Polymarket referrals.
 
+## Before First Users
+
+- Set the bot avatar in BotFather.
+- Set BotFather name, description, about text, commands, and inline placeholder.
+- Create a public Telegram channel.
+- Create a support contact or support group.
+- Add `PROJECT_CHANNEL_URL`.
+- Add `PROJECT_SUPPORT_URL`.
+- Record a clean demo video.
+- Invite the first 20 to 50 users.
+
 ## Next Milestones
 
 - Add screenshots under `docs/screenshots/`.

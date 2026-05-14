@@ -22,6 +22,17 @@ Builder submission package:
 - [docs/SCREENSHOT_GUIDE.md](docs/SCREENSHOT_GUIDE.md)
 - [docs/screenshots/](docs/screenshots/)
 
+## Public Telegram Setup
+
+- Bot: [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
+- Channel: placeholder until the public channel is created
+- Support: placeholder until a support contact or group is created
+- BotFather setup doc: [docs/BOTFATHER_SETUP.md](docs/BOTFATHER_SETUP.md)
+- Public Telegram setup doc: [docs/TELEGRAM_PUBLIC_SETUP.md](docs/TELEGRAM_PUBLIC_SETUP.md)
+- Avatar guide: [docs/brand/AVATAR_GUIDE.md](docs/brand/AVATAR_GUIDE.md)
+
+Recommended public channel username: `@PulseMarketAI`. If unavailable, use `@PulseMarketNews`, `@PulseMarketAlerts`, `@PulseMarketSignal`, `@PulseMarketRadar`, or `@PulseMarketDigest`.
+
 ## What is PulseMarket Bot
 
 PulseMarket Bot is a lightweight Telegram companion for Polymarket. It watches public Polymarket markets, highlights interesting activity, and presents market data in a beginner-friendly format.
@@ -274,6 +285,8 @@ POLYMARKET_BUILDER_CODE=
 POLYMARKET_REFERRAL_URL=
 PROJECT_PUBLIC_URL=
 PROJECT_TELEGRAM_HANDLE=@PulseMarketAIBot
+PROJECT_CHANNEL_URL=
+PROJECT_SUPPORT_URL=
 ADMIN_TELEGRAM_IDS=
 ```
 

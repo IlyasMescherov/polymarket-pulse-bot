@@ -50,6 +50,8 @@ class Settings:
     polymarket_referral_url: str | None
     project_public_url: str | None
     project_telegram_handle: str | None
+    project_channel_url: str | None
+    project_support_url: str | None
     admin_telegram_ids: frozenset[int]
     log_level: str
     app_host: str = "0.0.0.0"
@@ -75,6 +77,8 @@ def load_settings() -> Settings:
         polymarket_referral_url=_optional(os.getenv("POLYMARKET_REFERRAL_URL")),
         project_public_url=_optional(os.getenv("PROJECT_PUBLIC_URL")),
         project_telegram_handle=_optional(os.getenv("PROJECT_TELEGRAM_HANDLE")),
+        project_channel_url=_optional(os.getenv("PROJECT_CHANNEL_URL")),
+        project_support_url=_optional(os.getenv("PROJECT_SUPPORT_URL")),
         admin_telegram_ids=_int_set(os.getenv("ADMIN_TELEGRAM_IDS")),
         log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
         app_host=os.getenv("APP_HOST", "0.0.0.0"),
