@@ -3,6 +3,7 @@ from __future__ import annotations
 from bot.services.market_analyzer import (
     filter_markets_by_category,
     filter_markets_by_query,
+    market_matches_topics,
 )
 from bot.services.polymarket_client import Market
 
@@ -48,3 +49,12 @@ def test_filter_markets_by_category_matches_keywords() -> None:
     assert [market.id for market in filter_markets_by_category(markets, "sports")] == [
         "3"
     ]
+
+
+def test_topic_alert_filtering_matches_topics() -> None:
+    market = _market("1", "Will NVIDIA mention OpenAI this year?", "AI")
+
+    assert market_matches_topics(market, ["openai"])
+    assert market_matches_topics(market, ["nvidia"])
+    assert not market_matches_topics(market, ["ufc"])
+    assert market_matches_topics(market, [])

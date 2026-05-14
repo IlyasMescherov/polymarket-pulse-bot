@@ -3,7 +3,13 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from bot.services.polymarket_client import Market
-from bot.utils.formatting import format_date, format_market_card, format_probability, format_usd
+from bot.utils.formatting import (
+    format_date,
+    format_market_card,
+    format_market_timeline,
+    format_probability,
+    format_usd,
+)
 
 
 def test_format_probability_handles_missing_data() -> None:
@@ -31,10 +37,13 @@ def test_market_card_contains_core_fields() -> None:
 
     assert "Will this test pass?" in card
     assert "63%" in card
-    assert "$120,000" in card
-    assert "2026-06-01" in card
+    assert "$120K" in card
+    assert "До завершения:" in card
 
 
 def test_format_date_handles_missing_data() -> None:
     assert format_date(None) == "данных пока нет"
 
+
+def test_timeline_formatting_handles_missing_history() -> None:
+    assert "Пока мало данных" in format_market_timeline([])

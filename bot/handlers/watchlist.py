@@ -11,6 +11,7 @@ from bot.database.repositories import (
     add_market_to_watchlist,
     get_user_watchlist,
     remove_watchlist_item,
+    update_watchlist_probability,
 )
 from bot.handlers.common import load_user, user_language
 from bot.keyboards.main import (
@@ -45,6 +46,7 @@ async def _send_watchlist(
     message: Message,
     session_factory: async_sessionmaker[AsyncSession],
     telegram_user: object | None,
+    market_analyzer: MarketAnalyzer,
 ) -> None:
     language = await _language(session_factory, telegram_user)
     if telegram_user is None:
@@ -54,6 +56,13 @@ async def _send_watchlist(
     async with session_factory() as session:
         try:
             items = await get_user_watchlist(session, telegram_user)
+            for item in items:
+                try:
+                    market = await market_analyzer.find_market_by_id(item.market_id)
+                except PolymarketAPIError:
+                    market = None
+                if market is not None:
+                    await update_watchlist_probability(session, item, market)
             await session.commit()
         except Exception:
             await session.rollback()
@@ -70,8 +79,13 @@ async def _send_watchlist(
 
     for item in items[:10]:
         await message.answer(
-            format_watchlist_card(item.market_title),
-            reply_markup=watchlist_item_keyboard(item.id, item.market_url, language),
+            format_watchlist_card(item),
+            reply_markup=watchlist_item_keyboard(
+                item.id,
+                item.market_id,
+                item.market_url,
+                language,
+            ),
             disable_web_page_preview=True,
         )
 
@@ -80,20 +94,27 @@ async def _send_watchlist(
 async def watchlist_view(
     callback: CallbackQuery,
     session_factory: async_sessionmaker[AsyncSession],
+    market_analyzer: MarketAnalyzer,
 ) -> None:
     log_callback_action(logger, callback, "watchlist_view")
     await callback.answer()
     if callback.message:
-        await _send_watchlist(callback.message, session_factory, callback.from_user)
+        await _send_watchlist(
+            callback.message,
+            session_factory,
+            callback.from_user,
+            market_analyzer,
+        )
 
 
 @router.message(Command("watchlist"))
 async def watchlist_command(
     message: Message,
     session_factory: async_sessionmaker[AsyncSession],
+    market_analyzer: MarketAnalyzer,
 ) -> None:
     log_user_action(logger, message.from_user, "watchlist_view")
-    await _send_watchlist(message, session_factory, message.from_user)
+    await _send_watchlist(message, session_factory, message.from_user, market_analyzer)
 
 
 @router.callback_query(F.data.startswith(WATCHLIST_ADD_PREFIX))

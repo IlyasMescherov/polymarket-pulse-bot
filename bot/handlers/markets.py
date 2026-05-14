@@ -6,18 +6,25 @@ from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, InlineQuery, InlineQueryResultArticle, InputTextMessageContent, Message
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from bot.database.repositories import upsert_user
+from bot.database.repositories import (
+    get_latest_snapshots,
+    get_recent_snapshots,
+    upsert_user,
+)
 from bot.handlers.common import load_user, user_language
 from bot.keyboards.main import (
     CATEGORIES,
     CATEGORY_PREFIX,
+    EXPLAIN_PREFIX,
     HOT_MARKETS,
     MARKET_SEARCH,
     NEW_MARKETS,
+    SHARE_MARKET_PREFIX,
     SHARP_MOVES,
+    TIMELINE_PREFIX,
     categories_keyboard,
     main_menu_keyboard,
     market_actions_keyboard,
@@ -25,7 +32,16 @@ from bot.keyboards.main import (
 from bot.services.ai_explainer import AIExplainer
 from bot.services.market_analyzer import CATEGORY_LABELS, MarketAnalyzer, MarketMovement
 from bot.services.polymarket_client import Market, PolymarketAPIError
-from bot.utils.formatting import format_market_card, format_movement_card
+from bot.services.pulse_score import calculate_pulse_score
+from bot.services.risk_flags import count_strong_snapshot_moves, market_risk_flags
+from bot.utils.formatting import (
+    format_beginner_explanation,
+    format_market_card,
+    format_market_timeline,
+    format_movement_card,
+    format_share_market_card,
+    format_probability,
+)
 from bot.utils.i18n import t
 from bot.utils.logging import log_callback_action, log_user_action
 
@@ -35,6 +51,42 @@ router = Router()
 
 class MarketSearchStates(StatesGroup):
     waiting_query = State()
+
+
+@router.inline_query()
+async def inline_market_search(
+    inline_query: InlineQuery,
+    market_analyzer: MarketAnalyzer,
+) -> None:
+    query = (inline_query.query or "").strip()
+    log_user_action(logger, inline_query.from_user, "search_query", query=query[:80], source="inline")
+    if not query:
+        await inline_query.answer([], cache_time=5, is_personal=True)
+        return
+
+    try:
+        markets = await market_analyzer.search_markets(query, limit=5)
+    except PolymarketAPIError:
+        logger.exception("Could not search inline markets")
+        await inline_query.answer([], cache_time=5, is_personal=True)
+        return
+
+    results = [
+        InlineQueryResultArticle(
+            id=market.id,
+            title=market.question[:90],
+            description=f"Probability: {format_probability(market.yes_probability)}",
+            input_message_content=InputTextMessageContent(
+                message_text=format_share_market_card(
+                    market,
+                    pulse_score=calculate_pulse_score(market),
+                ),
+                disable_web_page_preview=True,
+            ),
+        )
+        for market in markets
+    ]
+    await inline_query.answer(results, cache_time=30, is_personal=True)
 
 
 async def _language(
@@ -53,6 +105,8 @@ async def _send_market_cards(
     markets: list[Market],
     ai_explainer: AIExplainer,
     language: str,
+    session_factory: async_sessionmaker[AsyncSession],
+    threshold: float = 0.10,
     heading: str = "🔥 Рынок:",
 ) -> None:
     if not markets:
@@ -60,9 +114,32 @@ async def _send_market_cards(
         return
 
     for market in markets[:5]:
+        delta = None
+        strong_moves = 0
+        async with session_factory() as session:
+            latest = await get_latest_snapshots(session, [market.id])
+            snapshot = latest.get(market.id)
+            if snapshot is not None and snapshot.yes_probability is not None and market.yes_probability is not None:
+                delta = market.yes_probability - snapshot.yes_probability
+            recent = await get_recent_snapshots(session, market.id, limit=8)
+            strong_moves = count_strong_snapshot_moves(recent, threshold)
+        pulse_score = calculate_pulse_score(market, delta=delta)
+        risk_flags = market_risk_flags(
+            market,
+            delta=delta,
+            threshold=threshold,
+            strong_moves_count=strong_moves,
+        )
         explanation = await ai_explainer.explain_market(market)
         await message.answer(
-            format_market_card(market, explanation=explanation, heading=heading),
+            format_market_card(
+                market,
+                explanation=explanation,
+                heading=heading,
+                movement_delta=delta,
+                pulse_score=pulse_score,
+                risk_flags=risk_flags,
+            ),
             reply_markup=market_actions_keyboard(market.url, market.id, language),
             disable_web_page_preview=True,
         )
@@ -73,6 +150,8 @@ async def _send_movement_cards(
     movements: list[MarketMovement],
     ai_explainer: AIExplainer,
     language: str,
+    session_factory: async_sessionmaker[AsyncSession],
+    threshold: float = 0.10,
 ) -> None:
     if not movements:
         await message.answer(
@@ -81,9 +160,24 @@ async def _send_movement_cards(
         return
 
     for movement in movements[:5]:
+        async with session_factory() as session:
+            recent = await get_recent_snapshots(session, movement.market.id, limit=8)
+            strong_moves = count_strong_snapshot_moves(recent, threshold)
+        pulse_score = calculate_pulse_score(movement.market, delta=movement.delta)
+        risk_flags = market_risk_flags(
+            movement.market,
+            delta=movement.delta,
+            threshold=threshold,
+            strong_moves_count=strong_moves,
+        )
         explanation = await ai_explainer.explain_market(movement.market)
         await message.answer(
-            format_movement_card(movement, explanation=explanation),
+            format_movement_card(
+                movement,
+                explanation=explanation,
+                pulse_score=pulse_score,
+                risk_flags=risk_flags,
+            ),
             reply_markup=market_actions_keyboard(
                 movement.market.url,
                 movement.market.id,
@@ -111,7 +205,14 @@ async def hot_markets(
         logger.exception("Could not fetch hot markets")
         await callback.message.answer(t("api_error", language))
         return
-    await _send_market_cards(callback.message, markets, ai_explainer, language)
+    await _send_market_cards(
+        callback.message,
+        markets,
+        ai_explainer,
+        language,
+        session_factory,
+        heading="🔥 Горячий рынок",
+    )
 
 
 @router.message(Command("hot"))
@@ -129,7 +230,14 @@ async def hot_markets_command(
         logger.exception("Could not fetch hot markets")
         await message.answer(t("api_error", language))
         return
-    await _send_market_cards(message, markets, ai_explainer, language)
+    await _send_market_cards(
+        message,
+        markets,
+        ai_explainer,
+        language,
+        session_factory,
+        heading="🔥 Горячий рынок",
+    )
 
 
 @router.callback_query(F.data == NEW_MARKETS)
@@ -150,7 +258,14 @@ async def new_markets(
         logger.exception("Could not fetch new markets")
         await callback.message.answer(t("api_error", language))
         return
-    await _send_market_cards(callback.message, markets, ai_explainer, language)
+    await _send_market_cards(
+        callback.message,
+        markets,
+        ai_explainer,
+        language,
+        session_factory,
+        heading="🆕 Новый рынок",
+    )
 
 
 @router.message(Command("new"))
@@ -168,7 +283,14 @@ async def new_markets_command(
         logger.exception("Could not fetch new markets")
         await message.answer(t("api_error", language))
         return
-    await _send_market_cards(message, markets, ai_explainer, language)
+    await _send_market_cards(
+        message,
+        markets,
+        ai_explainer,
+        language,
+        session_factory,
+        heading="🆕 Новый рынок",
+    )
 
 
 @router.callback_query(F.data == SHARP_MOVES)
@@ -201,7 +323,14 @@ async def sharp_moves(
         )
         return
 
-    await _send_movement_cards(callback.message, movements, ai_explainer, language)
+    await _send_movement_cards(
+        callback.message,
+        movements,
+        ai_explainer,
+        language,
+        session_factory,
+        threshold=user.movement_threshold,
+    )
 
 
 @router.message(Command("moves"))
@@ -230,7 +359,14 @@ async def sharp_moves_command(
             "Не смог сравнить рынки. Я уже записал ошибку в лог, попробуйте позже."
         )
         return
-    await _send_movement_cards(message, movements, ai_explainer, language)
+    await _send_movement_cards(
+        message,
+        movements,
+        ai_explainer,
+        language,
+        session_factory,
+        threshold=user.movement_threshold,
+    )
 
 
 @router.callback_query(F.data == MARKET_SEARCH)
@@ -294,6 +430,7 @@ async def market_search_query(
         markets,
         ai_explainer,
         language,
+        session_factory,
         heading="🔍 Найден рынок",
     )
 
@@ -340,5 +477,88 @@ async def category_selected(
         markets,
         ai_explainer,
         language,
+        session_factory,
         heading=heading,
+    )
+
+
+@router.callback_query(F.data.startswith(EXPLAIN_PREFIX))
+async def explain_market(
+    callback: CallbackQuery,
+    market_analyzer: MarketAnalyzer,
+    ai_explainer: AIExplainer,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    market_id = (callback.data or "").removeprefix(EXPLAIN_PREFIX)
+    log_callback_action(logger, callback, "beginner_explain", market_id=market_id)
+    await callback.answer()
+    if not callback.message:
+        return
+
+    language = await _language(session_factory, callback.from_user)
+    try:
+        market = await market_analyzer.find_market_by_id(market_id)
+    except PolymarketAPIError:
+        logger.exception("Could not fetch market for beginner explanation")
+        await callback.message.answer(t("api_error", language))
+        return
+    if market is None:
+        await callback.message.answer("Не смог найти этот рынок.")
+        return
+
+    ai_brief = await ai_explainer.explain_market(market)
+    await callback.message.answer(
+        format_beginner_explanation(market, ai_brief=ai_brief),
+        disable_web_page_preview=True,
+    )
+
+
+@router.callback_query(F.data.startswith(TIMELINE_PREFIX))
+async def market_timeline(
+    callback: CallbackQuery,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    market_id = (callback.data or "").removeprefix(TIMELINE_PREFIX)
+    log_callback_action(logger, callback, "market_timeline", market_id=market_id)
+    await callback.answer()
+    if not callback.message:
+        return
+
+    async with session_factory() as session:
+        try:
+            snapshots = await get_recent_snapshots(session, market_id, limit=8)
+        except Exception:
+            logger.exception("Could not load market timeline")
+            await callback.message.answer("Не смог загрузить динамику. Попробуйте позже.")
+            return
+    await callback.message.answer(format_market_timeline(snapshots))
+
+
+@router.callback_query(F.data.startswith(SHARE_MARKET_PREFIX))
+async def share_market(
+    callback: CallbackQuery,
+    market_analyzer: MarketAnalyzer,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    market_id = (callback.data or "").removeprefix(SHARE_MARKET_PREFIX)
+    log_callback_action(logger, callback, "share_market", market_id=market_id)
+    await callback.answer()
+    if not callback.message:
+        return
+
+    language = await _language(session_factory, callback.from_user)
+    try:
+        market = await market_analyzer.find_market_by_id(market_id)
+    except PolymarketAPIError:
+        logger.exception("Could not fetch market for share card")
+        await callback.message.answer(t("api_error", language))
+        return
+    if market is None:
+        await callback.message.answer("Не смог найти этот рынок.")
+        return
+
+    pulse_score = calculate_pulse_score(market)
+    await callback.message.answer(
+        format_share_market_card(market, pulse_score=pulse_score),
+        disable_web_page_preview=True,
     )

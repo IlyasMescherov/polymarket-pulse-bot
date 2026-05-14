@@ -8,8 +8,13 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from bot.database.models import Base
 from bot.database.repositories import (
     add_market_to_watchlist,
+    add_user_topic,
+    alert_sent_recently,
     get_user_watchlist,
+    get_user_topics,
+    log_alert_sent,
     remove_watchlist_item,
+    remove_user_topic,
     set_movement_threshold,
 )
 from bot.services.polymarket_client import Market
@@ -68,10 +73,57 @@ async def test_watchlist_repository_adds_deduplicates_and_removes() -> None:
         await session.commit()
 
     assert len(items) == 1
+    assert items[0].telegram_user_id == telegram_user.id
+    assert items[0].initial_probability == 0.7
+    assert items[0].last_probability == 0.7
     assert removed is True
 
     async with session_factory() as session:
         assert await get_user_watchlist(session, telegram_user) == []
+
+    await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_topics_repository_adds_and_removes_topics() -> None:
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+
+    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+    telegram_user = TelegramUser(id=44)
+
+    async with session_factory() as session:
+        topic, created = await add_user_topic(session, telegram_user, " Bitcoin ")
+        duplicate, duplicate_created = await add_user_topic(session, telegram_user, "bitcoin")
+        topics = await get_user_topics(session, telegram_user)
+        removed = await remove_user_topic(session, telegram_user, topic.id)
+        await session.commit()
+
+    assert created is True
+    assert duplicate_created is False
+    assert duplicate.id == topic.id
+    assert [item.topic for item in topics] == ["bitcoin"]
+    assert removed is True
+
+    await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_smart_alert_cooldown_uses_alert_log() -> None:
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+
+    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+
+    async with session_factory() as session:
+        assert not await alert_sent_recently(session, 45, "m1", "sharp_move")
+        await log_alert_sent(session, 45, "m1", "sharp_move")
+        await session.commit()
+
+    async with session_factory() as session:
+        assert await alert_sent_recently(session, 45, "m1", "sharp_move")
 
     await engine.dispose()
 

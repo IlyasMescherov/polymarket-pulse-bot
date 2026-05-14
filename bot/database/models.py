@@ -48,6 +48,12 @@ class User(Base):
         default=0.10,
         server_default=text("0.10"),
     )
+    min_volume_for_alerts: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+        default=0.0,
+        server_default=text("0"),
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -97,11 +103,61 @@ class UserWatchlist(Base):
         nullable=False,
         index=True,
     )
+    telegram_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
     market_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     market_title: Mapped[str] = mapped_column(Text, nullable=False)
     market_url: Mapped[str] = mapped_column(Text, nullable=False)
+    initial_probability: Mapped[float | None] = mapped_column(Float, nullable=True)
+    last_probability: Mapped[float | None] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+class UserTopic(Base):
+    __tablename__ = "user_topics"
+    __table_args__ = (
+        UniqueConstraint("telegram_user_id", "topic", name="uq_user_topics_user_topic"),
+        Index("ix_user_topics_user_created", "telegram_user_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    telegram_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    topic: Mapped[str] = mapped_column(String(80), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+
+class UserAlertLog(Base):
+    __tablename__ = "user_alerts_log"
+    __table_args__ = (
+        Index(
+            "ix_user_alerts_user_market_type_sent",
+            "telegram_user_id",
+            "market_id",
+            "alert_type",
+            "sent_at",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    telegram_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    market_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    alert_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    sent_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        index=True,
     )

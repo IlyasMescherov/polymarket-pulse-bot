@@ -27,13 +27,21 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - Hot markets: shows 5 active Polymarket markets ranked by recent volume.
 - New markets: shows 5 newly created active markets.
 - Sharp movements: compares stored market snapshots and surfaces probability changes above each user's selected threshold.
+- Pulse Score: each market gets a 0-100 signal score based on movement, volume, time to close, and data quality.
+- Risk flags: market cards highlight low volume, missing data, ending soon, sharp move, and volatile-history risks.
 - Market search: users can search public Polymarket markets by topic, such as `bitcoin`, `fed`, `election`, or `ai`.
-- Watchlist: users can save interesting markets and remove them later.
+- Watchlist 2.0: users can save markets, compare initial vs current probability, and remove markets later.
+- Topic alerts: users can save topics like `bitcoin`, `trump`, `fed`, `openai`, or `ufc`.
+- Smart alerts: sharp movement notifications respect user threshold, minimum volume, saved topics, and a 6-hour per-market cooldown.
+- Market timeline: cards include a timeline button that shows recent stored probability snapshots.
+- Beginner mode: every market can be explained in plain language without trading advice.
 - Categories: politics, crypto, AI / tech, sports, and economy filters are available from the main menu.
+- Daily digest: users can opt into a daily digest of high-signal markets, personalized by topics when available.
 - Quick start: a short guided onboarding screen explains how to use the bot.
 - Settings: users can manage sharp move alerts, daily digest preference, language, and movement threshold.
 - RU/EN language: core product screens support Russian and English through a simple internal dictionary.
-- Share link: users can share the bot without any financial referral program, rewards, or payments.
+- Share cards: users can share the bot or generate a clean text card for a specific market.
+- Inline mode ready: the bot includes an inline query handler for quick market lookup from Telegram chats.
 - Optional AI explanations: when `OPENAI_API_KEY` is configured, the bot adds short plain-language explanations.
 - No-AI fallback: when `OPENAI_API_KEY` is missing, the bot still works normally.
 - Public market links: every market card links users back to Polymarket.
@@ -53,6 +61,15 @@ For Yes/No markets, the Yes outcome price is displayed as the implied event prob
 Sharp movement detection works by saving market snapshots to PostgreSQL, then comparing the latest public probability against the previously stored probability for the same market.
 
 Search and categories use public Gamma API market data. If a direct search field is not available, the bot loads active markets and filters locally by market title, question, category, and simple topic keywords.
+
+Pulse Score is intentionally simple and transparent:
+
+- Movement points reward large probability changes.
+- Volume points reward higher public market volume.
+- Ending points highlight markets near resolution.
+- Data quality points reward complete public data.
+
+Risk flags are guardrails for discovery. They are not trading advice.
 
 ## Tech Stack
 
@@ -97,18 +114,39 @@ The MVP is useful for the Builders Program because it demonstrates:
 - Beginner-friendly market presentation
 - User-level notification settings
 - Market search, categories, and user watchlists
+- Pulse Score, risk flags, market timeline, and topic-based smart alerts
 - Snapshot-based market movement detection
 - A clear safety boundary before any trading integration
 
 ## Roadmap
 
-- Add saved keywords and topic alerts.
-- Add real scheduled daily digest delivery for users who enabled it.
 - Add richer market movement summaries.
 - Add a public landing page with screenshots and demo video.
 - Add production monitoring and health checks.
 - Add webhook deployment mode for production Telegram hosting.
 - Consider Builder Code usage only in a future trading version after safety review.
+
+## Inline Mode
+
+PulseMarket AI includes inline query support in code. To enable inline mode for the public Telegram bot, open BotFather and run:
+
+```text
+/setinline
+```
+
+Choose `@PulseMarketAIBot`, then set a placeholder such as:
+
+```text
+Search Polymarket markets
+```
+
+After BotFather enables inline mode, users can type:
+
+```text
+@PulseMarketAIBot bitcoin
+```
+
+Telegram will show up to 5 matching market cards.
 
 ## Local Development
 
@@ -192,8 +230,12 @@ Add screenshots before submitting:
 - Hot Markets result
 - New Markets result
 - Sharp Movement result
+- Pulse Score and risk flags
 - Market Search result
 - Watchlist view
+- Topic alerts settings
+- Market timeline
+- Beginner explanation
 - Categories view
 - Notification settings
 - Polymarket market link opened from Telegram
@@ -215,7 +257,11 @@ Add a 45-second demo video showing the live Telegram bot flow:
 - Open Sharp Moves
 - Search for a market
 - Add a market to Watchlist
+- Open Market Timeline
+- Tap Explain Simply
+- Add a topic alert
 - Enable notifications
+- Share a market card
 - Open a Polymarket market link
 - End on GitHub repository and [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
 

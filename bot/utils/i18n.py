@@ -12,7 +12,8 @@ TEXTS: dict[str, dict[str, str]] = {
             "Analytics only\n\n"
             "Без кошельков.\n"
             "Без пополнений.\n"
-            "Без торговли."
+            "Без торговли.\n\n"
+            "Выбери действие:"
         ),
         "quick_start": (
             "Как пользоваться ботом:\n\n"
@@ -27,15 +28,15 @@ TEXTS: dict[str, dict[str, str]] = {
             "Например: trump, bitcoin, fed, election, ai"
         ),
         "empty_watchlist": (
-            "Watchlist пока пуст. Добавь рынок из поиска, горячих рынков или новых рынков."
+            "Watchlist пока пуст. Найди рынок через поиск или добавь из горячих рынков."
         ),
         "share": (
-            "Поделись PulseMarket AI с другом:\n\n"
+            "Поделись PulseMarket AI:\n\n"
             "https://t.me/PulseMarketAIBot\n\n"
-            "Это не финансовая реферальная программа.\n"
-            "Без бонусов.\n"
-            "Без денег.\n"
-            "Просто share link."
+            "Он показывает горячие рынки Polymarket, резкие движения и объясняет всё простым языком.\n\n"
+            "Без кошельков.\n"
+            "Без пополнений.\n"
+            "Без торговли."
         ),
         "about": (
             "PulseMarket AI — аналитический Telegram бот вокруг Polymarket.\n\n"
@@ -59,7 +60,8 @@ TEXTS: dict[str, dict[str, str]] = {
             "Analytics only\n\n"
             "No wallets.\n"
             "No deposits.\n"
-            "No trading."
+            "No trading.\n\n"
+            "Choose an action:"
         ),
         "quick_start": (
             "How to use the bot:\n\n"
@@ -74,15 +76,15 @@ TEXTS: dict[str, dict[str, str]] = {
             "Examples: trump, bitcoin, fed, election, ai"
         ),
         "empty_watchlist": (
-            "Your Watchlist is empty. Add a market from search, hot markets, or new markets."
+            "Your Watchlist is empty. Search for a market or add one from hot markets."
         ),
         "share": (
-            "Share PulseMarket AI with a friend:\n\n"
+            "Share PulseMarket AI:\n\n"
             "https://t.me/PulseMarketAIBot\n\n"
-            "This is not a financial referral program.\n"
-            "No bonuses.\n"
-            "No money.\n"
-            "Just a share link."
+            "It shows hot Polymarket markets, sharp movements, and simple explanations.\n\n"
+            "No wallets.\n"
+            "No deposits.\n"
+            "No trading."
         ),
         "about": (
             "PulseMarket AI is an analytics Telegram bot for Polymarket.\n\n"

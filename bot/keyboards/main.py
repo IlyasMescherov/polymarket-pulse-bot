@@ -25,7 +25,13 @@ BACK_TO_MENU = "menu:back"
 
 WATCHLIST_ADD_PREFIX = "watchlist:add:"
 WATCHLIST_REMOVE_PREFIX = "watchlist:remove:"
+EXPLAIN_PREFIX = "market:explain:"
+TIMELINE_PREFIX = "market:timeline:"
+SHARE_MARKET_PREFIX = "market:share:"
 CATEGORY_PREFIX = "categories:select:"
+TOPICS_MENU = "settings:topics"
+TOPIC_ADD = "topics:add"
+TOPIC_REMOVE_PREFIX = "topics:remove:"
 
 NOTIFICATIONS_ON = "settings:notifications:on"
 NOTIFICATIONS_OFF = "settings:notifications:off"
@@ -34,6 +40,7 @@ DAILY_DIGEST_OFF = "settings:daily:off"
 LANGUAGE_RU = "settings:language:ru"
 LANGUAGE_EN = "settings:language:en"
 THRESHOLD_PREFIX = "settings:threshold:"
+MIN_VOLUME_PREFIX = "settings:min_volume:"
 
 LABELS: dict[str, dict[str, str]] = {
     "ru": {
@@ -46,13 +53,18 @@ LABELS: dict[str, dict[str, str]] = {
         "categories": "🗂 Категории",
         "notifications": "🔔 Уведомления",
         "settings": "⚙️ Настройки",
-        "share": "🤝 Поделиться ботом",
+        "share": "🤝 Поделиться",
         "about": "ℹ️ О проекте",
         "understood": "Понятно",
-        "open_market": "🔗 Открыть рынок",
-        "add_watchlist": "⭐ Добавить в Watchlist",
+        "open_market": "🔗 Открыть Polymarket",
+        "add_watchlist": "⭐ В Watchlist",
+        "explain": "🧠 Объяснить проще",
+        "timeline": "📊 Динамика",
+        "share_market": "📤 Поделиться рынком",
         "remove": "🗑 Удалить",
         "back": "Назад в меню",
+        "topics": "🎯 Мои темы",
+        "add_topic": "➕ Добавить тему",
     },
     "en": {
         "quick_start": "🚀 Quick Start",
@@ -64,13 +76,18 @@ LABELS: dict[str, dict[str, str]] = {
         "categories": "🗂 Categories",
         "notifications": "🔔 Alerts",
         "settings": "⚙️ Settings",
-        "share": "🤝 Share Bot",
+        "share": "🤝 Share",
         "about": "ℹ️ About",
         "understood": "Got it",
-        "open_market": "🔗 Open Market",
-        "add_watchlist": "⭐ Add to Watchlist",
+        "open_market": "🔗 Open Polymarket",
+        "add_watchlist": "⭐ Watchlist",
+        "explain": "🧠 Explain simply",
+        "timeline": "📊 Timeline",
+        "share_market": "📤 Share market",
         "remove": "🗑 Remove",
         "back": "Back to Menu",
+        "topics": "🎯 My topics",
+        "add_topic": "➕ Add topic",
     },
 }
 
@@ -82,7 +99,6 @@ def label(key: str, language: str | None = None) -> str:
 
 def main_menu_keyboard(language: str | None = None) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text=label("quick_start", language), callback_data=QUICK_START)
     builder.button(text=label("hot", language), callback_data=HOT_MARKETS)
     builder.button(text=label("new", language), callback_data=NEW_MARKETS)
     builder.button(text=label("moves", language), callback_data=SHARP_MOVES)
@@ -90,6 +106,7 @@ def main_menu_keyboard(language: str | None = None) -> InlineKeyboardMarkup:
     builder.button(text=label("watchlist", language), callback_data=WATCHLIST_VIEW)
     builder.button(text=label("categories", language), callback_data=CATEGORIES)
     builder.button(text=label("notifications", language), callback_data=MY_NOTIFICATIONS)
+    builder.button(text=label("quick_start", language), callback_data=QUICK_START)
     builder.button(text=label("settings", language), callback_data=SETTINGS_MENU)
     builder.button(text=label("share", language), callback_data=SHARE_BOT)
     builder.button(text=label("about", language), callback_data=ABOUT_PROJECT)
@@ -126,6 +143,24 @@ def market_actions_keyboard(
             ],
             [
                 InlineKeyboardButton(
+                    text=label("explain", language),
+                    callback_data=f"{EXPLAIN_PREFIX}{market_id}",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=label("timeline", language),
+                    callback_data=f"{TIMELINE_PREFIX}{market_id}",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=label("share_market", language),
+                    callback_data=f"{SHARE_MARKET_PREFIX}{market_id}",
+                )
+            ],
+            [
+                InlineKeyboardButton(
                     text=label("back", language),
                     callback_data=BACK_TO_MENU,
                 )
@@ -145,12 +180,25 @@ def market_link_keyboard(url: str) -> InlineKeyboardMarkup:
 
 def watchlist_item_keyboard(
     item_id: int,
+    market_id: str,
     url: str,
     language: str | None = None,
 ) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text=label("open_market", language), url=url)],
+            [
+                InlineKeyboardButton(
+                    text=label("explain", language),
+                    callback_data=f"{EXPLAIN_PREFIX}{market_id}",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=label("timeline", language),
+                    callback_data=f"{TIMELINE_PREFIX}{market_id}",
+                )
+            ],
             [
                 InlineKeyboardButton(
                     text=label("remove", language),
@@ -188,6 +236,7 @@ def settings_keyboard(user: Any, language: str | None = None) -> InlineKeyboardM
         if user.daily_digest_enabled
         else DAILY_DIGEST_ON,
     )
+    builder.button(text=label("topics", language), callback_data=TOPICS_MENU)
     builder.button(text="🌍 Language: RU", callback_data=LANGUAGE_RU)
     builder.button(text="🌍 Language: EN", callback_data=LANGUAGE_EN)
     for value in (5, 10, 15, 20):
@@ -196,7 +245,28 @@ def settings_keyboard(user: Any, language: str | None = None) -> InlineKeyboardM
             text=f"📊 {marker}Movement threshold: {value}%",
             callback_data=f"{THRESHOLD_PREFIX}{value}",
         )
+    min_volume = int(getattr(user, "min_volume_for_alerts", 0) or 0)
+    for value in (0, 10_000, 50_000, 100_000):
+        marker = "✓ " if min_volume == value else ""
+        label_value = "$0" if value == 0 else f"${value // 1000}K"
+        builder.button(
+            text=f"🔎 {marker}Min alert volume: {label_value}",
+            callback_data=f"{MIN_VOLUME_PREFIX}{value}",
+        )
     builder.button(text=label("back", language), callback_data=BACK_TO_MENU)
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def topics_keyboard(topics: list[Any], language: str | None = None) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(text=label("add_topic", language), callback_data=TOPIC_ADD)
+    for topic in topics:
+        builder.button(
+            text=f"🗑 {topic.topic}",
+            callback_data=f"{TOPIC_REMOVE_PREFIX}{topic.id}",
+        )
+    builder.button(text=label("back", language), callback_data=SETTINGS_MENU)
     builder.adjust(1)
     return builder.as_markup()
 

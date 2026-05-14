@@ -84,7 +84,7 @@ async def share_bot(
     callback: CallbackQuery,
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
-    log_callback_action(logger, callback, "share_opened")
+    log_callback_action(logger, callback, "share_bot")
     await callback.answer()
     if callback.message:
         language = await _language(session_factory, callback.from_user)

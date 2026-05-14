@@ -8,11 +8,11 @@ from bot.database.repositories import get_latest_snapshots, save_market_snapshot
 from bot.services.polymarket_client import Market, PolymarketClient
 
 CATEGORY_KEYWORDS: dict[str, tuple[str, ...]] = {
-    "politics": ("trump", "election", "president", "senate", "congress"),
-    "crypto": ("bitcoin", "ethereum", "solana", "crypto", "btc", "eth"),
-    "ai_tech": ("ai", "openai", "nvidia", "tesla", "apple", "google"),
-    "sports": ("nba", "nfl", "ufc", "soccer", "football"),
-    "economy": ("fed", "inflation", "rates", "recession", "cpi"),
+    "politics": ("trump", "election", "president", "senate", "congress", "biden"),
+    "crypto": ("bitcoin", "ethereum", "solana", "crypto", "btc", "eth", "xrp"),
+    "ai_tech": ("ai", "openai", "nvidia", "tesla", "apple", "google", "microsoft"),
+    "sports": ("nba", "nfl", "ufc", "soccer", "football", "tennis"),
+    "economy": ("fed", "inflation", "rates", "recession", "cpi", "jobs"),
 }
 
 CATEGORY_LABELS: dict[str, str] = {
@@ -53,7 +53,24 @@ def _category_text(market: Market) -> str:
         category = " ".join(str(value) for value in raw_category.values())
     else:
         category = str(raw_category or "")
-    return f"{market.question} {category}".lower()
+    raw_tags = market.raw.get("tags") or market.raw.get("tag")
+    if isinstance(raw_tags, list):
+        tags = " ".join(
+            str(value.get("label") or value.get("name") or value)
+            if isinstance(value, dict)
+            else str(value)
+            for value in raw_tags
+        )
+    else:
+        tags = str(raw_tags or "")
+    return f"{market.question} {category} {tags}".lower()
+
+
+def market_matches_topics(market: Market, topics: list[str]) -> bool:
+    if not topics:
+        return True
+    text = _category_text(market)
+    return any(topic.lower() in text for topic in topics)
 
 
 def filter_markets_by_query(markets: list[Market], query: str) -> list[Market]:
