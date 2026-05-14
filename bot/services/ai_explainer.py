@@ -98,7 +98,7 @@ class AIExplainer:
                     "role": "system",
                     "content": (
                         "You explain prediction market resolution rules in simple Russian. "
-                        "Never provide buy/sell advice."
+                        "Never provide directional financial advice."
                     ),
                 },
                 {"role": "user", "content": prompt},

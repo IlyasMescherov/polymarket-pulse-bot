@@ -15,6 +15,7 @@ from bot.handlers import (
     markets,
     menu,
     settings as settings_handlers,
+    smart_money,
     start,
     watchlist,
 )
@@ -22,8 +23,10 @@ from bot.services.ai_explainer import AIExplainer
 from bot.services.health_server import HealthServer
 from bot.services.market_analyzer import MarketAnalyzer
 from bot.services.notifier import Notifier
+from bot.services.polymarket_data_client import PolymarketDataClient
 from bot.services.polymarket_client import PolymarketClient
 from bot.services.scheduler import Scheduler
+from bot.services.smart_money_analyzer import SmartMoneyAnalyzer
 from bot.utils.logging import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -33,6 +36,7 @@ PUBLIC_BOT_COMMANDS = [
     BotCommand(command="hot", description="Hot markets"),
     BotCommand(command="new", description="New markets"),
     BotCommand(command="today", description="Today’s Pulse"),
+    BotCommand(command="smart", description="Smart Money Radar"),
     BotCommand(command="moves", description="Sharp movements"),
     BotCommand(command="search", description="Search markets"),
     BotCommand(command="watchlist", description="My watchlist"),
@@ -64,10 +68,12 @@ async def main() -> None:
 
     bot = Bot(token=settings.bot_token)
     polymarket_client = PolymarketClient(settings.polymarket_base_url)
+    polymarket_data_client = PolymarketDataClient(settings.polymarket_data_api_url)
     market_analyzer = MarketAnalyzer(
         polymarket_client,
         movement_threshold=settings.movement_threshold,
     )
+    smart_money_analyzer = SmartMoneyAnalyzer(polymarket_data_client)
     ai_explainer = AIExplainer(
         settings.openai_api_key,
         model=settings.openai_model,
@@ -86,12 +92,14 @@ async def main() -> None:
     dp.include_router(markets.router)
     dp.include_router(watchlist.router)
     dp.include_router(feedback.router)
+    dp.include_router(smart_money.router)
     dp.include_router(settings_handlers.router)
     dp.errors.register(on_error)
 
     dp["settings"] = settings
     dp["session_factory"] = session_factory
     dp["market_analyzer"] = market_analyzer
+    dp["smart_money_analyzer"] = smart_money_analyzer
     dp["ai_explainer"] = ai_explainer
 
     await health_server.start()
@@ -108,6 +116,7 @@ async def main() -> None:
         except asyncio.CancelledError:
             pass
         await polymarket_client.close()
+        await polymarket_data_client.close()
         await bot.session.close()
         await health_server.stop()
         await engine.dispose()

@@ -46,6 +46,7 @@ class Settings:
     database_url: str
     openai_api_key: str | None
     polymarket_base_url: str
+    polymarket_data_api_url: str
     polymarket_builder_code: str | None
     polymarket_referral_url: str | None
     project_public_url: str | None
@@ -73,6 +74,10 @@ def load_settings() -> Settings:
         polymarket_base_url=os.getenv(
             "POLYMARKET_BASE_URL",
             "https://gamma-api.polymarket.com",
+        ).rstrip("/"),
+        polymarket_data_api_url=os.getenv(
+            "POLYMARKET_DATA_API_URL",
+            "https://data-api.polymarket.com",
         ).rstrip("/"),
         polymarket_builder_code=_optional(os.getenv("POLYMARKET_BUILDER_CODE")),
         polymarket_referral_url=_optional(os.getenv("POLYMARKET_REFERRAL_URL")),

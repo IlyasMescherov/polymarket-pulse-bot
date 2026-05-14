@@ -29,6 +29,7 @@ def test_format_admin_stats_handles_empty_tracking_sections() -> None:
 
     assert "Total users: 3" in text
     assert "Market opens today: 0" in text
+    assert "Smart Money snapshots count: 0" in text
     assert text.count("not tracked yet") == 2
 
 

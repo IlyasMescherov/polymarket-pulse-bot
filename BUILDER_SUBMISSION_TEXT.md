@@ -28,13 +28,14 @@ New users often struggle to find relevant Polymarket markets and understand prob
 
 ## Solution
 
-PulseMarket AI gives users a simple Telegram interface for hot markets, new markets, Today's Pulse, search, watchlists, smart alerts, beginner explanations, resolution guidance, and direct links to Polymarket.
+PulseMarket AI gives users a simple Telegram interface for hot markets, new markets, Today's Pulse, Smart Money Radar, search, watchlists, smart alerts, beginner explanations, resolution guidance, and direct links to Polymarket.
 
 ## Current MVP
 
 - Hot markets
 - New markets
 - Today's Pulse
+- Smart Money Radar
 - Sharp movement detection
 - Why it moved
 - Pulse Score
@@ -57,9 +58,15 @@ PulseMarket AI gives users a simple Telegram interface for hot markets, new mark
 - Public landing page
 - Competitor analysis
 
+## Smart Money Radar
+
+Smart Money Radar highlights unusual public activity, public leaderboard context, active market attention, and user-tracked public wallet addresses using public Polymarket data only.
+
+It is research-only. It does not connect wallets, place orders, manage positions, or provide financial advice.
+
 ## Safety Scope
 
-PulseMarket AI does not execute trades, manage wallets, hold funds, request private keys, accept deposits, or provide financial advice.
+PulseMarket AI does not execute trades, enable copy trading, manage wallets, hold funds, request private keys, accept deposits, or provide financial advice.
 
 ## Builder Code
 
@@ -67,13 +74,14 @@ Builder code is prepared for future official trading integration, but the curren
 
 ## Ecosystem Value
 
-PulseMarket AI helps new users discover Polymarket markets, understand probabilities in simple language, track market movement, and open market pages on Polymarket. It also tracks engagement metrics such as searches, feedback, watchlist activity, digest activity, and market opens.
+PulseMarket AI helps new users discover Polymarket markets, understand probabilities in simple language, track market movement, identify public attention shifts, and open market pages on Polymarket. It also tracks engagement metrics such as searches, feedback, watchlist activity, digest activity, Smart Money interactions, and market opens.
 
 ## Future Roadmap
 
 - Publish the static landing page
 - Group mode for Telegram communities
 - Better channel digest automation with manual approval
+- Deeper research-only public activity summaries
 - More advanced market health signals
 - Better topic personalization
 - More Polymarket discovery endpoints

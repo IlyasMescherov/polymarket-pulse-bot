@@ -12,6 +12,7 @@ from bot.utils.i18n import normalize_language
 HOT_MARKETS = "markets:hot"
 NEW_MARKETS = "markets:new"
 TODAY_PULSE = "markets:today"
+SMART_MONEY = "smart:menu"
 SHARP_MOVES = "markets:moves"
 MARKET_SEARCH = "markets:search"
 WATCHLIST_VIEW = "watchlist:view"
@@ -45,6 +46,13 @@ LANGUAGE_RU = "settings:language:ru"
 LANGUAGE_EN = "settings:language:en"
 THRESHOLD_PREFIX = "settings:threshold:"
 MIN_VOLUME_PREFIX = "settings:min_volume:"
+SMART_MONEY_ALERTS_ON = "settings:smart_money:on"
+SMART_MONEY_ALERTS_OFF = "settings:smart_money:off"
+
+SMART_UNUSUAL = "smart:unusual"
+SMART_TRADERS = "smart:traders"
+SMART_ACTIVE_MARKETS = "smart:active_markets"
+SMART_TRACK_WALLET = "smart:track_wallet"
 
 LABELS: dict[str, dict[str, str]] = {
     "ru": {
@@ -52,6 +60,7 @@ LABELS: dict[str, dict[str, str]] = {
         "hot": "🔥 Горячие",
         "new": "🆕 Новые",
         "today": "📰 Пульс дня",
+        "smart_money": "🧠 Smart Money",
         "moves": "📈 Движения",
         "search": "🔍 Поиск",
         "watchlist": "⭐ Watchlist",
@@ -78,6 +87,7 @@ LABELS: dict[str, dict[str, str]] = {
         "hot": "🔥 Hot",
         "new": "🆕 New",
         "today": "📰 Today’s Pulse",
+        "smart_money": "🧠 Smart Money",
         "moves": "📈 Moves",
         "search": "🔍 Search",
         "watchlist": "⭐ Watchlist",
@@ -112,6 +122,7 @@ def main_menu_keyboard(language: str | None = None) -> InlineKeyboardMarkup:
     builder.button(text=label("hot", language), callback_data=HOT_MARKETS)
     builder.button(text=label("new", language), callback_data=NEW_MARKETS)
     builder.button(text=label("today", language), callback_data=TODAY_PULSE)
+    builder.button(text=label("smart_money", language), callback_data=SMART_MONEY)
     builder.button(text=label("moves", language), callback_data=SHARP_MOVES)
     builder.button(text=label("search", language), callback_data=MARKET_SEARCH)
     builder.button(text=label("watchlist", language), callback_data=WATCHLIST_VIEW)
@@ -261,6 +272,7 @@ def categories_keyboard(language: str | None = None) -> InlineKeyboardMarkup:
 def settings_keyboard(user: Any, language: str | None = None) -> InlineKeyboardMarkup:
     notifications_status = "ON" if user.notifications_enabled else "OFF"
     daily_status = "ON" if user.daily_digest_enabled else "OFF"
+    smart_money_status = "ON" if getattr(user, "smart_money_alerts_enabled", False) else "OFF"
     threshold = int(user.movement_threshold * 100)
 
     builder = InlineKeyboardBuilder()
@@ -275,6 +287,12 @@ def settings_keyboard(user: Any, language: str | None = None) -> InlineKeyboardM
         callback_data=DAILY_DIGEST_OFF
         if user.daily_digest_enabled
         else DAILY_DIGEST_ON,
+    )
+    builder.button(
+        text=f"🧠 Smart Money alerts: {smart_money_status}",
+        callback_data=SMART_MONEY_ALERTS_OFF
+        if getattr(user, "smart_money_alerts_enabled", False)
+        else SMART_MONEY_ALERTS_ON,
     )
     builder.button(text=label("topics", language), callback_data=TOPICS_MENU)
     builder.button(text="🌍 Language: RU", callback_data=LANGUAGE_RU)
@@ -296,6 +314,18 @@ def settings_keyboard(user: Any, language: str | None = None) -> InlineKeyboardM
     builder.button(text=label("back", language), callback_data=BACK_TO_MENU)
     builder.adjust(1)
     return builder.as_markup()
+
+
+def smart_money_keyboard(language: str | None = None) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🐋 Unusual Activity", callback_data=SMART_UNUSUAL)],
+            [InlineKeyboardButton(text="🏆 Public Traders", callback_data=SMART_TRADERS)],
+            [InlineKeyboardButton(text="📊 Active Markets", callback_data=SMART_ACTIVE_MARKETS)],
+            [InlineKeyboardButton(text="👀 Track Public Wallet", callback_data=SMART_TRACK_WALLET)],
+            [InlineKeyboardButton(text=label("back", language), callback_data=BACK_TO_MENU)],
+        ]
+    )
 
 
 def topics_keyboard(topics: list[Any], language: str | None = None) -> InlineKeyboardMarkup:

@@ -68,6 +68,7 @@ Paste this into `/setcommands`:
 ```text
 start - Main menu
 today - Today's Pulse
+smart - Smart Money Radar
 hot - Hot markets
 new - New markets
 moves - Sharp movements

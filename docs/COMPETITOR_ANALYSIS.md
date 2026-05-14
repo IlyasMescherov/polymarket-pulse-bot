@@ -39,6 +39,7 @@ New and casual users still need a simpler discovery layer:
 - Resolution clarity
 - Safe analytics-only discovery
 - No wallet requirement
+- Read-only public activity context
 - Direct path to Polymarket pages
 
 This gap matters because many users do not start with a trading terminal. They start by asking: what is interesting today, what does this probability mean, and how will this market resolve?
@@ -52,6 +53,7 @@ Competitors help users trade faster. PulseMarket AI helps users understand marke
 ## Differentiators
 
 - Today's Pulse
+- Smart Money Radar
 - Beginner explanations
 - Resolution Explainer
 - Market Health
@@ -59,6 +61,8 @@ Competitors help users trade faster. PulseMarket AI helps users understand marke
 - Watchlist
 - Topic Alerts
 - Smart Alerts
+- Public wallet address tracking without wallet connection
+- Admin Smart Money metrics
 - Link click tracking
 - Admin stats
 - Analytics-only safety scope
@@ -67,6 +71,7 @@ Competitors help users trade faster. PulseMarket AI helps users understand marke
 
 - Public landing page
 - Better news and source trail
+- Deeper read-only public activity summaries
 - Group mode for community discovery
 - More Polymarket discovery endpoints
 - Official builder code order attribution in a future non-custodial trading integration

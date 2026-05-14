@@ -18,6 +18,7 @@ from bot.database.repositories import (
     set_min_volume_for_alerts,
     set_movement_threshold,
     set_notifications,
+    set_smart_money_alerts,
     upsert_user,
 )
 from bot.keyboards.main import (
@@ -30,6 +31,8 @@ from bot.keyboards.main import (
     NOTIFICATIONS_OFF,
     NOTIFICATIONS_ON,
     SETTINGS_MENU,
+    SMART_MONEY_ALERTS_OFF,
+    SMART_MONEY_ALERTS_ON,
     THRESHOLD_PREFIX,
     TOPIC_ADD,
     TOPIC_REMOVE_PREFIX,
@@ -180,6 +183,40 @@ async def toggle_daily_digest(
         except Exception:
             await session.rollback()
             logger.exception("Could not update daily digest setting")
+            await callback.message.answer(
+                "Не смог сохранить настройки. Попробуйте позже."
+            )
+            return
+
+    await callback.message.answer(
+        t("settings_saved", user.language),
+        reply_markup=settings_keyboard(user, user.language),
+    )
+
+
+@router.callback_query(F.data.in_({SMART_MONEY_ALERTS_ON, SMART_MONEY_ALERTS_OFF}))
+async def toggle_smart_money_alerts(
+    callback: CallbackQuery,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    enabled = callback.data == SMART_MONEY_ALERTS_ON
+    log_callback_action(
+        logger,
+        callback,
+        "smart_money_alerts_toggle",
+        enabled=str(enabled).lower(),
+    )
+    await callback.answer()
+    if not callback.message or callback.from_user is None:
+        return
+
+    async with session_factory() as session:
+        try:
+            user = await set_smart_money_alerts(session, callback.from_user, enabled)
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            logger.exception("Could not update Smart Money alert setting")
             await callback.message.answer(
                 "Не смог сохранить настройки. Попробуйте позже."
             )

@@ -12,6 +12,7 @@
 - X/Twitter: [@PulseMarketBot](https://x.com/PulseMarketBot)
 - Landing page source: [landing/](landing/)
 - Competitor analysis: [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md)
+- Smart Money analytics: [docs/SMART_MONEY_ANALYTICS.md](docs/SMART_MONEY_ANALYTICS.md)
 - Status: Live MVP
 
 ## Demo video placeholder
@@ -24,18 +25,20 @@ Recommended flow:
 2. Show the main menu.
 3. Open Hot Markets and show Pulse Score plus Market Health.
 4. Open Today's Pulse.
-5. Search for `bitcoin`.
-6. Open a Polymarket market link.
-7. Show Resolution Explainer and Why it moved.
-8. Show inline search with `@PulseMarketAIBot bitcoin`.
-9. Show `/admin_stats`.
-10. End on GitHub repo, Telegram handle, and X profile.
+5. Open Smart Money Radar.
+6. Search for `bitcoin`.
+7. Open a Polymarket market link.
+8. Show Resolution Explainer and Why it moved.
+9. Show inline search with `@PulseMarketAIBot bitcoin`.
+10. Show `/admin_stats`.
+11. End on GitHub repo, Telegram handle, and X profile.
 
 ## Screenshots checklist
 
 - Main menu `/start`
 - Hot Markets with Pulse Score and Market Health
 - Today's Pulse
+- Smart Money Radar
 - Search `bitcoin` results
 - Resolution Explainer
 - Why it moved
@@ -59,6 +62,7 @@ Do not include private chats, bot tokens, `.env`, server terminals, or unrelated
 ## Safety scope
 
 - No trading
+- No copy trading
 - No wallet management
 - No deposits
 - No private keys
@@ -72,6 +76,7 @@ PulseMarket AI does not execute trades, manage wallets, hold funds, request priv
 - Hot markets
 - New markets
 - Today's Pulse
+- Smart Money Radar
 - Sharp movement detection
 - Why it moved
 - Pulse Score
@@ -93,6 +98,7 @@ PulseMarket AI does not execute trades, manage wallets, hold funds, request priv
 - Link click tracking
 - Public landing page
 - Competitor analysis doc
+- Smart Money analytics doc
 
 ## Polymarket ecosystem value
 
@@ -110,6 +116,7 @@ It also tracks engagement metrics such as searches, watchlist activity, topic al
 - Engagement metrics for product learning
 - Public channel workflow for first users
 - Feedback loop for product improvement
+- Read-only public activity intelligence
 - Future builder-code readiness
 
 Builder code is prepared for future official trading integration, but the current MVP uses public Polymarket market data only.
@@ -120,6 +127,7 @@ Builder code is prepared for future official trading integration, but the curren
 - Group mode for community discovery
 - Better manual channel digest workflow
 - More advanced market health signals
+- More advanced Smart Money Radar summaries
 - Better topic personalization
 - More Polymarket discovery endpoints
 - Official builder code order attribution in a future non-custodial trading integration

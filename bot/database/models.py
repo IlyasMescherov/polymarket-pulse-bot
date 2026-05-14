@@ -54,6 +54,12 @@ class User(Base):
         default=0.0,
         server_default=text("0"),
     )
+    smart_money_alerts_enabled: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("false"),
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -218,6 +224,81 @@ class UserFeedback(Base):
     username: Mapped[str | None] = mapped_column(String(255), nullable=True)
     message: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        index=True,
+    )
+
+
+class SmartMoneySnapshot(Base):
+    __tablename__ = "smart_money_snapshots"
+    __table_args__ = (
+        Index("ix_smart_money_snapshots_created", "created_at"),
+        Index("ix_smart_money_snapshots_market_created", "market_id", "created_at"),
+        Index("ix_smart_money_snapshots_type_created", "signal_type", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    signal_type: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    market_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    market_title: Mapped[str | None] = mapped_column(Text, nullable=True)
+    wallet_address: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    amount_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
+    raw_data: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        index=True,
+    )
+
+
+class TrackedTrader(Base):
+    __tablename__ = "tracked_traders"
+    __table_args__ = (
+        UniqueConstraint(
+            "telegram_user_id",
+            "wallet_address",
+            name="uq_tracked_traders_user_wallet",
+        ),
+        Index("ix_tracked_traders_user_created", "telegram_user_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    telegram_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    wallet_address: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    label: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        index=True,
+    )
+
+
+class SmartMoneyAlertLog(Base):
+    __tablename__ = "smart_money_alerts_log"
+    __table_args__ = (
+        Index(
+            "ix_smart_money_alerts_user_signal_sent",
+            "telegram_user_id",
+            "signal_type",
+            "sent_at",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    telegram_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    signal_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    market_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    wallet_address: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    sent_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),

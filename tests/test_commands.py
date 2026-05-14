@@ -7,6 +7,7 @@ def test_public_commands_include_traction_commands_without_admin_commands() -> N
     command_names = {item.command for item in PUBLIC_BOT_COMMANDS}
 
     assert "today" in command_names
+    assert "smart" in command_names
     assert "feedback" in command_names
     assert "whoami" not in command_names
     assert "admin_stats" not in command_names

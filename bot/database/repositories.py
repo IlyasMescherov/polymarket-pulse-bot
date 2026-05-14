@@ -11,6 +11,9 @@ from bot.database.models import (
     MarketLinkClick,
     MarketSnapshot,
     SearchQuery,
+    SmartMoneyAlertLog,
+    SmartMoneySnapshot,
+    TrackedTrader,
     User,
     UserAlertLog,
     UserFeedback,
@@ -23,6 +26,7 @@ from bot.services.polymarket_client import Market
 ALLOWED_LANGUAGES = {"ru", "en"}
 ALLOWED_MOVEMENT_THRESHOLDS = {0.05, 0.10, 0.15, 0.20}
 ALLOWED_MIN_ALERT_VOLUMES = {0.0, 10_000.0, 50_000.0, 100_000.0}
+ALLOWED_SMART_SIGNAL_TYPES = {"large_trade", "active_market", "tracked_wallet"}
 ALLOWED_LINK_SOURCES = {
     "hot",
     "new",
@@ -142,6 +146,17 @@ async def set_min_volume_for_alerts(
     return user
 
 
+async def set_smart_money_alerts(
+    session: AsyncSession,
+    telegram_user: Any,
+    enabled: bool,
+) -> User:
+    user = await upsert_user(session, telegram_user)
+    user.smart_money_alerts_enabled = enabled
+    await session.flush()
+    return user
+
+
 async def get_notification_users(session: AsyncSession) -> list[User]:
     result = await session.execute(
         select(User).where(User.notifications_enabled.is_(True))
@@ -152,6 +167,13 @@ async def get_notification_users(session: AsyncSession) -> list[User]:
 async def get_daily_digest_users(session: AsyncSession) -> list[User]:
     result = await session.execute(
         select(User).where(User.daily_digest_enabled.is_(True))
+    )
+    return list(result.scalars().all())
+
+
+async def get_smart_money_alert_users(session: AsyncSession) -> list[User]:
+    result = await session.execute(
+        select(User).where(User.smart_money_alerts_enabled.is_(True))
     )
     return list(result.scalars().all())
 
@@ -543,4 +565,137 @@ async def count_alerts_sent_today(session: AsyncSession) -> int:
 
 async def count_snapshots(session: AsyncSession) -> int:
     result = await session.execute(select(func.count(MarketSnapshot.id)))
+    return int(result.scalar_one() or 0)
+
+
+async def add_tracked_trader(
+    session: AsyncSession,
+    telegram_user: Any,
+    wallet_address: str,
+    label: str | None = None,
+) -> tuple[TrackedTrader, bool]:
+    user = await upsert_user(session, telegram_user)
+    normalized_wallet = wallet_address.strip()
+    result = await session.execute(
+        select(TrackedTrader).where(
+            TrackedTrader.telegram_user_id == user.telegram_id,
+            TrackedTrader.wallet_address == normalized_wallet,
+        )
+    )
+    existing = result.scalar_one_or_none()
+    if existing is not None:
+        return existing, False
+
+    item = TrackedTrader(
+        user_id=user.id,
+        telegram_user_id=user.telegram_id,
+        wallet_address=normalized_wallet,
+        label=label,
+    )
+    session.add(item)
+    await session.flush()
+    return item, True
+
+
+async def get_user_tracked_traders(
+    session: AsyncSession,
+    telegram_user_or_id: Any,
+) -> list[TrackedTrader]:
+    telegram_id = (
+        telegram_user_or_id
+        if isinstance(telegram_user_or_id, int)
+        else getattr(telegram_user_or_id, "id", None)
+    )
+    if telegram_id is None:
+        raise ValueError("Telegram user id is required")
+
+    result = await session.execute(
+        select(TrackedTrader)
+        .where(TrackedTrader.telegram_user_id == telegram_id)
+        .order_by(desc(TrackedTrader.created_at), desc(TrackedTrader.id))
+    )
+    return list(result.scalars().all())
+
+
+async def create_smart_money_snapshot(
+    session: AsyncSession,
+    signal_type: str,
+    market_id: str | None = None,
+    market_title: str | None = None,
+    wallet_address: str | None = None,
+    amount_usd: float | None = None,
+    raw_data: dict[str, Any] | None = None,
+) -> SmartMoneySnapshot:
+    normalized_type = signal_type if signal_type in ALLOWED_SMART_SIGNAL_TYPES else "large_trade"
+    item = SmartMoneySnapshot(
+        signal_type=normalized_type,
+        market_id=market_id,
+        market_title=market_title,
+        wallet_address=wallet_address,
+        amount_usd=amount_usd,
+        raw_data=raw_data,
+    )
+    session.add(item)
+    await session.flush()
+    return item
+
+
+async def get_recent_smart_money_snapshots(
+    session: AsyncSession,
+    limit: int = 5,
+) -> list[SmartMoneySnapshot]:
+    result = await session.execute(
+        select(SmartMoneySnapshot)
+        .order_by(desc(SmartMoneySnapshot.created_at), desc(SmartMoneySnapshot.id))
+        .limit(limit)
+    )
+    return list(result.scalars().all())
+
+
+async def log_smart_money_alert_sent(
+    session: AsyncSession,
+    telegram_user_id: int,
+    signal_type: str,
+    market_id: str | None = None,
+    wallet_address: str | None = None,
+) -> SmartMoneyAlertLog:
+    item = SmartMoneyAlertLog(
+        telegram_user_id=telegram_user_id,
+        signal_type=signal_type,
+        market_id=market_id,
+        wallet_address=wallet_address,
+    )
+    session.add(item)
+    await session.flush()
+    return item
+
+
+async def count_smart_money_snapshots(session: AsyncSession) -> int:
+    result = await session.execute(select(func.count(SmartMoneySnapshot.id)))
+    return int(result.scalar_one() or 0)
+
+
+async def count_tracked_traders(session: AsyncSession) -> int:
+    result = await session.execute(select(func.count(TrackedTrader.id)))
+    return int(result.scalar_one() or 0)
+
+
+async def count_smart_money_alerts_today(session: AsyncSession) -> int:
+    start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    result = await session.execute(
+        select(func.count(SmartMoneyAlertLog.id)).where(
+            SmartMoneyAlertLog.sent_at >= start
+        )
+    )
+    return int(result.scalar_one() or 0)
+
+
+async def count_large_trades_detected_today(session: AsyncSession) -> int:
+    start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    result = await session.execute(
+        select(func.count(SmartMoneySnapshot.id)).where(
+            SmartMoneySnapshot.signal_type == "large_trade",
+            SmartMoneySnapshot.created_at >= start,
+        )
+    )
     return int(result.scalar_one() or 0)

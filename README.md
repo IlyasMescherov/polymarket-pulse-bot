@@ -60,6 +60,7 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - Hot markets: shows 5 active Polymarket markets ranked by recent volume.
 - New markets: shows 5 newly created active markets.
 - Today's Pulse: shows 3-5 high-signal markets ranked by Pulse Score, volume, movement, and data quality.
+- Smart Money Radar: read-only view of unusual public activity, public leaderboard data, active market attention, and user-tracked public wallet addresses.
 - Sharp movements: compares stored market snapshots and surfaces probability changes above each user's selected threshold.
 - Why it moved: explains probability movement using public market data, volume, time to resolution, and risk flags.
 - Pulse Score: each market gets a 0-100 signal score based on movement, volume, time to close, and data quality.
@@ -84,6 +85,7 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - Inline search: BotFather inline mode is enabled; `@PulseMarketAIBot bitcoin` returns market results.
 - Link click tracking: Polymarket link opens are tracked as safe product analytics without storing secrets.
 - Admin stats: project admins can view aggregate usage stats with `/admin_stats`.
+- Smart Money admin metrics: admin stats include Smart Money snapshots, tracked public wallets, alerts sent today, and large public activity detected today.
 - Admin diagnostics: `/whoami` shows a user's Telegram id for safe admin setup.
 - Optional referral URL: an optional referral URL can be configured only if the project becomes eligible for Polymarket referrals.
 - Optional AI explanations: when `OPENAI_API_KEY` is configured, the bot adds short plain-language explanations.
@@ -100,6 +102,14 @@ https://gamma-api.polymarket.com
 ```
 
 The bot reads public market fields such as `question`, `outcomePrices`, `volume`, `endDate`, and `slug`.
+
+For Smart Money Radar, the bot also uses the public Polymarket Data API when available:
+
+```text
+https://data-api.polymarket.com
+```
+
+The current integration uses public trades, public leaderboard data, and public positions endpoints with graceful fallback. If the Data API is unavailable or returns an unexpected format, the bot keeps running and shows a friendly unavailable state.
 
 For Yes/No markets, the Yes outcome price is displayed as the implied event probability. If the data is incomplete, the bot does not fail; it shows a friendly "data is not available yet" message.
 
@@ -130,6 +140,7 @@ Market Health is separate from Pulse Score. It is a quality and activity signal 
 - python-dotenv
 - Optional OpenAI API
 - Public Polymarket Gamma API
+- Public Polymarket Data API
 
 ## Safety and Scope
 
@@ -138,6 +149,7 @@ PulseMarket Bot is not a trading bot.
 The current MVP has strict safety boundaries:
 
 - No trading
+- No copy trading
 - No wallet connection
 - No wallet management
 - No deposits
@@ -187,6 +199,21 @@ It is based on public market quality signals such as volume, probability availab
 
 Market Health is not a recommendation to trade.
 
+## Smart Money Radar
+
+Smart Money Radar is a read-only market intelligence layer. It highlights unusual public activity, public leaderboard context, active market attention, and public wallet addresses that users choose to track.
+
+It does not connect wallets, manage positions, place orders, or tell users what decision to make. The feature is for research only and uses public Polymarket data.
+
+Current Smart Money Radar surfaces:
+
+- Unusual Activity: large public activity detected from public trade data.
+- Public Traders: public leaderboard context with a clear past-performance warning.
+- Active Markets: markets receiving stronger public attention.
+- Track Public Wallet: lets a user save a public EVM wallet address for read-only monitoring.
+
+If the public Data API is unavailable, the bot falls back safely and does not interrupt the rest of the product.
+
 ## Resolution Explainer
 
 Each market card includes a resolution explainer button. It summarizes:
@@ -215,7 +242,7 @@ The bot then sends the direct Polymarket URL. This gives the project safe engage
 
 Project admins can use `/admin_stats` when their Telegram ids are configured in `ADMIN_TELEGRAM_IDS`.
 
-The command shows aggregate metrics such as total users, notification users, digest users, watchlist items, topic count, market opens, alerts sent today, top clicked markets, top search queries, and snapshot count.
+The command shows aggregate metrics such as total users, notification users, digest users, watchlist items, topic count, market opens, alerts sent today, Smart Money snapshots, tracked public wallets, top clicked markets, top search queries, and snapshot count.
 
 ## Optional referral URL
 
@@ -251,11 +278,13 @@ The MVP is useful for the Builders Program because it demonstrates:
 Phase 5 adds a lightweight traction layer for public launch:
 
 - Today's Pulse gives users a simple daily discovery surface.
-- Why it moved explains market movement without giving buy/sell advice.
+- Why it moved explains market movement without giving directional financial advice.
+- Smart Money Radar highlights unusual public activity as research-only market intelligence.
 - `/admin_digest` generates a channel-ready post for [@PulseMarketAI](https://t.me/PulseMarketAI).
 - `/feedback` gives early users a direct product feedback loop.
 - The static landing page in [landing/](landing/) gives the project a public website, currently served at [http://2.26.80.27:8080](http://2.26.80.27:8080).
 - [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md) explains how PulseMarket AI differs from trading terminals and copy-trading tools.
+- [docs/SMART_MONEY_ANALYTICS.md](docs/SMART_MONEY_ANALYTICS.md) explains the read-only Smart Money Radar scope.
 
 ## Roadmap
 
@@ -305,6 +334,7 @@ Optional:
 
 ```env
 OPENAI_API_KEY=
+POLYMARKET_DATA_API_URL=https://data-api.polymarket.com
 POLYMARKET_BUILDER_CODE=
 POLYMARKET_REFERRAL_URL=
 PROJECT_PUBLIC_URL=

@@ -12,14 +12,19 @@ from bot.database.repositories import (
     count_alerts_sent_today,
     count_market_link_clicks,
     count_market_link_clicks_today,
+    count_large_trades_detected_today,
     count_snapshots,
+    count_smart_money_alerts_today,
+    count_smart_money_snapshots,
     count_topics,
     count_total_users,
+    count_tracked_traders,
     count_users_with_daily_digest,
     count_users_with_notifications,
     count_watchlist_items,
     get_latest_snapshots,
     get_recent_feedback,
+    get_recent_smart_money_snapshots,
     get_top_clicked_markets,
     get_top_search_queries,
 )
@@ -65,6 +70,10 @@ def format_admin_stats(
     snapshots_count: int,
     top_clicked_markets: list[tuple[str, str, int]],
     top_search_queries: list[tuple[str, int]],
+    smart_money_snapshots_count: int = 0,
+    tracked_wallets_count: int = 0,
+    smart_money_alerts_today: int = 0,
+    large_trades_detected_today: int = 0,
 ) -> str:
     lines = [
         "📊 PulseMarket Admin Stats",
@@ -78,6 +87,10 @@ def format_admin_stats(
         f"Market opens total: {market_opens_total}",
         f"Alerts sent today: {alerts_sent_today}",
         f"Snapshots count: {snapshots_count}",
+        f"Smart Money snapshots count: {smart_money_snapshots_count}",
+        f"Tracked wallets count: {tracked_wallets_count}",
+        f"Smart Money alerts sent today: {smart_money_alerts_today}",
+        f"Large public activities detected today: {large_trades_detected_today}",
         "",
         "Top clicked markets:",
     ]
@@ -98,6 +111,26 @@ def format_admin_stats(
     else:
         lines.append("not tracked yet")
 
+    return "\n".join(lines)
+
+
+def format_smart_money_digest_block(snapshots: list[object]) -> str:
+    if not snapshots:
+        return ""
+
+    lines = ["", "🧠 Smart Money Radar", ""]
+    for index, item in enumerate(snapshots[:3], start=1):
+        title = str(getattr(item, "market_title", "") or "Public activity")
+        amount = getattr(item, "amount_usd", None)
+        amount_text = f" · {amount:,.0f} USD public activity" if amount else ""
+        lines.append(f"{index}. {title[:100]}{amount_text}")
+    lines.extend(
+        [
+            "",
+            "Research only.",
+            "No copy trading. No trade execution.",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -146,6 +179,10 @@ async def admin_stats(
             "snapshots_count": await count_snapshots(session),
             "top_clicked_markets": await get_top_clicked_markets(session),
             "top_search_queries": await get_top_search_queries(session),
+            "smart_money_snapshots_count": await count_smart_money_snapshots(session),
+            "tracked_wallets_count": await count_tracked_traders(session),
+            "smart_money_alerts_today": await count_smart_money_alerts_today(session),
+            "large_trades_detected_today": await count_large_trades_detected_today(session),
         }
 
     await message.answer(format_admin_stats(**stats))
@@ -170,6 +207,7 @@ async def admin_digest(
         markets = hot_markets + new_markets
         async with session_factory() as session:
             latest = await get_latest_snapshots(session, [market.id for market in markets])
+            smart_money_snapshots = await get_recent_smart_money_snapshots(session, limit=3)
         items = build_today_pulse_items(
             markets,
             latest_snapshots=latest,
@@ -186,7 +224,12 @@ async def admin_digest(
         await message.answer("Could not build digest. Please try again later.")
         return
 
-    await message.answer(format_channel_digest(items, language="en"), disable_web_page_preview=True)
+    digest = format_channel_digest(items, language="en")
+    smart_money_block = format_smart_money_digest_block(smart_money_snapshots)
+    await message.answer(
+        digest + smart_money_block,
+        disable_web_page_preview=True,
+    )
 
 
 @router.message(Command("admin_feedback"))

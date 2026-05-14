@@ -11,6 +11,7 @@ The current version focuses on public Polymarket market discovery, market moveme
 - Telegram `/start` onboarding flow
 - Main menu with inline buttons
 - Today's Pulse discovery screen and `/today` command
+- Smart Money Radar screen and `/smart` command
 - Hot Markets view
 - New Markets view
 - Sharp Movement detection based on stored market snapshots
@@ -34,6 +35,8 @@ The current version focuses on public Polymarket market discovery, market moveme
 - Admin stats command gated by `ADMIN_TELEGRAM_IDS`
 - Admin channel digest command gated by `ADMIN_TELEGRAM_IDS`
 - User feedback command and admin feedback review
+- Read-only Smart Money Radar using public Polymarket Data API fallback
+- Public wallet address tracking without wallet connection
 - `/whoami` command for safe admin id discovery
 - User notification toggle and alert settings for sharp movement alerts
 - PostgreSQL persistence for users and market snapshots
@@ -52,6 +55,7 @@ The current version focuses on public Polymarket market discovery, market moveme
 - Seed phrase handling
 - Payments
 - Order signing
+- Automated Smart Money alert delivery
 - Webhook production mode
 - Demo video and final screenshots
 
@@ -108,6 +112,21 @@ Phase 5 adds the public traction layer for first users and Builders Program revi
 - Public landing page served from [http://2.26.80.27:8080](http://2.26.80.27:8080) and sourced from [landing/](landing/)
 - Competitor analysis in [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md)
 
+## Phase 6 Read-only Smart Money Radar Completed
+
+Phase 6 adds public market intelligence without trading or wallet connection:
+
+- `/smart` command and Smart Money main menu button
+- Unusual Activity from public Data API trades when available
+- Public Traders from public leaderboard data when available
+- Active Markets aggregation from public activity
+- Track Public Wallet for public EVM addresses only
+- Smart Money alerts setting
+- Admin stats for Smart Money snapshots, tracked public wallets, alerts, and large public activity
+- Optional Smart Money block in `/admin_digest`
+- Public landing page Smart Money Radar section
+- [docs/SMART_MONEY_ANALYTICS.md](docs/SMART_MONEY_ANALYTICS.md)
+
 ## What is live on VPS
 
 - Production VPS health endpoint: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
@@ -116,6 +135,7 @@ Phase 5 adds the public traction layer for first users and Builders Program revi
 - Public channel: [@PulseMarketAI](https://t.me/PulseMarketAI)
 - Support: [@PulseMarketAISupport](https://t.me/PulseMarketAISupport)
 - X/Twitter: [@PulseMarketBot](https://x.com/PulseMarketBot)
+- Smart Money Radar is available from `/smart`
 - Inline search is enabled and manually verified with `@PulseMarketAIBot bitcoin`
 - Docker Compose production deployment
 - PostgreSQL-backed persistence
@@ -148,6 +168,7 @@ Phase 5 adds the public traction layer for first users and Builders Program revi
 - Invite the first 20 to 50 users.
 - Run `/admin_digest` and publish the first channel digest manually.
 - Ask first users to send `/feedback`.
+- Ask early users whether Smart Money Radar is understandable without trading terminology.
 
 ## Next Milestones
 
