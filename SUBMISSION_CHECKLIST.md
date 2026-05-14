@@ -6,6 +6,11 @@
 - Telegram: [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
 - GitHub: [https://github.com/IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
 - Production health: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
+- Channel: [@PulseMarketAI](https://t.me/PulseMarketAI)
+- Support: [@PulseMarketAISupport](https://t.me/PulseMarketAISupport)
+- X/Twitter: [@PulseMarketBot](https://x.com/PulseMarketBot)
+- Landing page source: [landing/](landing/)
+- Competitor analysis: [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md)
 - Status: Live MVP
 
 ## Demo video placeholder
@@ -17,19 +22,22 @@ Recommended flow:
 1. Open `@PulseMarketAIBot` and send `/start`.
 2. Show the main menu.
 3. Open Hot Markets and show Pulse Score plus Market Health.
-4. Search for `bitcoin`.
-5. Open a Polymarket market link.
-6. Show Resolution Explainer.
-7. Show inline search with `@PulseMarketAIBot bitcoin`.
-8. Show `/admin_stats`.
-9. End on GitHub repo and Telegram handle.
+4. Open Today's Pulse.
+5. Search for `bitcoin`.
+6. Open a Polymarket market link.
+7. Show Resolution Explainer and Why it moved.
+8. Show inline search with `@PulseMarketAIBot bitcoin`.
+9. Show `/admin_stats`.
+10. End on GitHub repo, Telegram handle, and X profile.
 
 ## Screenshots checklist
 
 - Main menu `/start`
 - Hot Markets with Pulse Score and Market Health
+- Today's Pulse
 - Search `bitcoin` results
 - Resolution Explainer
+- Why it moved
 - Inline search `@PulseMarketAIBot bitcoin`
 - Watchlist
 - Admin Stats
@@ -62,7 +70,9 @@ PulseMarket AI does not execute trades, manage wallets, hold funds, request priv
 
 - Hot markets
 - New markets
+- Today's Pulse
 - Sharp movement detection
+- Why it moved
 - Pulse Score
 - Market Health Score
 - Risk flags
@@ -72,12 +82,16 @@ PulseMarket AI does not execute trades, manage wallets, hold funds, request priv
 - Topic alerts
 - Smart alerts
 - Daily digest
+- Admin channel digest
+- Feedback
 - Beginner mode
 - Resolution explainer
 - Share cards
 - Inline search
 - Admin stats
 - Link click tracking
+- Static landing page
+- Competitor analysis doc
 
 ## Polymarket ecosystem value
 
@@ -93,13 +107,17 @@ It also tracks engagement metrics such as searches, watchlist activity, topic al
 - Direct links back to Polymarket market pages
 - Safe analytics-only scope
 - Engagement metrics for product learning
+- Public channel workflow for first users
+- Feedback loop for product improvement
 - Future builder-code readiness
 
 Builder code is prepared for future official trading integration, but the current MVP uses public Polymarket market data only.
 
 ## Future roadmap
 
-- Public landing page
+- Publish landing page
+- Group mode for community discovery
+- Better manual channel digest workflow
 - More advanced market health signals
 - Better topic personalization
 - More Polymarket discovery endpoints

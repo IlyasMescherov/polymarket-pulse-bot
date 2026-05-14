@@ -25,13 +25,15 @@ Builder submission package:
 ## Public Telegram Setup
 
 - Bot: [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
-- Channel: placeholder until the public channel is created
-- Support: placeholder until a support contact or group is created
+- Channel: [@PulseMarketAI](https://t.me/PulseMarketAI)
+- Support: [@PulseMarketAISupport](https://t.me/PulseMarketAISupport)
 - X/Twitter: [@PulseMarketBot](https://x.com/PulseMarketBot)
 - BotFather setup doc: [docs/BOTFATHER_SETUP.md](docs/BOTFATHER_SETUP.md)
 - Public Telegram setup doc: [docs/TELEGRAM_PUBLIC_SETUP.md](docs/TELEGRAM_PUBLIC_SETUP.md)
 - X/Twitter setup doc: [docs/X_PUBLIC_SETUP.md](docs/X_PUBLIC_SETUP.md)
 - X/Twitter launch thread: [docs/X_LAUNCH_THREAD.md](docs/X_LAUNCH_THREAD.md)
+- Competitor analysis: [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md)
+- Static landing page: [landing/](landing/)
 - Avatar guide: [docs/brand/AVATAR_GUIDE.md](docs/brand/AVATAR_GUIDE.md)
 
 Recommended public channel username: `@PulseMarketAI`. If unavailable, use `@PulseMarketNews`, `@PulseMarketAlerts`, `@PulseMarketSignal`, `@PulseMarketRadar`, or `@PulseMarketDigest`.
@@ -54,7 +56,9 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 
 - Hot markets: shows 5 active Polymarket markets ranked by recent volume.
 - New markets: shows 5 newly created active markets.
+- Today's Pulse: shows 3-5 high-signal markets ranked by Pulse Score, volume, movement, and data quality.
 - Sharp movements: compares stored market snapshots and surfaces probability changes above each user's selected threshold.
+- Why it moved: explains probability movement using public market data, volume, time to resolution, and risk flags.
 - Pulse Score: each market gets a 0-100 signal score based on movement, volume, time to close, and data quality.
 - Market Health Score: each market gets a separate 0-100 quality/activity score based on volume, data completeness, time to resolution, and optional liquidity signals when available.
 - Risk flags: market cards highlight low volume, missing data, ending soon, sharp move, and volatile-history risks.
@@ -67,6 +71,8 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - Resolution explainer: users can ask how a market resolves and what rules should be checked.
 - Categories: politics, crypto, AI / tech, sports, and economy filters are available from the main menu.
 - Daily digest: users can opt into a daily digest of high-signal markets, personalized by topics when available.
+- Admin channel digest: admins can generate a ready-to-copy daily post for `@PulseMarketAI` with `/admin_digest`.
+- Feedback: users can send product feedback with `/feedback`; admins can review recent feedback with `/admin_feedback`.
 - Quick start: a short guided onboarding screen explains how to use the bot.
 - Settings: users can manage sharp move alerts, daily digest preference, language, and movement threshold.
 - RU/EN language: core product screens support Russian and English through a simple internal dictionary.
@@ -80,6 +86,7 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - Optional AI explanations: when `OPENAI_API_KEY` is configured, the bot adds short plain-language explanations.
 - No-AI fallback: when `OPENAI_API_KEY` is missing, the bot still works normally.
 - Public market links: every market card links users back to Polymarket.
+- Static landing page: a no-build page is included under [landing/](landing/) for public launch and Builders Program packaging.
 
 ## How it works
 
@@ -236,10 +243,21 @@ The MVP is useful for the Builders Program because it demonstrates:
 - Snapshot-based market movement detection
 - A clear safety boundary before any trading integration
 
+## Traction Layer
+
+Phase 5 adds a lightweight traction layer for public launch:
+
+- Today's Pulse gives users a simple daily discovery surface.
+- Why it moved explains market movement without giving buy/sell advice.
+- `/admin_digest` generates a channel-ready post for [@PulseMarketAI](https://t.me/PulseMarketAI).
+- `/feedback` gives early users a direct product feedback loop.
+- The static landing page in [landing/](landing/) gives the project a public website starting point.
+- [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md) explains how PulseMarket AI differs from trading terminals and copy-trading tools.
+
 ## Roadmap
 
 - Add richer market movement summaries.
-- Add a public landing page with screenshots and demo video.
+- Publish the static landing page and add screenshots plus demo video.
 - Add production monitoring and health checks.
 - Add webhook deployment mode for production Telegram hosting.
 - Consider Builder Code usage only in a future trading version after safety review.

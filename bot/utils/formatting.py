@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import Any
 
 from bot.database.models import MarketSnapshot, UserWatchlist
 from bot.services.market_analyzer import MarketMovement
@@ -193,6 +194,97 @@ def format_movement_card(
         lines.extend(["", _label("Риски:", "Risk flags:", language), *risk_flags[:3]])
     if explanation:
         lines.extend(["", "AI brief:", explanation])
+    return "\n".join(lines)
+
+
+def format_today_pulse_card(
+    item: Any,
+    index: int,
+    ai_why: str | None = None,
+    language: str | None = None,
+) -> str:
+    market = item.market
+    why = ai_why or item.why_it_matters
+    lines = [
+        "📰 Today’s Pulse" if normalize_language(language) == "en" else "📰 Пульс дня",
+        "",
+        f"{index}. {market.question}",
+        "",
+        f"{_label('Вероятность:', 'Probability:', language)} {format_probability(market.yes_probability, language)}",
+        f"{_label('Движение:', 'Movement:', language)} "
+        + (
+            f"{format_percentage_points(item.delta, language)} / 24h"
+            if item.delta is not None
+            else _missing_data(language)
+        ),
+        f"{_label('Объём:', 'Volume:', language)} {format_compact_usd(market.volume, language)}",
+        f"Pulse Score: {item.pulse_score.value}/100",
+        f"Market Health: {item.market_health.value}/100",
+        "",
+        _label("Почему важно:", "Why it matters:", language),
+        why,
+    ]
+    if item.risk_flags:
+        lines.extend(["", _label("Риски:", "Risk flags:", language), *item.risk_flags[:3]])
+    return "\n".join(lines)
+
+
+def format_channel_digest(
+    items: list[Any],
+    language: str | None = "en",
+) -> str:
+    normalized = normalize_language(language)
+    if normalized == "en":
+        lines = [
+            "📰 Today’s Pulse",
+            "",
+            "3 interesting Polymarket markets today:",
+        ]
+        for index, item in enumerate(items[:3], start=1):
+            lines.extend(
+                [
+                    "",
+                    f"{index}. {item.market.question}",
+                    f"Probability: {format_probability(item.market.yes_probability, 'en')}",
+                    f"Pulse Score: {item.pulse_score.value}/100",
+                    f"Why it matters: {item.why_it_matters}",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "Analytics only.",
+                "No trading. No wallets. No financial advice.",
+                "",
+                "Bot: https://t.me/PulseMarketAIBot",
+            ]
+        )
+        return "\n".join(lines)
+
+    lines = [
+        "📰 Пульс дня",
+        "",
+        "3 интересных рынка Polymarket сегодня:",
+    ]
+    for index, item in enumerate(items[:3], start=1):
+        lines.extend(
+            [
+                "",
+                f"{index}. {item.market.question}",
+                f"Вероятность: {format_probability(item.market.yes_probability, 'ru')}",
+                f"Pulse Score: {item.pulse_score.value}/100",
+                f"Почему важно: {item.why_it_matters}",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "Только аналитика.",
+            "Без торговли. Без кошельков. Без финансовых советов.",
+            "",
+            "Бот: https://t.me/PulseMarketAIBot",
+        ]
+    )
     return "\n".join(lines)
 
 

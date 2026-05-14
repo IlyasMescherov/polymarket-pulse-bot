@@ -18,9 +18,15 @@ from bot.database.repositories import (
     count_users_with_daily_digest,
     count_users_with_notifications,
     count_watchlist_items,
+    get_latest_snapshots,
+    get_recent_feedback,
     get_top_clicked_markets,
     get_top_search_queries,
 )
+from bot.services.market_analyzer import MarketAnalyzer
+from bot.services.polymarket_client import PolymarketAPIError
+from bot.services.today_pulse import build_today_pulse_items
+from bot.utils.formatting import format_channel_digest
 from bot.utils.logging import log_user_action
 
 logger = logging.getLogger(__name__)
@@ -95,6 +101,20 @@ def format_admin_stats(
     return "\n".join(lines)
 
 
+def format_admin_feedback(feedback_items: list[object]) -> str:
+    lines = ["📝 Recent feedback", ""]
+    if not feedback_items:
+        lines.append("No feedback yet.")
+        return "\n".join(lines)
+
+    for index, item in enumerate(feedback_items, start=1):
+        username = getattr(item, "username", None)
+        author = f"@{username}" if username else str(getattr(item, "telegram_user_id", "unknown"))
+        message = str(getattr(item, "message", "")).strip().replace("\n", " ")
+        lines.append(f"{index}. {author}: {message[:240]}")
+    return "\n".join(lines)
+
+
 @router.message(Command("whoami"))
 async def whoami(message: Message) -> None:
     log_user_action(logger, message.from_user, "whoami")
@@ -129,3 +149,58 @@ async def admin_stats(
         }
 
     await message.answer(format_admin_stats(**stats))
+
+
+@router.message(Command("admin_digest"))
+async def admin_digest(
+    message: Message,
+    settings: Settings,
+    session_factory: async_sessionmaker[AsyncSession],
+    market_analyzer: MarketAnalyzer,
+) -> None:
+    log_user_action(logger, message.from_user, "admin_digest")
+    telegram_id = message.from_user.id if message.from_user else None
+    if telegram_id not in settings.admin_telegram_ids:
+        await message.answer("Команда доступна только администратору.")
+        return
+
+    try:
+        hot_markets = await market_analyzer.get_hot_markets(limit=20)
+        new_markets = await market_analyzer.get_new_markets(limit=20)
+        markets = hot_markets + new_markets
+        async with session_factory() as session:
+            latest = await get_latest_snapshots(session, [market.id for market in markets])
+        items = build_today_pulse_items(
+            markets,
+            latest_snapshots=latest,
+            threshold=0.10,
+            limit=3,
+            language="en",
+        )
+    except PolymarketAPIError:
+        logger.exception("Could not build admin digest")
+        await message.answer("Could not load Polymarket data. Please try again later.")
+        return
+    except Exception:
+        logger.exception("Could not build admin digest")
+        await message.answer("Could not build digest. Please try again later.")
+        return
+
+    await message.answer(format_channel_digest(items, language="en"), disable_web_page_preview=True)
+
+
+@router.message(Command("admin_feedback"))
+async def admin_feedback(
+    message: Message,
+    settings: Settings,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    log_user_action(logger, message.from_user, "admin_feedback")
+    telegram_id = message.from_user.id if message.from_user else None
+    if telegram_id not in settings.admin_telegram_ids:
+        await message.answer("Команда доступна только администратору.")
+        return
+
+    async with session_factory() as session:
+        feedback_items = await get_recent_feedback(session, limit=10)
+    await message.answer(format_admin_feedback(feedback_items))

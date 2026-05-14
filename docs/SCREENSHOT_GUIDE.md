@@ -6,12 +6,14 @@ Prefer English mode for all screenshots.
 
 1. Main menu `/start`
 2. Hot Markets with Pulse Score and Market Health
-3. Search `bitcoin` results
-4. Resolution Explainer
-5. Inline search `@PulseMarketAIBot bitcoin`
-6. Watchlist
-7. Admin Stats
-8. Open Polymarket link flow
+3. Today's Pulse
+4. Search `bitcoin` results
+5. Resolution Explainer
+6. Why it moved
+7. Inline search `@PulseMarketAIBot bitcoin`
+8. Watchlist
+9. Admin Stats
+10. Open Polymarket link flow
 
 ## Rules
 

@@ -59,7 +59,17 @@ Show a market card with:
 - Market Health
 - Risk flags if present
 
-### 17-23 sec: Search
+### 17-21 sec: Today's Pulse
+
+Tap:
+
+```text
+Today's Pulse
+```
+
+Show the ranked daily discovery card.
+
+### 21-27 sec: Search
 
 Use Search and type:
 
@@ -69,7 +79,7 @@ bitcoin
 
 Show the search result cards.
 
-### 23-28 sec: Open Polymarket link
+### 27-31 sec: Open Polymarket link
 
 Tap:
 
@@ -79,7 +89,7 @@ Open
 
 Show that the bot sends a direct Polymarket market link.
 
-### 28-33 sec: Resolution Explainer
+### 31-35 sec: Resolution Explainer and Why It Moved
 
 Tap:
 
@@ -87,9 +97,15 @@ Tap:
 Rules
 ```
 
-Show the resolution guidance.
+Then tap:
 
-### 33-38 sec: Inline search
+```text
+Why it moved
+```
+
+Show the resolution guidance and movement explanation.
+
+### 35-39 sec: Inline search
 
 In any Telegram chat field, type:
 
@@ -99,7 +115,7 @@ In any Telegram chat field, type:
 
 Show inline results.
 
-### 38-43 sec: Admin stats
+### 39-43 sec: Admin stats
 
 Send:
 

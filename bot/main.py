@@ -9,7 +9,15 @@ from aiogram.types import BotCommand, ErrorEvent
 
 from bot.config import load_settings
 from bot.database.db import create_engine, create_session_factory, ping_database
-from bot.handlers import admin, markets, menu, settings as settings_handlers, start, watchlist
+from bot.handlers import (
+    admin,
+    feedback,
+    markets,
+    menu,
+    settings as settings_handlers,
+    start,
+    watchlist,
+)
 from bot.services.ai_explainer import AIExplainer
 from bot.services.health_server import HealthServer
 from bot.services.market_analyzer import MarketAnalyzer
@@ -20,6 +28,20 @@ from bot.utils.logging import setup_logging
 
 logger = logging.getLogger(__name__)
 
+PUBLIC_BOT_COMMANDS = [
+    BotCommand(command="start", description="Main menu"),
+    BotCommand(command="hot", description="Hot markets"),
+    BotCommand(command="new", description="New markets"),
+    BotCommand(command="today", description="Today’s Pulse"),
+    BotCommand(command="moves", description="Sharp movements"),
+    BotCommand(command="search", description="Search markets"),
+    BotCommand(command="watchlist", description="My watchlist"),
+    BotCommand(command="settings", description="Settings"),
+    BotCommand(command="feedback", description="Send feedback"),
+    BotCommand(command="whoami", description="Show my Telegram ID"),
+    BotCommand(command="about", description="About PulseMarket AI"),
+]
+
 
 async def on_error(event: ErrorEvent) -> bool:
     logger.exception("Update failed", exc_info=event.exception)
@@ -27,19 +49,7 @@ async def on_error(event: ErrorEvent) -> bool:
 
 
 async def set_bot_commands(bot: Bot) -> None:
-    await bot.set_my_commands(
-        [
-            BotCommand(command="start", description="Main menu"),
-            BotCommand(command="hot", description="Hot markets"),
-            BotCommand(command="new", description="New markets"),
-            BotCommand(command="moves", description="Sharp movements"),
-            BotCommand(command="search", description="Search markets"),
-            BotCommand(command="watchlist", description="My watchlist"),
-            BotCommand(command="settings", description="Settings"),
-            BotCommand(command="whoami", description="Show my Telegram ID"),
-            BotCommand(command="about", description="About PulseMarket AI"),
-        ]
-    )
+    await bot.set_my_commands(PUBLIC_BOT_COMMANDS)
 
 
 async def main() -> None:
@@ -76,6 +86,7 @@ async def main() -> None:
     dp.include_router(menu.router)
     dp.include_router(markets.router)
     dp.include_router(watchlist.router)
+    dp.include_router(feedback.router)
     dp.include_router(settings_handlers.router)
     dp.errors.register(on_error)
 

@@ -11,6 +11,7 @@ from bot.utils.i18n import normalize_language
 
 HOT_MARKETS = "markets:hot"
 NEW_MARKETS = "markets:new"
+TODAY_PULSE = "markets:today"
 SHARP_MOVES = "markets:moves"
 MARKET_SEARCH = "markets:search"
 WATCHLIST_VIEW = "watchlist:view"
@@ -28,6 +29,7 @@ WATCHLIST_REMOVE_PREFIX = "watchlist:remove:"
 EXPLAIN_PREFIX = "market:explain:"
 RESOLUTION_PREFIX = "market:resolution:"
 TIMELINE_PREFIX = "market:timeline:"
+WHY_MOVED_PREFIX = "market:why_moved:"
 SHARE_MARKET_PREFIX = "market:share:"
 OPEN_MARKET_PREFIX = "market:open:"
 CATEGORY_PREFIX = "categories:select:"
@@ -49,6 +51,7 @@ LABELS: dict[str, dict[str, str]] = {
         "quick_start": "🚀 Быстрый старт",
         "hot": "🔥 Горячие",
         "new": "🆕 Новые",
+        "today": "📰 Пульс дня",
         "moves": "📈 Движения",
         "search": "🔍 Поиск",
         "watchlist": "⭐ Watchlist",
@@ -63,6 +66,7 @@ LABELS: dict[str, dict[str, str]] = {
         "explain": "🧠 Просто",
         "resolution": "📜 Правила",
         "timeline": "📊 Динамика",
+        "why_moved": "🧭 Почему двигается",
         "share_market": "📤 Поделиться",
         "remove": "🗑 Удалить",
         "back": "Назад в меню",
@@ -73,6 +77,7 @@ LABELS: dict[str, dict[str, str]] = {
         "quick_start": "🚀 Quick Start",
         "hot": "🔥 Hot",
         "new": "🆕 New",
+        "today": "📰 Today’s Pulse",
         "moves": "📈 Moves",
         "search": "🔍 Search",
         "watchlist": "⭐ Watchlist",
@@ -87,6 +92,7 @@ LABELS: dict[str, dict[str, str]] = {
         "explain": "🧠 Simple",
         "resolution": "📜 Rules",
         "timeline": "📊 Timeline",
+        "why_moved": "🧭 Why it moved",
         "share_market": "📤 Share",
         "remove": "🗑 Remove",
         "back": "Back to Menu",
@@ -105,6 +111,7 @@ def main_menu_keyboard(language: str | None = None) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text=label("hot", language), callback_data=HOT_MARKETS)
     builder.button(text=label("new", language), callback_data=NEW_MARKETS)
+    builder.button(text=label("today", language), callback_data=TODAY_PULSE)
     builder.button(text=label("moves", language), callback_data=SHARP_MOVES)
     builder.button(text=label("search", language), callback_data=MARKET_SEARCH)
     builder.button(text=label("watchlist", language), callback_data=WATCHLIST_VIEW)
@@ -167,6 +174,12 @@ def market_actions_keyboard(
                 InlineKeyboardButton(
                     text=label("timeline", language),
                     callback_data=f"{TIMELINE_PREFIX}{market_id}",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=label("why_moved", language),
+                    callback_data=f"{WHY_MOVED_PREFIX}{market_id}",
                 )
             ],
             [

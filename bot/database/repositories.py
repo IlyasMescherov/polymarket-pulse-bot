@@ -13,6 +13,7 @@ from bot.database.models import (
     SearchQuery,
     User,
     UserAlertLog,
+    UserFeedback,
     UserTopic,
     UserWatchlist,
 )
@@ -25,6 +26,7 @@ ALLOWED_MIN_ALERT_VOLUMES = {0.0, 10_000.0, 50_000.0, 100_000.0}
 ALLOWED_LINK_SOURCES = {
     "hot",
     "new",
+    "today",
     "moves",
     "search",
     "watchlist",
@@ -466,6 +468,40 @@ async def get_top_search_queries(
         .limit(limit)
     )
     return [(str(query), int(count)) for query, count in result.all()]
+
+
+async def create_user_feedback(
+    session: AsyncSession,
+    telegram_user: Any,
+    message: str,
+) -> UserFeedback:
+    telegram_id = getattr(telegram_user, "id", None)
+    if telegram_id is None:
+        raise ValueError("Telegram user id is required")
+    normalized_message = message.strip()
+    if not normalized_message:
+        raise ValueError("Feedback message is required")
+
+    item = UserFeedback(
+        telegram_user_id=telegram_id,
+        username=getattr(telegram_user, "username", None),
+        message=normalized_message[:4000],
+    )
+    session.add(item)
+    await session.flush()
+    return item
+
+
+async def get_recent_feedback(
+    session: AsyncSession,
+    limit: int = 10,
+) -> list[UserFeedback]:
+    result = await session.execute(
+        select(UserFeedback)
+        .order_by(desc(UserFeedback.created_at), desc(UserFeedback.id))
+        .limit(limit)
+    )
+    return list(result.scalars().all())
 
 
 async def count_total_users(session: AsyncSession) -> int:

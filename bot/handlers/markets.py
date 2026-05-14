@@ -28,7 +28,9 @@ from bot.keyboards.main import (
     RESOLUTION_PREFIX,
     SHARE_MARKET_PREFIX,
     SHARP_MOVES,
+    TODAY_PULSE,
     TIMELINE_PREFIX,
+    WHY_MOVED_PREFIX,
     categories_keyboard,
     main_menu_keyboard,
     market_actions_keyboard,
@@ -36,16 +38,19 @@ from bot.keyboards.main import (
 from bot.services.ai_explainer import AIExplainer
 from bot.services.market_analyzer import CATEGORY_LABELS, MarketAnalyzer, MarketMovement
 from bot.services.market_health import calculate_market_health
+from bot.services.movement_explainer import explain_movement
 from bot.services.polymarket_client import Market, PolymarketAPIError
 from bot.services.pulse_score import calculate_pulse_score
 from bot.services.risk_flags import count_strong_snapshot_moves, market_risk_flags
 from bot.services.resolution_explainer import ResolutionExplainer
+from bot.services.today_pulse import TodayPulseItem, build_today_pulse_items
 from bot.utils.formatting import (
     format_beginner_explanation,
     format_market_card,
     format_market_timeline,
     format_movement_card,
     format_share_market_card,
+    format_today_pulse_card,
     format_probability,
 )
 from bot.utils.i18n import t
@@ -217,6 +222,60 @@ async def _send_movement_cards(
         )
 
 
+async def _build_today_pulse(
+    market_analyzer: MarketAnalyzer,
+    session_factory: async_sessionmaker[AsyncSession],
+    language: str,
+    threshold: float = 0.10,
+    limit: int = 5,
+) -> list[TodayPulseItem]:
+    hot_markets = await market_analyzer.get_hot_markets(limit=20)
+    new_markets = await market_analyzer.get_new_markets(limit=20)
+    markets = hot_markets + new_markets
+    async with session_factory() as session:
+        latest = await get_latest_snapshots(session, [market.id for market in markets])
+    return build_today_pulse_items(
+        markets,
+        latest_snapshots=latest,
+        threshold=threshold,
+        limit=limit,
+        language=language,
+    )
+
+
+async def _send_today_pulse_cards(
+    message: Message,
+    items: list[TodayPulseItem],
+    ai_explainer: AIExplainer,
+    language: str,
+) -> None:
+    if not items:
+        await message.answer(
+            "No strong Today’s Pulse candidates yet. Please try again later."
+            if language == "en"
+            else "Пока нет сильных кандидатов для Пульса дня. Попробуйте позже."
+        )
+        return
+
+    for index, item in enumerate(items[:5], start=1):
+        ai_why = await ai_explainer.explain_market(item.market)
+        await message.answer(
+            format_today_pulse_card(
+                item,
+                index,
+                ai_why=ai_why,
+                language=language,
+            ),
+            reply_markup=market_actions_keyboard(
+                item.market.url,
+                item.market.id,
+                language,
+                source="today",
+            ),
+            disable_web_page_preview=True,
+        )
+
+
 @router.callback_query(F.data == HOT_MARKETS)
 async def hot_markets(
     callback: CallbackQuery,
@@ -270,6 +329,81 @@ async def hot_markets_command(
         heading="🔥 Hot market" if language == "en" else "🔥 Горячий рынок",
         source="hot",
     )
+
+
+@router.callback_query(F.data == TODAY_PULSE)
+async def today_pulse(
+    callback: CallbackQuery,
+    market_analyzer: MarketAnalyzer,
+    ai_explainer: AIExplainer,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    log_callback_action(logger, callback, "today_pulse")
+    language = await _language(session_factory, callback.from_user)
+    await callback.answer("Building Today’s Pulse" if language == "en" else "Собираю Пульс дня")
+    if not callback.message:
+        return
+    try:
+        async with session_factory() as session:
+            user = await upsert_user(session, callback.from_user)
+            threshold = user.movement_threshold
+            await session.commit()
+        items = await _build_today_pulse(
+            market_analyzer,
+            session_factory,
+            language,
+            threshold=threshold,
+            limit=5,
+        )
+    except PolymarketAPIError:
+        logger.exception("Could not fetch markets for today's pulse")
+        await callback.message.answer(t("api_error", language))
+        return
+    except Exception:
+        logger.exception("Could not build today's pulse")
+        await callback.message.answer(
+            "Could not build Today’s Pulse. Please try again later."
+            if language == "en"
+            else "Не смог собрать Пульс дня. Попробуйте позже."
+        )
+        return
+    await _send_today_pulse_cards(callback.message, items, ai_explainer, language)
+
+
+@router.message(Command("today"))
+async def today_pulse_command(
+    message: Message,
+    market_analyzer: MarketAnalyzer,
+    ai_explainer: AIExplainer,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    log_user_action(logger, message.from_user, "today_pulse")
+    language = await _language(session_factory, message.from_user)
+    try:
+        async with session_factory() as session:
+            user = await upsert_user(session, message.from_user)
+            threshold = user.movement_threshold
+            await session.commit()
+        items = await _build_today_pulse(
+            market_analyzer,
+            session_factory,
+            language,
+            threshold=threshold,
+            limit=5,
+        )
+    except PolymarketAPIError:
+        logger.exception("Could not fetch markets for today's pulse")
+        await message.answer(t("api_error", language))
+        return
+    except Exception:
+        logger.exception("Could not build today's pulse")
+        await message.answer(
+            "Could not build Today’s Pulse. Please try again later."
+            if language == "en"
+            else "Не смог собрать Пульс дня. Попробуйте позже."
+        )
+        return
+    await _send_today_pulse_cards(message, items, ai_explainer, language)
 
 
 @router.callback_query(F.data == NEW_MARKETS)
@@ -689,6 +823,56 @@ async def market_timeline(
             return
     language = await _language(session_factory, callback.from_user)
     await callback.message.answer(format_market_timeline(snapshots, language=language))
+
+
+@router.callback_query(F.data.startswith(WHY_MOVED_PREFIX))
+async def why_market_moved(
+    callback: CallbackQuery,
+    market_analyzer: MarketAnalyzer,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    market_id = (callback.data or "").removeprefix(WHY_MOVED_PREFIX)
+    log_callback_action(logger, callback, "why_it_moved", market_id=market_id)
+    await callback.answer()
+    if not callback.message:
+        return
+
+    language = await _language(session_factory, callback.from_user)
+    try:
+        market = await market_analyzer.find_market_by_id(market_id)
+    except PolymarketAPIError:
+        logger.exception("Could not fetch market for movement explanation")
+        await callback.message.answer(t("api_error", language))
+        return
+    if market is None:
+        await callback.message.answer(
+            "Could not find this market." if language == "en" else "Не смог найти этот рынок."
+        )
+        return
+
+    async with session_factory() as session:
+        user = await upsert_user(session, callback.from_user)
+        threshold = user.movement_threshold
+        latest = await get_latest_snapshots(session, [market.id])
+        recent = await get_recent_snapshots(session, market.id, limit=8)
+        await session.commit()
+    snapshot = latest.get(market.id)
+    delta = (
+        market.yes_probability - snapshot.yes_probability
+        if snapshot is not None
+        and snapshot.yes_probability is not None
+        and market.yes_probability is not None
+        else None
+    )
+    risk_flags = market_risk_flags(
+        market,
+        delta=delta,
+        threshold=threshold,
+        strong_moves_count=count_strong_snapshot_moves(recent, threshold),
+    )
+    await callback.message.answer(
+        explain_movement(market, delta=delta, risk_flags=risk_flags, language=language).to_text()
+    )
 
 
 @router.callback_query(F.data.startswith(SHARE_MARKET_PREFIX))

@@ -10,9 +10,11 @@ The current version focuses on public Polymarket market discovery, market moveme
 
 - Telegram `/start` onboarding flow
 - Main menu with inline buttons
+- Today's Pulse discovery screen and `/today` command
 - Hot Markets view
 - New Markets view
 - Sharp Movement detection based on stored market snapshots
+- Why it moved explanations for market movement context
 - Pulse Score for market signal ranking
 - Market Health Score for public-data quality and activity context
 - Risk flags for low volume, missing data, ending soon, sharp move, and volatile history
@@ -30,6 +32,8 @@ The current version focuses on public Polymarket market discovery, market moveme
 - Link click tracking for market opens
 - Search query tracking for aggregate product stats
 - Admin stats command gated by `ADMIN_TELEGRAM_IDS`
+- Admin channel digest command gated by `ADMIN_TELEGRAM_IDS`
+- User feedback command and admin feedback review
 - `/whoami` command for safe admin id discovery
 - User notification toggle and alert settings for sharp movement alerts
 - PostgreSQL persistence for users and market snapshots
@@ -49,7 +53,6 @@ The current version focuses on public Polymarket market discovery, market moveme
 - Payments
 - Order signing
 - Webhook production mode
-- Public landing page
 - Demo video and final screenshots
 
 ## Phase 3 Completed
@@ -93,10 +96,25 @@ The submission package is ready for final screenshots and demo recording:
 - [docs/SCREENSHOT_GUIDE.md](docs/SCREENSHOT_GUIDE.md)
 - [docs/screenshots/](docs/screenshots/)
 
+## Phase 5 Traction Layer Completed
+
+Phase 5 adds the public traction layer for first users and Builders Program review:
+
+- Today's Pulse for daily-style discovery
+- Why it moved explanations
+- Channel digest text generation for `@PulseMarketAI`
+- User feedback collection
+- Admin feedback review
+- Static landing page in [landing/](landing/)
+- Competitor analysis in [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md)
+
 ## What is live on VPS
 
 - Production VPS health endpoint: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
 - Telegram bot: [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
+- Public channel: [@PulseMarketAI](https://t.me/PulseMarketAI)
+- Support: [@PulseMarketAISupport](https://t.me/PulseMarketAISupport)
+- X/Twitter: [@PulseMarketBot](https://x.com/PulseMarketBot)
 - Inline search is enabled and manually verified with `@PulseMarketAIBot bitcoin`
 - Docker Compose production deployment
 - PostgreSQL-backed persistence
@@ -106,13 +124,14 @@ The submission package is ready for final screenshots and demo recording:
 
 1. Switch bot UI to English for screenshots.
 2. Take clean screenshots.
-3. Record a 45-second demo video.
-4. Paste [BUILDER_SUBMISSION_TEXT.md](BUILDER_SUBMISSION_TEXT.md) into the application.
-5. Attach GitHub repo.
-6. Include Telegram bot handle.
-7. Include demo video link.
-8. Include admin stats screenshot.
-9. Add `POLYMARKET_REFERRAL_URL` only if the project becomes eligible for Polymarket referrals.
+3. Record a 45-second demo video if the application form asks for one.
+4. Publish the static landing page through GitHub Pages, Nginx, or another simple host.
+5. Post the first manual digest in [@PulseMarketAI](https://t.me/PulseMarketAI).
+6. Paste [BUILDER_SUBMISSION_TEXT.md](BUILDER_SUBMISSION_TEXT.md) into the application.
+7. Attach GitHub repo.
+8. Include Telegram bot handle.
+9. Include admin stats screenshot.
+10. Add `POLYMARKET_REFERRAL_URL` only if the project becomes eligible for Polymarket referrals.
 
 ## Before First Users
 
@@ -126,6 +145,8 @@ The submission package is ready for final screenshots and demo recording:
 - Add `PROJECT_X_URL`.
 - Record a clean demo video.
 - Invite the first 20 to 50 users.
+- Run `/admin_digest` and publish the first channel digest manually.
+- Ask first users to send `/feedback`.
 
 ## Next Milestones
 

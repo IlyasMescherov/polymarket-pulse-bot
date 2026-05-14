@@ -26,13 +26,15 @@ New users often struggle to find relevant Polymarket markets and understand prob
 
 ## Solution
 
-PulseMarket AI gives users a simple Telegram interface for hot markets, new markets, search, watchlists, smart alerts, beginner explanations, resolution guidance, and direct links to Polymarket.
+PulseMarket AI gives users a simple Telegram interface for hot markets, new markets, Today's Pulse, search, watchlists, smart alerts, beginner explanations, resolution guidance, and direct links to Polymarket.
 
 ## Current MVP
 
 - Hot markets
 - New markets
+- Today's Pulse
 - Sharp movement detection
+- Why it moved
 - Pulse Score
 - Market Health Score
 - Risk flags
@@ -42,12 +44,16 @@ PulseMarket AI gives users a simple Telegram interface for hot markets, new mark
 - Topic alerts
 - Smart alerts
 - Daily digest
+- Channel digest text generation
+- User feedback
 - Beginner mode
 - Resolution explainer
 - Share cards
 - Inline search
 - Admin stats
 - Link click tracking
+- Static landing page
+- Competitor analysis
 
 ## Safety Scope
 
@@ -59,11 +65,13 @@ Builder code is prepared for future official trading integration, but the curren
 
 ## Ecosystem Value
 
-PulseMarket AI helps new users discover Polymarket markets, understand probabilities in simple language, track market movement, and open market pages on Polymarket. It also tracks engagement metrics such as searches, watchlist activity, and market opens.
+PulseMarket AI helps new users discover Polymarket markets, understand probabilities in simple language, track market movement, and open market pages on Polymarket. It also tracks engagement metrics such as searches, feedback, watchlist activity, digest activity, and market opens.
 
 ## Future Roadmap
 
-- Public landing page
+- Publish the static landing page
+- Group mode for Telegram communities
+- Better channel digest automation with manual approval
 - More advanced market health signals
 - Better topic personalization
 - More Polymarket discovery endpoints

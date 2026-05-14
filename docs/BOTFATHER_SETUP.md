@@ -69,10 +69,12 @@ Paste this into `/setcommands`:
 start - Main menu
 hot - Hot markets
 new - New markets
+today - Today's Pulse
 moves - Sharp movements
 search - Search markets
 watchlist - My watchlist
 settings - Settings
+feedback - Send feedback
 whoami - Show my Telegram ID
 about - About PulseMarket AI
 ```
