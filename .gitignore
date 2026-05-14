@@ -11,3 +11,4 @@ logs/
 .DS_Store
 .idea/
 .vscode/
+docs/screenshots/final/*.png
