@@ -60,6 +60,7 @@ class Settings:
     app_port: int = 8080
     market_poll_interval_seconds: int = 900
     movement_threshold: float = 0.10
+    smart_money_active_market_min_usd: float = 1000.0
     openai_model: str = "gpt-4o-mini"
 
 
@@ -95,5 +96,8 @@ def load_settings() -> Settings:
             os.getenv("MARKET_POLL_INTERVAL_SECONDS", "900")
         ),
         movement_threshold=float(os.getenv("MOVEMENT_THRESHOLD", "0.10")),
+        smart_money_active_market_min_usd=float(
+            os.getenv("SMART_MONEY_ACTIVE_MARKET_MIN_USD", "1000")
+        ),
         openai_model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
     )

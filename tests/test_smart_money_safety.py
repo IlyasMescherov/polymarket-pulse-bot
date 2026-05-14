@@ -18,11 +18,17 @@ def test_smart_money_public_files_do_not_use_banned_promotional_phrases() -> Non
 
     for phrase in (
         "insider",
+        "inside information",
         "guaranteed",
+        "guaranteed profit",
         "buy now",
         "sell now",
         "copy this trader",
+        "entry signal",
         "trade signal",
+        "sure profit",
+        "alpha leak",
+        "private info",
     ):
         assert phrase not in text
 

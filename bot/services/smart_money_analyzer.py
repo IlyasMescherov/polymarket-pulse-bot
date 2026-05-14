@@ -14,6 +14,7 @@ from bot.utils.formatting import format_compact_usd
 
 WALLET_RE = re.compile(r"^0x[a-fA-F0-9]{40}$")
 DEFAULT_LARGE_TRADE_USD = 10_000.0
+DEFAULT_ACTIVE_MARKET_MIN_USD = 1000.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,6 +112,7 @@ def score_public_trader(trader: LeaderboardTrader) -> TraderScore:
 
 def aggregate_market_activity(
     trades: list[DataTrade],
+    min_usd: float = DEFAULT_ACTIVE_MARKET_MIN_USD,
     limit: int = 5,
 ) -> list[MarketActivity]:
     totals: dict[str, float] = defaultdict(float)
@@ -137,6 +139,7 @@ def aggregate_market_activity(
             participant_count=len(participants[market_id]),
         )
         for market_id, amount in totals.items()
+        if amount >= min_usd
     ]
     return sorted(
         activities,
@@ -164,17 +167,37 @@ def explain_large_trade(signal: LargeTradeSignal) -> str:
     )
 
 
-def explain_market_activity(activity: MarketActivity) -> str:
+def explain_market_activity(activity: MarketActivity, language: str | None = None) -> str:
+    if language == "ru":
+        trade_word = "публичным сделкам"
+        return "\n".join(
+            [
+                "⚡ Активный публичный рынок",
+                "",
+                activity.market_title,
+                "",
+                "Публичная активность выше порога видимости.",
+                "",
+                "Оценка публичной активности:",
+                f"{format_compact_usd(activity.amount_usd, 'ru')} по {activity.trades_count} {trade_word}.",
+                "",
+                "Что смотреть дальше:",
+                "Объём, движение вероятности и правила разрешения рынка.",
+                "",
+                "Для анализа · Без сделок",
+            ]
+        )
+
     return "\n".join(
         [
-            "⚡ Attention Shift",
+            "⚡ Active Public Market",
             "",
             activity.market_title,
             "",
-            "This market is showing stronger public activity than usual.",
+            "Public activity detected above the visibility threshold.",
             "",
-            "Public activity:",
-            f"{format_compact_usd(activity.amount_usd, 'en')} across {activity.trades_count} events.",
+            "Estimated public activity:",
+            f"{format_compact_usd(activity.amount_usd, 'en')} across {activity.trades_count} public trades.",
             "",
             "Watch next:",
             "Volume, probability movement, and resolution rules.",
@@ -189,9 +212,11 @@ class SmartMoneyAnalyzer:
         self,
         data_client: PolymarketDataClient,
         large_trade_usd: float = DEFAULT_LARGE_TRADE_USD,
+        active_market_min_usd: float = DEFAULT_ACTIVE_MARKET_MIN_USD,
     ) -> None:
         self._data_client = data_client
         self._large_trade_usd = large_trade_usd
+        self._active_market_min_usd = active_market_min_usd
 
     async def unusual_activity(self, limit: int = 5) -> list[LargeTradeSignal]:
         trades = await self._data_client.get_trades(limit=100)
@@ -203,4 +228,8 @@ class SmartMoneyAnalyzer:
 
     async def active_markets(self, limit: int = 5) -> list[MarketActivity]:
         trades = await self._data_client.get_trades(limit=100)
-        return aggregate_market_activity(trades, limit=limit)
+        return aggregate_market_activity(
+            trades,
+            min_usd=self._active_market_min_usd,
+            limit=limit,
+        )

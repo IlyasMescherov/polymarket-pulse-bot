@@ -74,7 +74,7 @@ Builder code is prepared for future official trading integration, but the curren
 
 ## Ecosystem Value
 
-PulseMarket AI helps new users discover Polymarket markets, understand probabilities in simple language, track market movement, identify public attention shifts, and open market pages on Polymarket. It also tracks engagement metrics such as searches, feedback, watchlist activity, digest activity, Smart Money interactions, and market opens.
+PulseMarket AI helps new users discover Polymarket markets, understand probabilities in simple language, track market movement, identify active public market activity, and open market pages on Polymarket. It also tracks engagement metrics such as searches, feedback, watchlist activity, digest activity, Smart Money interactions, and market opens.
 
 ## Future Roadmap
 

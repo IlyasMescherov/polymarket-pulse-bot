@@ -26,6 +26,7 @@ from bot.keyboards.main import (
 )
 from bot.services.smart_money_analyzer import (
     SmartMoneyAnalyzer,
+    TraderScore,
     explain_large_trade,
     explain_market_activity,
     validate_wallet_address,
@@ -74,6 +75,139 @@ def _short_wallet(address: str | None) -> str:
     return f"{address[:6]}…{address[-4:]}"
 
 
+def _unusual_empty_state(language: str) -> str:
+    if language == "ru":
+        return "\n".join(
+            [
+                "🐋 Необычная активность",
+                "",
+                "Сейчас нет сильной необычной публичной активности.",
+                "PulseMarket продолжит отслеживание.",
+                "",
+                "Так бывает, когда нет свежих публичных сделок выше крупного порога активности.",
+                "",
+                "Для анализа · Без сделок",
+            ]
+        )
+    return "\n".join(
+        [
+            "🐋 Unusual Activity",
+            "",
+            "No strong unusual public activity detected right now.",
+            "PulseMarket will keep watching.",
+            "",
+            "This can happen when there are no recent public trades above the large activity threshold.",
+            "",
+            "Research only · No trade execution",
+        ]
+    )
+
+
+def _active_markets_empty_state(language: str) -> str:
+    if language == "ru":
+        return "\n".join(
+            [
+                "📊 Активные рынки",
+                "",
+                "Сейчас нет активных публичных рынков выше порога видимости.",
+                "PulseMarket продолжит отслеживание.",
+                "",
+                "Для анализа · Без сделок",
+            ]
+        )
+    return "\n".join(
+        [
+            "📊 Active Markets",
+            "",
+            "No active public markets above the visibility threshold right now.",
+            "PulseMarket will keep watching.",
+            "",
+            "Research only · No trade execution",
+        ]
+    )
+
+
+def _track_wallet_prompt(language: str) -> str:
+    if language == "ru":
+        return "\n".join(
+            [
+                "👀 Отслеживать публичный адрес",
+                "",
+                "Отправь публичный адрес кошелька:",
+                "",
+                "Пример:",
+                "0x1234...abcd",
+                "",
+                "Только публичный адрес.",
+                "Никогда не отправляй private key или seed phrase.",
+            ]
+        )
+    return "\n".join(
+        [
+            "👀 Track Public Wallet",
+            "",
+            "Send a public wallet address:",
+            "",
+            "Example:",
+            "0x1234...abcd",
+            "",
+            "Only public addresses.",
+            "Never send a private key or seed phrase.",
+        ]
+    )
+
+
+def _invalid_wallet_message(language: str) -> str:
+    if language == "ru":
+        return "\n".join(
+            [
+                "Это не похоже на публичный адрес кошелька.",
+                "Адрес должен начинаться с 0x и содержать 42 символа.",
+            ]
+        )
+    return "\n".join(
+        [
+            "This does not look like a public wallet address.",
+            "It should start with 0x and contain 42 characters.",
+        ]
+    )
+
+
+def _format_public_traders(traders: list[TraderScore]) -> str:
+    lines = [
+        "🏆 Public Traders",
+        "",
+        "Past performance does not guarantee future results.",
+        "Use this for research, not copy trading.",
+        "",
+    ]
+    if not traders:
+        lines.extend(
+            [
+                "Leaderboard data is not available right now.",
+                "",
+                "Research only · No trade execution",
+            ]
+        )
+        return "\n".join(lines)
+
+    for index, trader in enumerate(traders, start=1):
+        name = trader.display_name or _short_wallet(trader.wallet_address)
+        lines.extend([f"{index}. {name}", f"Trader Score: {trader.score}/100 · {trader.label}"])
+        if trader.wallet_address:
+            lines.append(f"Wallet: {_short_wallet(trader.wallet_address)}")
+        if trader.volume is not None:
+            lines.append(f"Public volume: {format_compact_usd(trader.volume, 'en')}")
+        if trader.trades_count is not None:
+            lines.append(f"Public trades: {trader.trades_count}")
+        if trader.rank is not None:
+            lines.append(f"Rank: {trader.rank}")
+        lines.append("")
+
+    lines.append("Research only · No trade execution")
+    return "\n".join(lines)
+
+
 async def _send_smart_menu(
     message: Message,
     session_factory: async_sessionmaker[AsyncSession],
@@ -114,21 +248,10 @@ async def unusual_activity(
     if not callback.message:
         return
 
+    language = await _language(session_factory, callback.from_user)
     signals = await smart_money_analyzer.unusual_activity(limit=5)
     if not signals:
-        await callback.message.answer(
-            "\n".join(
-                [
-                    "🐋 Unusual Activity",
-                    "",
-                    "No unusual public activity available right now.",
-                    "",
-                    "This can happen when the public Data API is unavailable or there is not enough recent data.",
-                    "",
-                    "Research only · No trade execution",
-                ]
-            )
-        )
+        await callback.message.answer(_unusual_empty_state(language))
         return
 
     async with session_factory() as session:
@@ -175,39 +298,7 @@ async def public_traders(
         return
 
     traders = await smart_money_analyzer.public_traders(limit=5)
-    lines = [
-        "🏆 Public Traders",
-        "",
-        "Past performance does not guarantee future results.",
-        "Use this for research, not copy trading.",
-        "",
-    ]
-    if not traders:
-        lines.extend(
-            [
-                "Leaderboard data is not available right now.",
-                "",
-                "Research only · No trade execution",
-            ]
-        )
-        await callback.message.answer("\n".join(lines))
-        return
-
-    for index, trader in enumerate(traders, start=1):
-        name = trader.display_name or _short_wallet(trader.wallet_address)
-        volume = format_compact_usd(trader.volume, "en")
-        count = trader.trades_count if trader.trades_count is not None else "unknown"
-        lines.extend(
-            [
-                f"{index}. {name}",
-                f"Trader Score: {trader.score}/100 · {trader.label}",
-                f"Public volume: {volume}",
-                f"Public events: {count}",
-                "",
-            ]
-        )
-    lines.append("Research only · No trade execution")
-    await callback.message.answer("\n".join(lines))
+    await callback.message.answer(_format_public_traders(traders))
 
 
 @router.callback_query(F.data == SMART_ACTIVE_MARKETS)
@@ -221,19 +312,10 @@ async def active_markets(
     if not callback.message:
         return
 
+    language = await _language(session_factory, callback.from_user)
     activities = await smart_money_analyzer.active_markets(limit=5)
     if not activities:
-        await callback.message.answer(
-            "\n".join(
-                [
-                    "📊 Active Markets",
-                    "",
-                    "No public activity aggregation available right now.",
-                    "",
-                    "Research only · No trade execution",
-                ]
-            )
-        )
+        await callback.message.answer(_active_markets_empty_state(language))
         return
 
     async with session_factory() as session:
@@ -256,30 +338,21 @@ async def active_markets(
             logger.exception("Could not save Smart Money market activity")
 
     for activity in activities:
-        await callback.message.answer(explain_market_activity(activity))
+        await callback.message.answer(explain_market_activity(activity, language))
 
 
 @router.callback_query(F.data == SMART_TRACK_WALLET)
 async def track_wallet_start(
     callback: CallbackQuery,
     state: FSMContext,
+    session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     log_callback_action(logger, callback, "smart_money_track_wallet_started")
     await callback.answer()
     await state.set_state(SmartMoneyStates.waiting_wallet)
     if callback.message:
-        await callback.message.answer(
-            "\n".join(
-                [
-                    "👀 Track Public Wallet",
-                    "",
-                    "Send a public wallet address only.",
-                    "This is read-only tracking of public Polymarket activity.",
-                    "",
-                    "Never send a private key or seed phrase.",
-                ]
-            )
-        )
+        language = await _language(session_factory, callback.from_user)
+        await callback.message.answer(_track_wallet_prompt(language))
 
 
 @router.message(SmartMoneyStates.waiting_wallet)
@@ -289,6 +362,7 @@ async def track_wallet_finish(
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     address = (message.text or "").strip()
+    language = await _language(session_factory, message.from_user)
     log_user_action(
         logger,
         message.from_user,
@@ -296,9 +370,7 @@ async def track_wallet_finish(
         valid=str(validate_wallet_address(address)).lower(),
     )
     if not validate_wallet_address(address):
-        await message.answer(
-            "This does not look like a public EVM wallet address. Send an address like 0x1234...abcd."
-        )
+        await message.answer(_invalid_wallet_message(language))
         return
 
     await state.clear()
@@ -331,5 +403,5 @@ async def track_wallet_finish(
                 "Research only · No wallet connection · No trade execution",
             ]
         ),
-        reply_markup=main_menu_keyboard("en"),
+        reply_markup=main_menu_keyboard(language),
     )

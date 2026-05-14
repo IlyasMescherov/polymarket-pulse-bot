@@ -91,7 +91,7 @@ Phase 6 adds:
 
 This feature makes PulseMarket AI more useful as a Polymarket discovery layer:
 
-- It surfaces public attention shifts.
+- It surfaces active public market activity.
 - It adds context before a user opens Polymarket.
 - It does not replace Polymarket execution.
 - It keeps the safety scope clear and research-only.

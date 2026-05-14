@@ -73,7 +73,10 @@ async def main() -> None:
         polymarket_client,
         movement_threshold=settings.movement_threshold,
     )
-    smart_money_analyzer = SmartMoneyAnalyzer(polymarket_data_client)
+    smart_money_analyzer = SmartMoneyAnalyzer(
+        polymarket_data_client,
+        active_market_min_usd=settings.smart_money_active_market_min_usd,
+    )
     ai_explainer = AIExplainer(
         settings.openai_api_key,
         model=settings.openai_model,
