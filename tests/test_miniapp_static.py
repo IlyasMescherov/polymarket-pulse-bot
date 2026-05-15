@@ -31,8 +31,8 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "Hot Markets",
         "Sharp Moves",
         "Search",
-        "Watchlist",
-        "Research only · No trading · No wallet access · No financial advice",
+        "Saved markets",
+        "Research only · No trading · No wallets · No deposits · No private keys · No financial advice",
     ):
         assert text in index_text
 
@@ -40,6 +40,15 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
     assert "Safety scope" not in index_text
     assert "Markets worth watching today." in index_text
     assert "Where public attention is rising." in index_text
+
+    for target_id in (
+        'id="today"',
+        'id="radar"',
+        'id="hot"',
+        'id="search"',
+        'id="saved"',
+    ):
+        assert target_id in index_text
 
     for target_id in (
         "today-hero",
@@ -53,9 +62,13 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         assert target_id in script_text
 
     for class_name in (
+        "top-tabs",
+        "bottom-nav",
+        "nav-pill",
+        "bottom-nav__item",
         "today-primary",
         "pulse-hero",
-        "smart-hero",
+        "insight-card",
         "horizontal-strip",
         "skeleton-card",
         "empty-state--compact",
@@ -65,6 +78,28 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
 
     assert "story-hero" not in styles_text
     assert "safety-grid" not in styles_text
+
+
+def test_miniapp_navigation_and_search_are_app_like() -> None:
+    root = Path(__file__).resolve().parents[1]
+    index_text = (root / "miniapp" / "index.html").read_text()
+    script_text = (root / "miniapp" / "app.js").read_text()
+
+    assert 'class="top-tabs"' in index_text
+    assert 'class="bottom-nav"' in index_text
+    assert 'data-nav-target="today"' in index_text
+    assert 'data-nav-target="radar"' in index_text
+    assert 'data-nav-target="search"' in index_text
+    assert 'data-nav-target="saved"' in index_text
+    assert 'data-nav-target="moves"' in index_text
+
+    for label in ("Today", "Radar", "Search", "Saved", "More"):
+        assert label in index_text
+
+    assert index_text.count('type="search"') == 1
+    assert index_text.count('id="search-input"') == 1
+    assert "IntersectionObserver" in script_text
+    assert "scrollToSection" in script_text
 
 
 def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
@@ -79,6 +114,7 @@ def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
     assert "no deposits" in text
     assert "no private keys" in text
     assert "no financial advice" in text
+    assert "where public attention is rising" in text
 
     banned = (
         "insider",

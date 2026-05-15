@@ -10,8 +10,9 @@ Telegram Mini App.
 3. Activity Radar
 4. Hot Markets
 5. Search
-6. Watchlist empty state
-7. Mobile scroll view
+6. Saved markets empty state
+7. Sticky top tabs and bottom navigation
+8. Mobile scroll view
 
 ## Capture Rules
 
@@ -28,10 +29,11 @@ Telegram Mini App.
 1. Open `https://app.pulsemarketai.com/app` for browser preview.
 2. For Telegram review, use the Mini App only after HTTPS is configured.
 3. Take vertical mobile screenshots first.
-4. Keep the safety footer visible in at least one screenshot.
+4. Keep the compact safety footer visible in at least one screenshot.
+5. Include one screenshot where the bottom navigation is visible.
 
 ## Notes
 
 PulseMarket AI is positioned as market intelligence, not trade execution. The
 screenshots should emphasize discovery, Today’s Pulse, Activity Radar, search,
-and safety scope.
+sticky navigation, and safety scope.

@@ -6,76 +6,84 @@
     <title>PulseMarket AI Dashboard</title>
     <meta
       name="description"
-      content="Premium Telegram Mini App preview for Polymarket market intelligence."
+      content="Telegram Mini App for Polymarket market intelligence."
     />
     <link rel="stylesheet" href="/app/styles.css" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
   </head>
   <body>
     <main class="app-shell">
-      <header class="masthead fade-in">
+      <header class="masthead fade-in" id="top">
         <div class="brand-mark" aria-hidden="true">P</div>
         <div class="masthead__copy">
           <h1>PulseMarket AI</h1>
-          <p>Research only · No trade execution</p>
+          <p data-i18n="researchLabel">Research only · No trade execution</p>
         </div>
-        <a class="bot-link" href="https://t.me/PulseMarketAIBot">Bot</a>
+        <a class="bot-link" href="https://t.me/PulseMarketAIBot" data-i18n="botLink">Bot</a>
       </header>
 
-      <section class="section-block today-primary fade-in" aria-labelledby="today-title">
-        <div class="section-heading">
+      <nav class="top-tabs" aria-label="Mini App sections">
+        <button class="nav-pill is-active" type="button" data-nav-target="today" data-i18n="tabToday">Today</button>
+        <button class="nav-pill" type="button" data-nav-target="radar" data-i18n="tabRadar">Radar</button>
+        <button class="nav-pill" type="button" data-nav-target="hot" data-i18n="tabHot">Hot</button>
+        <button class="nav-pill" type="button" data-nav-target="search" data-i18n="tabSearch">Search</button>
+        <button class="nav-pill" type="button" data-nav-target="saved" data-i18n="tabSaved">Saved</button>
+      </nav>
+
+      <section id="today" data-section class="section-block today-primary fade-in" aria-labelledby="today-title">
+        <div class="section-heading section-heading--compact">
           <div>
-            <p class="section-kicker">Curated market intelligence</p>
-            <h2 id="today-title">Today’s Pulse</h2>
-            <p class="section-subtitle">Markets worth watching today.</p>
+            <p class="section-kicker" data-i18n="todayKicker">Curated for today</p>
+            <h2 id="today-title" data-i18n="todayTitle">Today’s Pulse</h2>
+            <p class="section-subtitle" data-i18n="todaySubtitle">Markets worth watching today.</p>
           </div>
-          <button class="text-button" type="button" data-refresh>Refresh</button>
+          <button class="text-button" type="button" data-refresh data-i18n="refresh">Refresh</button>
         </div>
         <div id="today-hero" class="pulse-hero skeleton-card"></div>
-        <div id="today-secondary" class="mini-grid"></div>
+        <div id="today-secondary" class="mini-grid" aria-live="polite"></div>
       </section>
 
-      <section class="section-block fade-in" aria-labelledby="smart-title">
-        <div class="section-heading">
+      <section id="radar" data-section class="section-block fade-in" aria-labelledby="radar-title">
+        <div class="section-heading section-heading--compact">
           <div>
-            <p class="section-kicker">Public activity</p>
-            <h2 id="smart-title">Activity Radar</h2>
-            <p class="section-subtitle">Where public attention is rising.</p>
+            <p class="section-kicker" data-i18n="radarKicker">Public attention</p>
+            <h2 id="radar-title" data-i18n="radarTitle">Activity Radar</h2>
+            <p class="section-subtitle" data-i18n="radarSubtitle">Where public attention is rising.</p>
           </div>
-          <span class="quiet-label">Market intelligence</span>
+          <span class="quiet-label" data-i18n="intelligenceLabel">Intelligence</span>
         </div>
-        <div id="smart-hero" class="smart-hero skeleton-card"></div>
+        <div id="smart-hero" class="insight-card skeleton-card"></div>
       </section>
 
-      <section class="section-block fade-in" aria-labelledby="hot-title">
-        <div class="section-heading">
+      <section id="hot" data-section class="section-block fade-in" aria-labelledby="hot-title">
+        <div class="section-heading section-heading--compact">
           <div>
-            <p class="section-kicker">Secondary scan</p>
-            <h2 id="hot-title">Hot Markets</h2>
-            <p class="section-subtitle">Markets with strong current activity.</p>
+            <p class="section-kicker" data-i18n="hotKicker">Secondary scan</p>
+            <h2 id="hot-title" data-i18n="hotTitle">Hot Markets</h2>
+            <p class="section-subtitle" data-i18n="hotSubtitle">Markets with strong current activity.</p>
           </div>
-          <span class="quiet-label">Swipe</span>
+          <span class="quiet-label" data-i18n="swipeLabel">Swipe</span>
         </div>
         <div id="hot-strip" class="horizontal-strip" aria-live="polite"></div>
       </section>
 
-      <section class="section-block fade-in" aria-labelledby="moves-title">
-        <div class="section-heading">
+      <section id="moves" data-section class="section-block section-block--quiet fade-in" aria-labelledby="moves-title">
+        <div class="section-heading section-heading--compact">
           <div>
-            <p class="section-kicker">Only if something moved</p>
-            <h2 id="moves-title">Sharp Moves</h2>
-            <p class="section-subtitle">Markets where probability changed.</p>
+            <p class="section-kicker" data-i18n="movesKicker">Only meaningful moves</p>
+            <h2 id="moves-title" data-i18n="movesTitle">Sharp Moves</h2>
+            <p class="section-subtitle" data-i18n="movesSubtitle">Markets where probability changed.</p>
           </div>
         </div>
         <div id="moves-list" class="compact-list" aria-live="polite"></div>
       </section>
 
-      <section class="section-block search-block fade-in" aria-labelledby="search-title">
-        <div class="section-heading">
+      <section id="search" data-section class="section-block search-block fade-in" aria-labelledby="search-title">
+        <div class="section-heading section-heading--compact">
           <div>
-            <p class="section-kicker">Find a topic</p>
-            <h2 id="search-title">Search</h2>
-            <p class="section-subtitle">Find a market and get a simple read.</p>
+            <p class="section-kicker" data-i18n="searchKicker">Quick access</p>
+            <h2 id="search-title" data-i18n="searchTitle">Search</h2>
+            <p class="section-subtitle" data-i18n="searchSubtitle">Find a market and get a simple read.</p>
           </div>
         </div>
         <form id="search-form" class="search-form">
@@ -84,36 +92,62 @@
             name="q"
             type="search"
             placeholder="Search markets, topics, names..."
+            data-i18n-placeholder="searchPlaceholder"
             autocomplete="off"
           />
-          <button type="submit">Search</button>
+          <button type="submit" data-i18n="searchButton">Search</button>
         </form>
         <div id="search-results" class="search-results" aria-live="polite">
-          <div class="empty-state empty-state--compact">Search markets, topics, names...</div>
+          <div class="empty-state empty-state--compact" data-i18n="searchEmpty">Search markets, topics, names...</div>
         </div>
       </section>
 
-      <section class="section-block watchlist-block fade-in" aria-labelledby="watchlist-title">
-        <div class="section-heading">
+      <section id="saved" data-section class="section-block saved-block fade-in" aria-labelledby="saved-title">
+        <div class="section-heading section-heading--compact">
           <div>
-            <p class="section-kicker">Saved markets</p>
-            <h2 id="watchlist-title">Watchlist</h2>
-            <p class="section-subtitle">Save markets to return later.</p>
+            <p class="section-kicker" data-i18n="savedKicker">Saved markets</p>
+            <h2 id="saved-title" data-i18n="savedTitle">Saved markets</h2>
+            <p class="section-subtitle" data-i18n="savedSubtitle">Save markets to return later.</p>
           </div>
-          <span class="quiet-label">Preview</span>
         </div>
-        <div class="watchlist-empty">
-          <strong>Your watchlist is empty.</strong>
-          <p>Add markets from the bot.</p>
-          <a href="https://t.me/PulseMarketAIBot">Open bot</a>
+        <div class="saved-empty">
+          <strong data-i18n="savedEmptyTitle">No saved markets yet.</strong>
+          <p data-i18n="savedEmptyCopy">Add markets from the bot.</p>
+          <a href="https://t.me/PulseMarketAIBot" data-i18n="openBot">Open bot</a>
         </div>
       </section>
 
-      <footer class="footer-note fade-in">
-        <strong>Research only · No trading · No wallet access · No financial advice</strong>
-        <span>PulseMarket AI helps users understand public market data. It does not execute trades.</span>
+      <footer id="more" data-section class="footer-note fade-in">
+        <strong data-i18n="footerSafety">Research only · No trading · No wallets · No deposits · No private keys · No financial advice</strong>
+        <span data-i18n="footerCopy">PulseMarket AI helps users understand public market data. It does not execute trades.</span>
       </footer>
     </main>
+
+    <nav class="bottom-nav" aria-label="Primary Mini App navigation">
+      <div class="bottom-nav__inner">
+        <button class="bottom-nav__item is-active" type="button" data-nav-target="today">
+          <span aria-hidden="true">📰</span>
+          <strong data-i18n="tabToday">Today</strong>
+        </button>
+        <button class="bottom-nav__item" type="button" data-nav-target="radar">
+          <span aria-hidden="true">🧠</span>
+          <strong data-i18n="tabRadar">Radar</strong>
+        </button>
+        <button class="bottom-nav__item" type="button" data-nav-target="search">
+          <span aria-hidden="true">🔍</span>
+          <strong data-i18n="tabSearch">Search</strong>
+        </button>
+        <button class="bottom-nav__item" type="button" data-nav-target="saved">
+          <span aria-hidden="true">⭐</span>
+          <strong data-i18n="tabSaved">Saved</strong>
+        </button>
+        <button class="bottom-nav__item" type="button" data-nav-target="moves">
+          <span aria-hidden="true">⋯</span>
+          <strong data-i18n="tabMore">More</strong>
+        </button>
+      </div>
+    </nav>
+
     <script src="/app/app.js"></script>
   </body>
 </html>

@@ -124,6 +124,7 @@ The dashboard prioritizes:
 - Activity Radar as public activity context.
 - Hot markets and sharp moves as secondary discovery.
 - Search as a fast way to explore a topic.
+- Sticky top tabs and bottom navigation for one-hand mobile use.
 - Safety scope as a visible product boundary.
 
 ## Market Intelligence Positioning

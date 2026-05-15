@@ -1,6 +1,6 @@
 # PulseMarket AI Mini App
 
-Static Telegram Mini App dashboard preview for PulseMarket AI.
+Static Telegram Mini App dashboard for PulseMarket AI.
 
 Preview route:
 
@@ -8,8 +8,16 @@ Preview route:
 https://app.pulsemarketai.com/app
 ```
 
-Telegram Mini Apps require an HTTPS URL in BotFather. The HTTP preview is only
-for browser and VPS checks before connecting a domain.
+The production Mini App URL is HTTPS-ready for BotFather.
+
+UX structure:
+
+- Sticky top tabs for Today, Radar, Hot, Search, and Saved
+- Bottom navigation for one-hand mobile use
+- Compact Today’s Pulse hero
+- Activity Radar insight card
+- Lightweight hot markets carousel
+- Single search input
 
 Safety scope:
 
