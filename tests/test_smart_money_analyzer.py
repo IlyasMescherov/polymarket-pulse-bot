@@ -88,9 +88,8 @@ def test_market_activity_text_uses_public_trades_not_events() -> None:
     text = explain_market_activity(activity)
     lowered = text.lower()
 
-    assert "active public market" in lowered
+    assert "market getting attention" in lowered
     assert "visibility threshold" in lowered
-    assert "public trades" in lowered
     assert "events" not in lowered
     assert "stronger than usual" not in lowered
 
@@ -99,9 +98,8 @@ def test_market_activity_text_has_ru_copy() -> None:
     activity = aggregate_market_activity([_trade("m1", 1500)], min_usd=1000)[0]
     text = explain_market_activity(activity, "ru")
 
-    assert "Активный публичный рынок" in text
+    assert "Рынок с ростом внимания" in text
     assert "Публичная активность выше порога видимости." in text
-    assert "публичным сделкам" in text
 
 
 def test_smart_money_text_has_research_only_language_without_banned_phrases() -> None:

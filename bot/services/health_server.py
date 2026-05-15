@@ -22,6 +22,7 @@ from bot.services.smart_money_analyzer import (
     TraderScore,
 )
 from bot.services.today_pulse import TodayPulseItem, build_today_pulse_items
+from bot.utils.formatting import format_probability
 
 logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -56,6 +57,7 @@ def _market_to_api_object(market: Market, delta: float | None = None) -> dict[st
         "market_id": market.id,
         "title": market.question,
         "probability": _percent(market.yes_probability),
+        "probability_label": format_probability(market.yes_probability, "en"),
         "volume": market.volume,
         "end_date": _iso_datetime(market.end_date),
         "movement": _percent(delta),
@@ -63,6 +65,8 @@ def _market_to_api_object(market: Market, delta: float | None = None) -> dict[st
         "pulse_label": pulse.label,
         "market_health_score": health.value,
         "market_health_label": health.label,
+        "pulse_description": "How interesting this market looks today.",
+        "market_health_description": "How clean and readable the market looks.",
         "risk_flags": market_risk_flags(market, delta=delta),
         "url": market.url,
     }
@@ -86,6 +90,7 @@ def _smart_market_to_api_object(activity: MarketActivity) -> dict[str, Any]:
         "trades_count": activity.trades_count,
         "top_side": None,
         "url": "https://polymarket.com",
+        "why_it_matters": "Public activity is above the visibility threshold.",
     }
 
 
@@ -94,8 +99,10 @@ def _trader_to_api_object(trader: TraderScore) -> dict[str, Any]:
     short_wallet = f"{wallet[:6]}...{wallet[-4:]}" if len(wallet) >= 12 else wallet or None
     return {
         "wallet": short_wallet,
+        "wallet_label": short_wallet,
         "trader_score": trader.score,
         "label": trader.label,
+        "why_it_matters": "This wallet has been active across public Polymarket markets today.",
         "public_volume": trader.volume,
         "rank": trader.rank,
     }

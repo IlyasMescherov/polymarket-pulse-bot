@@ -43,5 +43,5 @@ def test_movement_explainer_includes_delta_volume_time_and_flags() -> None:
 def test_movement_explainer_supports_russian() -> None:
     text = explain_movement(_market(), delta=-0.05, language="ru").to_text()
 
-    assert "Почему двигается" in text
+    assert "Почему это важно" in text
     assert "Вероятность изменилась на -5%" in text

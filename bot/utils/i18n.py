@@ -6,12 +6,14 @@ SUPPORTED_LANGUAGES = {"ru", "en"}
 TEXTS: dict[str, dict[str, str]] = {
     "ru": {
         "dashboard": (
-            "🚀 PulseMarket AI\n\n"
             "PulseMarket AI помогает быстро понять, что важно на Polymarket.\n\n"
-            "Начни с:\n"
-            "📰 Today’s Pulse — главные рынки дня\n"
-            "🧠 Радар активности — публичная активность\n"
-            "🔍 Поиск — найти рынок\n\n"
+            "Начни отсюда:\n\n"
+            "📰 Пульс дня\n"
+            "Короткая подборка рынков, за которыми стоит следить.\n\n"
+            "🧠 Радар активности\n"
+            "Показывает, где растёт публичное внимание.\n\n"
+            "🔍 Поиск\n"
+            "Найди любой рынок Polymarket и получи простое объяснение.\n\n"
             "Для анализа · Без сделок"
         ),
         "quick_start": (
@@ -47,7 +49,7 @@ TEXTS: dict[str, dict[str, str]] = {
             "• поиск\n"
             "• Watchlist\n"
             "• уведомления по темам\n"
-            "• Smart Money Radar\n"
+            "• радар активности\n"
             "• простые объяснения\n"
             "• прямые ссылки на Polymarket\n\n"
             "Безопасность:\n"
@@ -62,12 +64,14 @@ TEXTS: dict[str, dict[str, str]] = {
     },
     "en": {
         "dashboard": (
-            "🚀 PulseMarket AI\n\n"
-            "PulseMarket AI helps you find what matters on Polymarket.\n\n"
-            "Start with:\n"
-            "📰 Today’s Pulse — daily market highlights\n"
-            "🧠 Smart Money — public activity radar\n"
-            "🔍 Search — find any market\n\n"
+            "PulseMarket AI helps you understand what matters on Polymarket.\n\n"
+            "Start here:\n\n"
+            "📰 Today’s Pulse\n"
+            "A short daily selection of markets worth watching.\n\n"
+            "🧠 Activity Radar\n"
+            "Shows where public attention is rising.\n\n"
+            "🔍 Search\n"
+            "Find any Polymarket market and get a simple explanation.\n\n"
             "Research only · No trade execution"
         ),
         "quick_start": (
@@ -103,7 +107,7 @@ TEXTS: dict[str, dict[str, str]] = {
             "• Search\n"
             "• Watchlist\n"
             "• Topic alerts\n"
-            "• Smart Money Radar\n"
+            "• Activity Radar\n"
             "• Simple explanations\n"
             "• Direct Polymarket links\n\n"
             "Safety:\n"

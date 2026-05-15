@@ -8,7 +8,6 @@ from bot.services.market_health import MarketHealth, calculate_market_health
 from bot.services.polymarket_client import Market
 from bot.services.pulse_score import PulseScore, calculate_pulse_score
 from bot.services.risk_flags import market_risk_flags
-from bot.utils.formatting import format_compact_usd, format_percentage_points, format_time_until
 from bot.utils.i18n import normalize_language
 
 
@@ -41,44 +40,39 @@ def explain_why_it_matters(
     language: str | None = None,
 ) -> str:
     normalized = normalize_language(language)
-    reasons: list[str] = []
-
-    if pulse_score.value >= 70:
-        reasons.append("strong signal" if normalized == "en" else "сильный сигнал")
-    elif pulse_score.value >= 40:
-        reasons.append("worth watching" if normalized == "en" else "стоит наблюдать")
+    if delta is not None and abs(delta) >= 0.05:
+        return (
+            "Probability moved enough to make this market worth checking."
+            if normalized == "en"
+            else "Вероятность заметно изменилась, поэтому рынок стоит проверить."
+        )
 
     if market.volume is not None and market.volume >= 100_000:
-        reasons.append(
-            f"high activity ({format_compact_usd(market.volume, normalized)})"
-            if normalized == "en"
-            else f"высокая активность ({format_compact_usd(market.volume, normalized)})"
-        )
-    if delta is not None and abs(delta) >= 0.05:
-        reasons.append(
-            f"recent movement {format_percentage_points(delta, normalized)}"
-            if normalized == "en"
-            else f"движение {format_percentage_points(delta, normalized)}"
-        )
-    if market.end_date is not None:
-        reasons.append(
-            f"time left: {format_time_until(market.end_date, language=normalized)}"
-            if normalized == "en"
-            else f"до завершения: {format_time_until(market.end_date, language=normalized)}"
-        )
-    if market_health.value >= 70:
-        reasons.append("healthy public data" if normalized == "en" else "хорошие публичные данные")
-
-    if not reasons:
         return (
-            "Useful discovery candidate based on current public market data."
+            "Activity and volume make this market noticeable today."
             if normalized == "en"
-            else "Полезный кандидат для наблюдения по текущим публичным данным рынка."
+            else "Активность и объём делают этот рынок заметным сегодня."
         )
 
-    if normalized == "en":
-        return "High activity, " + ", ".join(reasons[:3]) + "."
-    return "Интересно: " + ", ".join(reasons[:3]) + "."
+    if pulse_score.value >= 70:
+        return (
+            "Pulse Score puts this market among today’s stronger stories."
+            if normalized == "en"
+            else "Pulse Score выделяет этот рынок среди важных историй дня."
+        )
+
+    if market_health.value >= 70:
+        return (
+            "The market has enough public data to be easy to read."
+            if normalized == "en"
+            else "По рынку достаточно публичных данных, чтобы быстро понять ситуацию."
+        )
+
+    return (
+        "This market is active enough to keep on your radar today."
+        if normalized == "en"
+        else "Этот рынок достаточно активен, чтобы держать его в поле зрения."
+    )
 
 
 def build_today_pulse_items(

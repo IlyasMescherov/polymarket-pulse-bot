@@ -33,14 +33,14 @@ def explain_movement(
     if delta is None:
         if normalized == "en":
             return MovementExplanation(
-                title="🧭 Why it moved",
+                title="🧭 Why this matters",
                 lines=[
                     "Not enough movement data yet.",
                     "PulseMarket AI will improve this after more snapshots.",
                 ],
             )
         return MovementExplanation(
-            title="🧭 Почему двигается",
+            title="🧭 Почему это важно",
             lines=[
                 "Пока мало данных о движении.",
                 "PulseMarket AI станет точнее после нескольких снимков рынка.",
@@ -58,7 +58,7 @@ def explain_movement(
             lines.append(f"• Topic match: {topic_match}.")
         if flags:
             lines.append(f"• Risk flags: {', '.join(flags[:3])}.")
-        return MovementExplanation(title="🧭 Why it moved", lines=lines)
+        return MovementExplanation(title="🧭 Why this matters", lines=lines)
 
     movement = format_percentage_points(delta, "ru")
     lines = [
@@ -70,4 +70,4 @@ def explain_movement(
         lines.append(f"• Совпадение с темой: {topic_match}.")
     if flags:
         lines.append(f"• Флаги риска: {', '.join(flags[:3])}.")
-    return MovementExplanation(title="🧭 Почему двигается", lines=lines)
+    return MovementExplanation(title="🧭 Почему это важно", lines=lines)

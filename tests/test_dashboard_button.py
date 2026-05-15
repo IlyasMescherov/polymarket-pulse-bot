@@ -38,7 +38,7 @@ def test_main_menu_prioritizes_curated_onboarding_actions() -> None:
     assert [button.text for button in buttons] == [
         "📰 Today’s Pulse",
         "📊 Dashboard",
-        "🧠 Smart Money",
+        "🧠 Activity Radar",
         "🔍 Search",
         "🔥 Hot",
         "📈 Moves",

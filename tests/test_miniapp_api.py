@@ -80,7 +80,9 @@ async def test_miniapp_hot_api_shape() -> None:
     assert payload["message"] == "ok"
     assert payload["data"][0]["market_id"] == "hot"
     assert payload["data"][0]["probability"] == 63
+    assert payload["data"][0]["probability_label"] == "63%"
     assert payload["data"][0]["pulse_score"] >= 0
+    assert payload["data"][0]["pulse_description"] == "How interesting this market looks today."
     assert payload["data"][0]["market_health_score"] >= 0
     assert payload["data"][0]["url"].startswith("https://polymarket.com")
 
@@ -124,7 +126,9 @@ async def test_miniapp_smart_money_api_shape() -> None:
 
     assert active_payload["data"][0]["public_activity"] == 42000
     assert active_payload["data"][0]["trades_count"] == 3
+    assert active_payload["data"][0]["why_it_matters"]
     assert traders_payload["data"][0]["wallet"] == "0x1111...1111"
+    assert traders_payload["data"][0]["why_it_matters"]
     assert traders_payload["data"][0]["trader_score"] == 74
 
 

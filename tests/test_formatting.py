@@ -18,6 +18,12 @@ def test_format_probability_handles_missing_data() -> None:
     assert format_probability(None) == "данных пока нет"
 
 
+def test_format_probability_explains_very_low_values() -> None:
+    assert format_probability(0, "en") == "Very low probability"
+    assert format_probability(0.004, "en") == "<1%"
+    assert format_probability(0, "ru") == "Очень низкая вероятность"
+
+
 def test_format_usd_compacts_large_values() -> None:
     assert format_usd(1_250_000) == "$1.2M"
     assert format_usd(120_000) == "$120,000"
@@ -62,7 +68,7 @@ def test_market_card_supports_english_demo_labels() -> None:
     assert "Title:" in card
     assert "Probability:" in card
     assert "Time left:" in card
-    assert "🧠 Simple explanation" in beginner
+    assert "🧠 Explain simply" in beginner
     assert "📤 Polymarket market" in share
 
 

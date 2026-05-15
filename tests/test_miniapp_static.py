@@ -27,7 +27,7 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
 
     for text in (
         "Today’s Pulse",
-        "Smart Money Radar",
+        "Activity Radar",
         "Hot Markets",
         "Sharp Moves",
         "Search",
@@ -36,8 +36,10 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
     ):
         assert text in index_text
 
-    assert index_text.find("Today’s Pulse") < index_text.find("Smart Money Radar")
+    assert index_text.find("Today’s Pulse") < index_text.find("Activity Radar")
     assert "Safety scope" not in index_text
+    assert "Markets worth watching today." in index_text
+    assert "Where public attention is rising." in index_text
 
     for target_id in (
         "today-hero",
@@ -101,7 +103,7 @@ def test_landing_and_screenshot_docs_reference_miniapp_polish() -> None:
     assert guide.exists()
     assert "Telegram Mini App Dashboard" in landing
     assert "Today’s Pulse" in landing
-    assert "Smart Money Radar" in landing
+    assert "Activity Radar" in landing
     assert "Home dashboard" in guide.read_text()
 
 

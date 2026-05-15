@@ -152,16 +152,16 @@ def explain_large_trade(signal: LargeTradeSignal, language: str | None = None) -
     if language == "ru":
         return "\n".join(
             [
-                "🐋 Необычная активность",
+                "🐋 Всплеск публичной активности",
                 "",
-                "PulseMarket обнаружил:",
-                f"Крупную публичную активность около {format_compact_usd(signal.amount_usd, 'ru')}.",
+                "PulseMarket заметил заметную публичную активность.",
+                f"Размер: {format_compact_usd(signal.amount_usd, 'ru')}.",
                 "",
                 "Почему это важно:",
-                "Крупная публичная активность может показать, куда смещается внимание рынка.",
+                "Так можно увидеть, куда смещается внимание рынка.",
                 "",
-                "Взгляд PulseMarket:",
-                "Стоит изучить. Проверь движение и правила рынка перед любыми решениями.",
+                "Что смотреть:",
+                "Вероятность, активность и правила разрешения.",
                 "",
                 "Для анализа · Без сделок",
             ]
@@ -169,16 +169,16 @@ def explain_large_trade(signal: LargeTradeSignal, language: str | None = None) -
 
     return "\n".join(
         [
-            "🐋 Unusual Activity",
+            "🐋 Public activity spike",
             "",
-            "PulseMarket detected:",
-            f"Large public activity around {format_compact_usd(signal.amount_usd, 'en')}.",
+            "PulseMarket noticed visible public activity.",
+            f"Size: {format_compact_usd(signal.amount_usd, 'en')}.",
             "",
             "Why it matters:",
-            "Large public activity can show where market attention is moving.",
+            "It can show where market attention is moving.",
             "",
-            "PulseMarket view:",
-            "Worth watching. Check movement and rules before making any decision.",
+            "Watch:",
+            "Probability, activity, and resolution rules.",
             "",
             "Research only · No trade execution",
         ]
@@ -187,20 +187,17 @@ def explain_large_trade(signal: LargeTradeSignal, language: str | None = None) -
 
 def explain_market_activity(activity: MarketActivity, language: str | None = None) -> str:
     if language == "ru":
-        trade_word = "публичным сделкам"
         return "\n".join(
             [
-                "⚡ Активный публичный рынок",
+                "📈 Рынок с ростом внимания",
                 "",
                 activity.market_title,
                 "",
+                "Почему это важно:",
                 "Публичная активность выше порога видимости.",
                 "",
-                "Оценка публичной активности:",
-                f"{format_compact_usd(activity.amount_usd, 'ru')} по {activity.trades_count} {trade_word}.",
-                "",
-                "Что смотреть дальше:",
-                "Объём, движение вероятности и правила разрешения рынка.",
+                "Публичная активность:",
+                format_compact_usd(activity.amount_usd, "ru"),
                 "",
                 "Для анализа · Без сделок",
             ]
@@ -208,17 +205,15 @@ def explain_market_activity(activity: MarketActivity, language: str | None = Non
 
     return "\n".join(
         [
-            "⚡ Active Public Market",
+            "📈 Market getting attention",
             "",
             activity.market_title,
             "",
-            "Public activity detected above the visibility threshold.",
+            "Why it matters:",
+            "Public activity is above the visibility threshold.",
             "",
-            "Estimated public activity:",
-            f"{format_compact_usd(activity.amount_usd, 'en')} across {activity.trades_count} public trades.",
-            "",
-            "Watch next:",
-            "Volume, probability movement, and resolution rules.",
+            "Public activity:",
+            format_compact_usd(activity.amount_usd, "en"),
             "",
             "Research only · No trade execution",
         ]

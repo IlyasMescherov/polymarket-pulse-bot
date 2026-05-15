@@ -17,7 +17,7 @@ from bot.services.smart_money_analyzer import TraderScore
 def test_active_markets_empty_state_mentions_visibility_threshold() -> None:
     text = _active_markets_empty_state("en")
 
-    assert "No active public markets above the visibility threshold right now." in text
+    assert "No public markets above the visibility threshold right now." in text
     assert "Research only" in text
     assert "No trade execution" in text
 
@@ -43,7 +43,7 @@ def test_wallet_prompt_has_ru_copy() -> None:
     prompt = _track_wallet_prompt("ru")
     invalid = _invalid_wallet_message("ru")
 
-    assert "Отправь полный публичный адрес кошелька." in prompt
+    assert "Вставь публичный адрес кошелька" in prompt
     assert "Никогда не отправляй private key или seed phrase." in prompt
     assert "Адрес должен начинаться с 0x и содержать 42 символа." in invalid
 
@@ -86,8 +86,9 @@ def test_public_trader_card_localizes_wallet_label() -> None:
     assert "Wallet:" in en
     assert "0x1111…1111" in en
     assert "Кошелёк:" in ru
-    assert "Оценка участника" in ru
-    assert "Публичные сделки: 120" in ru
+    assert "Почему это важно:" in ru
+    assert "Оценка активности" in ru
+    assert "Публичная активность:" in ru
 
 
 def test_smart_money_texts_do_not_mix_language_on_key_screens() -> None:
@@ -128,7 +129,7 @@ def test_smart_money_texts_do_not_mix_language_on_key_screens() -> None:
 
     assert "Research only" not in ru_text
     assert "No trade execution" not in ru_text
-    assert "Track Public Wallet" not in ru_text
+    assert "Follow public activity" not in ru_text
     assert "Для анализа" not in en_text
     assert "Без сделок" not in en_text
     assert "Кошелёк" not in en_text

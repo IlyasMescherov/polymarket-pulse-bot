@@ -40,7 +40,7 @@ PUBLIC_BOT_COMMANDS = [
     BotCommand(command="hot", description="Hot markets"),
     BotCommand(command="new", description="New markets"),
     BotCommand(command="today", description="Today’s Pulse"),
-    BotCommand(command="smart", description="Smart Money Radar"),
+    BotCommand(command="smart", description="Activity Radar"),
     BotCommand(command="moves", description="Sharp movements"),
     BotCommand(command="search", description="Search markets"),
     BotCommand(command="watchlist", description="My watchlist"),

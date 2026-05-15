@@ -14,8 +14,8 @@ def test_short_russian_button_labels() -> None:
     assert label("search", "ru") == "🔍 Поиск"
     assert label("open_market", "ru") == "🔗 Открыть"
     assert label("resolution", "ru") == "📜 Правила"
-    assert label("why_moved", "ru") == "🧭 Почему двигается"
-    assert label("explain", "ru") == "🧠 Просто"
+    assert label("why_moved", "ru") == "🧭 Почему это важно"
+    assert label("explain", "ru") == "🧠 Объяснить просто"
     assert label("share_market", "ru") == "📤 Поделиться"
 
 
@@ -23,13 +23,13 @@ def test_short_english_button_labels() -> None:
     assert label("hot", "en") == "🔥 Hot"
     assert label("new", "en") == "🆕 New"
     assert label("today", "en") == "📰 Today’s Pulse"
-    assert label("smart_money", "en") == "🧠 Smart Money"
+    assert label("smart_money", "en") == "🧠 Activity Radar"
     assert label("moves", "en") == "📈 Moves"
     assert label("search", "en") == "🔍 Search"
     assert label("open_market", "en") == "🔗 Open"
     assert label("resolution", "en") == "📜 Rules"
-    assert label("why_moved", "en") == "🧭 Why it moved"
-    assert label("explain", "en") == "🧠 Simple"
+    assert label("why_moved", "en") == "🧭 Why this matters"
+    assert label("explain", "en") == "🧠 Explain simply"
     assert label("timeline", "en") == "📊 Timeline"
 
 
@@ -38,7 +38,7 @@ def test_public_trader_keyboard_uses_full_wallet_in_callback() -> None:
     keyboard = public_trader_keyboard(wallet, "en")
 
     button = keyboard.inline_keyboard[0][0]
-    assert button.text == "👀 Track this wallet"
+    assert button.text == "👀 Follow public activity"
     assert button.callback_data == f"smart:tw:{wallet}"
 
 
@@ -64,4 +64,4 @@ def test_settings_keyboard_localizes_smart_money_alerts() -> None:
     ]
 
     assert "🧠 Уведомления радара: ВКЛ" in ru_texts
-    assert "🧠 Smart Money alerts: ON" in en_texts
+    assert "🧠 Activity alerts: ON" in en_texts

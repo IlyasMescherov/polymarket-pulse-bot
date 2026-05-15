@@ -59,28 +59,24 @@ def _smart_intro(language: str) -> str:
     if language == "ru":
         return "\n".join(
             [
-                "🧠 Радар публичной активности",
+                "🧠 Радар активности",
                 "",
-                "PulseMarket отслеживает публичную активность крупных и активных участников Polymarket.",
+                "PulseMarket отслеживает публичную активность на Polymarket и показывает рынки, к которым растёт внимание.",
                 "",
-                "Используй это, чтобы замечать рынки, к которым растёт внимание.",
+                "Это помогает быстрее замечать, где появляется интерес.",
                 "",
-                "Для анализа.",
-                "Без копирования сделок.",
-                "Без исполнения сделок.",
+                "Для анализа · Без сделок",
             ]
         )
     return "\n".join(
         [
-            "🧠 Smart Money Radar",
+            "🧠 Activity Radar",
             "",
-            "PulseMarket tracks public activity from larger and active Polymarket participants.",
+            "PulseMarket watches public Polymarket activity and highlights markets that are getting unusual attention.",
             "",
-            "Use it to spot markets that may be heating up before they become obvious.",
+            "Use it to notice where attention is moving.",
             "",
-            "Research only.",
-            "No copy trading.",
-            "No trade execution.",
+            "Research only · No trade execution",
         ]
     )
 
@@ -117,7 +113,7 @@ def _unusual_empty_state(language: str) -> str:
     if language == "ru":
         return "\n".join(
             [
-                "🐋 Необычная активность",
+                "🐋 Всплески активности",
                 "",
                 "Сейчас нет сильной необычной публичной активности.",
                 "PulseMarket продолжит отслеживание.",
@@ -129,7 +125,7 @@ def _unusual_empty_state(language: str) -> str:
         )
     return "\n".join(
         [
-            "🐋 Unusual Activity",
+            "🐋 Activity spikes",
             "",
             "No strong unusual public activity detected right now.",
             "PulseMarket will keep watching.",
@@ -145,9 +141,9 @@ def _active_markets_empty_state(language: str) -> str:
     if language == "ru":
         return "\n".join(
             [
-                "📊 Активные рынки",
+                "📈 Рынки с ростом внимания",
                 "",
-                "Сейчас нет активных публичных рынков выше порога видимости.",
+                "Сейчас нет рынков выше порога видимости.",
                 "PulseMarket продолжит отслеживание.",
                 "",
                 "Для анализа · Без сделок",
@@ -155,9 +151,9 @@ def _active_markets_empty_state(language: str) -> str:
         )
     return "\n".join(
         [
-            "📊 Active Markets",
+            "📈 Markets getting attention",
             "",
-            "No active public markets above the visibility threshold right now.",
+            "No public markets above the visibility threshold right now.",
             "PulseMarket will keep watching.",
             "",
             "Research only · No trade execution",
@@ -169,27 +165,27 @@ def _track_wallet_prompt(language: str) -> str:
     if language == "ru":
         return "\n".join(
             [
-                "👀 Отслеживать публичный адрес",
+                "👀 Следить за активностью",
                 "",
-                "Отправь полный публичный адрес кошелька.",
+                "Вставь публичный адрес кошелька, чтобы отслеживать его публичную активность на Polymarket.",
                 "",
                 "Пример:",
                 "0x1234567890abcdef1234567890abcdef12345678",
                 "",
-                "Только публичный адрес.",
+                "Мы читаем только публичные данные.",
                 "Никогда не отправляй private key или seed phrase.",
             ]
         )
     return "\n".join(
         [
-            "👀 Track Public Wallet",
+            "👀 Follow public activity",
             "",
-            "Send a full public wallet address.",
+            "Paste a public wallet address to follow its public Polymarket activity.",
             "",
             "Example:",
             "0x1234567890abcdef1234567890abcdef12345678",
             "",
-            "Only public addresses.",
+            "We only read public data.",
             "Never send a private key or seed phrase.",
         ]
     )
@@ -215,18 +211,18 @@ def _public_traders_intro(language: str) -> str:
     if language == "ru":
         return "\n".join(
             [
-                "🏆 Публичные участники",
+                "👥 Активные участники",
                 "",
-                "Прошлые результаты не гарантируют будущие.",
-                "Используй это для анализа, а не для копирования действий.",
+                "Это публичные адреса с заметной активностью.",
+                "Используй это, чтобы понять, куда может смещаться внимание, а не как инструкцию к действию.",
             ]
         )
     return "\n".join(
         [
-            "🏆 Public Traders",
+            "👥 Active participants",
             "",
-            "Past performance does not guarantee future results.",
-            "Use this for research, not copy trading.",
+            "These are public wallets with noticeable activity.",
+            "Use this to understand where attention may be moving, not as instructions.",
         ]
     )
 
@@ -235,18 +231,18 @@ def _public_traders_empty_state(language: str) -> str:
     if language == "ru":
         return "\n".join(
             [
-                "🏆 Публичные участники",
+                "👥 Активные участники",
                 "",
-                "Данные leaderboard сейчас недоступны.",
+                "Данные по активным участникам сейчас недоступны.",
                 "",
                 "Для анализа · Без сделок",
             ]
         )
     return "\n".join(
         [
-            "🏆 Public Traders",
+            "👥 Active participants",
             "",
-            "Leaderboard data is not available right now.",
+            "Active participant data is not available right now.",
             "",
             "Research only · No trade execution",
         ]
@@ -259,34 +255,46 @@ def _format_public_trader_card(
     language: str,
 ) -> str:
     if language == "ru":
-        name = trader.display_name or _short_wallet_label(trader.wallet_address, language)
         lines = [
-            f"{index}. {name}",
-            f"Оценка участника: {trader.score}/100 · {_trader_score_label(trader.label, language)}",
+            f"{index}. Активный публичный участник",
+            "",
+            "Почему это важно:",
+            "Этот кошелёк сегодня заметно активен на публичных рынках Polymarket.",
         ]
-        if trader.wallet_address:
-            lines.extend([_wallet_label(language) + ":", _short_wallet(trader.wallet_address)])
         if trader.volume is not None:
-            lines.append(f"Публичный объём: {format_compact_usd(trader.volume, 'ru')}")
-        if trader.trades_count is not None:
-            lines.append(f"Публичные сделки: {trader.trades_count}")
-        if trader.rank is not None:
-            lines.append(f"Ранг: {trader.rank}")
+            lines.extend(["", "Публичная активность:", format_compact_usd(trader.volume, "ru")])
+        lines.extend(
+            [
+                "",
+                "Оценка активности:",
+                f"{trader.score}/100 · {_trader_score_label(trader.label, language)}",
+                "",
+                "Отсортировано по недавней публичной активности.",
+            ]
+        )
+        if trader.wallet_address:
+            lines.extend(["", _wallet_label(language) + ":", _short_wallet(trader.wallet_address)])
         return "\n".join(lines)
 
-    name = trader.display_name or _short_wallet_label(trader.wallet_address, language)
     lines = [
-        f"{index}. {name}",
-        f"Trader Score: {trader.score}/100 · {trader.label}",
+        f"{index}. Active public participant",
+        "",
+        "Why it matters:",
+        "This wallet has been active across public Polymarket markets today.",
     ]
-    if trader.wallet_address:
-        lines.extend([_wallet_label(language) + ":", _short_wallet(trader.wallet_address)])
     if trader.volume is not None:
-        lines.append(f"Public volume: {format_compact_usd(trader.volume, 'en')}")
-    if trader.trades_count is not None:
-        lines.append(f"Public trades: {trader.trades_count}")
-    if trader.rank is not None:
-        lines.append(f"Rank: {trader.rank}")
+        lines.extend(["", "Public activity:", format_compact_usd(trader.volume, "en")])
+    lines.extend(
+        [
+            "",
+            "Activity score:",
+            f"{trader.score}/100 · {trader.label}",
+            "",
+            "Listed by recent public activity.",
+        ]
+    )
+    if trader.wallet_address:
+        lines.extend(["", _wallet_label(language) + ":", _short_wallet(trader.wallet_address)])
     return "\n".join(lines)
 
 
@@ -311,7 +319,7 @@ def _wallet_saved_text(
                 _short_wallet(wallet_address),
                 f"Отслеживаемых кошельков: {tracked_count}",
                 "",
-                "Для анализа · Без подключения кошелька · Без сделок",
+                "Только публичные данные · Без сделок",
             ]
         )
 
@@ -328,7 +336,7 @@ def _wallet_saved_text(
             _short_wallet(wallet_address),
             f"Tracked public wallets: {tracked_count}",
             "",
-            "Research only · No wallet connection · No trade execution",
+            "Public data only · No trade execution",
         ]
     )
 
@@ -439,9 +447,6 @@ async def unusual_activity(
                     "",
                     "Рынок:" if language == "ru" else "Market:",
                     signal.market_title,
-                    "",
-                    "Публичный участник:" if language == "ru" else "Public participant:",
-                    _short_wallet_label(signal.wallet_address, language),
                 ]
             )
         )
@@ -460,9 +465,9 @@ async def public_traders(
 
     language = await _language(session_factory, callback.from_user)
     await callback.answer(
-        "Загружаю публичный leaderboard"
+        "Загружаю активных участников"
         if language == "ru"
-        else "Loading public leaderboard"
+        else "Loading active participants"
     )
     traders = await smart_money_analyzer.public_traders(limit=5)
     if not traders:

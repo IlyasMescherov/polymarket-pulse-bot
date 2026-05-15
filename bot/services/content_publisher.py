@@ -73,9 +73,9 @@ def format_smart_money_channel_post(
         return None
 
     lines = [
-        "🧠 Smart Money Radar",
+        "🧠 Activity Radar",
         "",
-        "Unusual public activity worth watching:",
+        "Markets getting attention:",
         "",
     ]
     for index, activity in enumerate(activities[:3], start=1):
@@ -83,7 +83,7 @@ def format_smart_money_channel_post(
             [
                 f"{index}. {_title(activity.market_title)}",
                 f"Public activity: {format_compact_usd(activity.amount_usd, 'en')}",
-                "Why it matters: Active public activity can show where market attention is moving.",
+                "Why it matters: Public activity is above the visibility threshold.",
                 "",
             ]
         )
@@ -91,7 +91,7 @@ def format_smart_money_channel_post(
     lines.extend(
         [
             "Research only.",
-            "No trading. No wallets. No copy trading. No financial advice.",
+            "No trading. No wallets. No financial advice.",
             "",
             "Bot:",
             bot_handle,

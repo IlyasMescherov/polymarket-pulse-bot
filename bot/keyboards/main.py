@@ -75,27 +75,27 @@ LABELS: dict[str, dict[str, str]] = {
         "understood": "Понятно",
         "open_market": "🔗 Открыть",
         "add_watchlist": "⭐ В Watchlist",
-        "explain": "🧠 Просто",
+        "explain": "🧠 Объяснить просто",
         "resolution": "📜 Правила",
         "timeline": "📊 Динамика",
-        "why_moved": "🧭 Почему двигается",
+        "why_moved": "🧭 Почему это важно",
         "share_market": "📤 Поделиться",
         "remove": "🗑 Удалить",
         "back": "Назад в меню",
         "topics": "🎯 Мои темы",
         "add_topic": "➕ Добавить тему",
         "smart_unusual": "🐋 Необычная активность",
-        "smart_traders": "🏆 Публичные участники",
-        "smart_active": "📊 Активные рынки",
-        "smart_track_wallet": "👀 Ввести адрес",
-        "track_this_wallet": "👀 Следить за кошельком",
+        "smart_traders": "👥 Активные участники",
+        "smart_active": "📈 Рынки с ростом внимания",
+        "smart_track_wallet": "👀 Следить за активностью",
+        "track_this_wallet": "👀 Следить за активностью",
     },
     "en": {
         "quick_start": "🚀 Quick Start",
         "hot": "🔥 Hot",
         "new": "🆕 New",
         "today": "📰 Today’s Pulse",
-        "smart_money": "🧠 Smart Money",
+        "smart_money": "🧠 Activity Radar",
         "dashboard": "📊 Dashboard",
         "moves": "📈 Moves",
         "search": "🔍 Search",
@@ -108,20 +108,20 @@ LABELS: dict[str, dict[str, str]] = {
         "understood": "Got it",
         "open_market": "🔗 Open",
         "add_watchlist": "⭐ Watchlist",
-        "explain": "🧠 Simple",
+        "explain": "🧠 Explain simply",
         "resolution": "📜 Rules",
         "timeline": "📊 Timeline",
-        "why_moved": "🧭 Why it moved",
+        "why_moved": "🧭 Why this matters",
         "share_market": "📤 Share",
         "remove": "🗑 Remove",
         "back": "Back to Menu",
         "topics": "🎯 My topics",
         "add_topic": "➕ Add topic",
         "smart_unusual": "🐋 Unusual Activity",
-        "smart_traders": "🏆 Public Traders",
-        "smart_active": "📊 Active Markets",
-        "smart_track_wallet": "👀 Track Public Wallet",
-        "track_this_wallet": "👀 Track this wallet",
+        "smart_traders": "👥 Active participants",
+        "smart_active": "📈 Markets getting attention",
+        "smart_track_wallet": "👀 Follow public activity",
+        "track_this_wallet": "👀 Follow public activity",
     },
 }
 
@@ -307,11 +307,7 @@ def settings_keyboard(user: Any, language: str | None = None) -> InlineKeyboardM
         else "Уведомления о движениях"
     )
     daily_label = "Daily digest" if normalized == "en" else "Ежедневный дайджест"
-    smart_label = (
-        "Smart Money alerts"
-        if normalized == "en"
-        else "Уведомления радара"
-    )
+    smart_label = "Activity alerts" if normalized == "en" else "Уведомления радара"
     language_label = "Language" if normalized == "en" else "Язык"
     threshold_label = "Movement threshold" if normalized == "en" else "Порог движения"
     min_volume_label = "Min alert volume" if normalized == "en" else "Мин. объём"
@@ -360,9 +356,8 @@ def settings_keyboard(user: Any, language: str | None = None) -> InlineKeyboardM
 def smart_money_keyboard(language: str | None = None) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text=label("smart_unusual", language), callback_data=SMART_UNUSUAL)],
-            [InlineKeyboardButton(text=label("smart_traders", language), callback_data=SMART_TRADERS)],
             [InlineKeyboardButton(text=label("smart_active", language), callback_data=SMART_ACTIVE_MARKETS)],
+            [InlineKeyboardButton(text=label("smart_traders", language), callback_data=SMART_TRADERS)],
             [InlineKeyboardButton(text=label("smart_track_wallet", language), callback_data=SMART_TRACK_WALLET)],
             [InlineKeyboardButton(text=label("back", language), callback_data=BACK_TO_MENU)],
         ]

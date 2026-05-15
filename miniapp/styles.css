@@ -197,6 +197,14 @@ a {
   font-size: clamp(1.2rem, 5vw, 2.05rem);
 }
 
+.section-subtitle {
+  max-width: 30rem;
+  margin: 6px 0 0;
+  color: var(--text-soft);
+  font-size: 0.96rem;
+  line-height: 1.45;
+}
+
 .quiet-label {
   color: var(--muted);
   padding-top: 6px;
@@ -296,6 +304,24 @@ a {
   margin-top: 6px;
   font-size: clamp(1.35rem, 8vw, 2.45rem);
   line-height: 1;
+}
+
+.metric small {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.why-label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--green);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .why-copy {

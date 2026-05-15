@@ -62,9 +62,9 @@ def test_smart_money_channel_post_has_required_safety_text() -> None:
     )
 
     assert text is not None
-    assert "Smart Money Radar" in text
+    assert "Activity Radar" in text
     assert "Public activity:" in text
-    assert "No trading. No wallets. No copy trading. No financial advice." in text
+    assert "No trading. No wallets. No financial advice." in text
     lowered = text.lower()
     for phrase in (
         "insider",

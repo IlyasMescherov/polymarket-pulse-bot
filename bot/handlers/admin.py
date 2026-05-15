@@ -150,7 +150,7 @@ def format_smart_money_digest_block(snapshots: list[object]) -> str:
     if not snapshots:
         return ""
 
-    lines = ["", "🧠 Smart Money Radar", ""]
+    lines = ["", "🧠 Activity Radar", ""]
     for index, item in enumerate(snapshots[:3], start=1):
         title = str(getattr(item, "market_title", "") or "Public activity")
         amount = getattr(item, "amount_usd", None)
@@ -160,7 +160,7 @@ def format_smart_money_digest_block(snapshots: list[object]) -> str:
         [
             "",
             "Research only.",
-            "No copy trading. No trade execution.",
+            "No trade execution.",
         ]
     )
     return "\n".join(lines)

@@ -22,7 +22,12 @@ def _label(ru: str, en: str, language: str | None = None) -> str:
 def format_probability(value: float | None, language: str | None = None) -> str:
     if value is None:
         return _missing_data(language)
-    return f"{value * 100:.0f}%"
+    percent = value * 100
+    if percent <= 0:
+        return _label("Очень низкая вероятность", "Very low probability", language)
+    if percent < 1:
+        return "<1%"
+    return f"{percent:.0f}%"
 
 
 def format_percentage_points(value: float | None, language: str | None = None) -> str:
@@ -116,6 +121,11 @@ def format_market_card(
                 "",
                 "⚡ Pulse Score:",
                 f"{pulse_score.value}/100 · {pulse_score.label}",
+                _label(
+                    "Насколько рынок сейчас интересен.",
+                    "How interesting this market looks today.",
+                    language,
+                ),
             ]
         )
     if market_health is not None:
@@ -124,6 +134,11 @@ def format_market_card(
                 "",
                 "🩺 Market Health:",
                 f"{market_health.value}/100 · {market_health.label}",
+                _label(
+                    "Насколько рынок понятный и живой.",
+                    "How clean and readable the market looks.",
+                    language,
+                ),
             ]
         )
     if risk_flags:
@@ -205,27 +220,53 @@ def format_today_pulse_card(
 ) -> str:
     market = item.market
     why = ai_why or item.why_it_matters
+    if normalize_language(language) == "en":
+        lines = [
+            "📰 Today’s Pulse",
+            "",
+            "3 markets worth watching today.",
+            "",
+            f"{index}. {market.question}",
+            "",
+            "Why it matters:",
+            why,
+            "",
+            "Watch:",
+            "Probability, activity, and resolution rules.",
+            "",
+            "Probability:",
+            format_probability(market.yes_probability, language),
+            "",
+            "Pulse Score:",
+            f"{item.pulse_score.value}/100",
+            "How interesting this market looks today.",
+            "",
+            "Research only · No trade execution",
+        ]
+        return "\n".join(lines)
+
     lines = [
-        "📰 Today’s Pulse" if normalize_language(language) == "en" else "📰 Пульс дня",
+        "📰 Пульс дня",
+        "",
+        "3 рынка, за которыми сегодня стоит следить.",
         "",
         f"{index}. {market.question}",
         "",
-        f"{_label('Вероятность:', 'Probability:', language)} {format_probability(market.yes_probability, language)}",
-        f"{_label('Движение:', 'Movement:', language)} "
-        + (
-            f"{format_percentage_points(item.delta, language)} / 24h"
-            if item.delta is not None
-            else _missing_data(language)
-        ),
-        f"{_label('Объём:', 'Volume:', language)} {format_compact_usd(market.volume, language)}",
-        f"Pulse Score: {item.pulse_score.value}/100",
-        f"Market Health: {item.market_health.value}/100",
-        "",
-        _label("Почему важно:", "Why it matters:", language),
+        "Почему это важно:",
         why,
+        "",
+        "За чем следить:",
+        "Вероятность, активность и правила разрешения.",
+        "",
+        "Вероятность:",
+        format_probability(market.yes_probability, language),
+        "",
+        "Pulse Score:",
+        f"{item.pulse_score.value}/100",
+        "Насколько рынок сейчас интересен.",
+        "",
+        "Для анализа · Без сделок",
     ]
-    if item.risk_flags:
-        lines.extend(["", _label("Риски:", "Risk flags:", language), *item.risk_flags[:3]])
     return "\n".join(lines)
 
 
@@ -334,20 +375,13 @@ def format_beginner_explanation(
 ) -> str:
     if normalize_language(language) == "en":
         lines = [
-            "🧠 Simple explanation",
+            "🧠 Explain simply",
             "",
-            "This market shows how strongly Polymarket participants believe an event may happen.",
+            "In plain English:",
+            "This market is active today because people are paying more attention to it.",
+            "Watch the probability and the rules before drawing conclusions.",
             "",
-            f"{format_probability(market.yes_probability, language)} is the market's current estimate.",
-            "",
-            "It is not a guarantee.",
-            "It is the market's opinion at this moment.",
-            "",
-            "Watch:",
-            "• volume",
-            "• end date",
-            "• sharp moves",
-            "• resolution rules",
+            f"Current probability: {format_probability(market.yes_probability, language)}",
         ]
         if ai_brief:
             lines.extend(["", "AI brief:", ai_brief])
@@ -356,18 +390,11 @@ def format_beginner_explanation(
     lines = [
         "🧠 Объяснить проще",
         "",
-        "Этот рынок показывает, насколько участники Polymarket верят в событие.",
+        "Простыми словами:",
+        "Этот рынок сегодня заметен, потому что к нему вырос интерес.",
+        "Смотри на вероятность и правила разрешения, прежде чем делать выводы.",
         "",
-        f"{format_probability(market.yes_probability)} означает, что рынок сейчас оценивает событие примерно так.",
-        "",
-        "Это не гарантия.",
-        "Это мнение рынка на данный момент.",
-        "",
-        "Обрати внимание:",
-        "• объём",
-        "• дату завершения",
-        "• резкие движения",
-        "• правила разрешения рынка",
+        f"Текущая вероятность: {format_probability(market.yes_probability)}",
     ]
     if ai_brief:
         lines.extend(["", "AI brief:", ai_brief])

@@ -47,7 +47,15 @@ function compactUsd(value) {
 
 function percent(value) {
   if (value === null || value === undefined || Number.isNaN(Number(value))) return "n/a";
-  return `${Math.round(Number(value))}%`;
+  const number = Number(value);
+  if (number <= 0) return "Very low probability";
+  if (number < 1) return "<1%";
+  return `${Math.round(number)}%`;
+}
+
+function probability(item) {
+  if (item && item.probability_label) return item.probability_label;
+  return percent(item ? item.probability : null);
 }
 
 function movement(value) {
@@ -84,20 +92,12 @@ function emptyState(message) {
   return `<div class="empty-state">${escapeHtml(message || EMPTY_MESSAGE)}</div>`;
 }
 
-function riskBadges(flags) {
-  if (!Array.isArray(flags) || !flags.length) return "";
-  return `
-    <div class="small-meta">
-      ${flags.slice(0, 3).map((flag) => `<span class="badge">${escapeHtml(flag)}</span>`).join("")}
-    </div>
-  `;
-}
-
-function metric(label, value, accent = false) {
+function metric(label, value, accent = false, caption = "") {
   return `
     <div class="metric">
       <span>${escapeHtml(label)}</span>
       <strong class="${accent ? "accent-text" : ""}">${escapeHtml(value)}</strong>
+      ${caption ? `<small>${escapeHtml(caption)}</small>` : ""}
     </div>
   `;
 }
@@ -121,10 +121,10 @@ function marketActions(item, primaryLabel = "Explore Market", compact = false) {
     `;
   }
   return `
-    <div class="market-actions">
+      <div class="market-actions">
       <a class="market-action market-action--primary" href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(primaryLabel)}</a>
       <button class="market-action" type="button" data-bot-action="rules">Rules</button>
-      <button class="market-action" type="button" data-bot-action="simple">Simple</button>
+      <button class="market-action" type="button" data-bot-action="simple">Explain simply</button>
       <button class="market-action" type="button" data-share="${encodeURIComponent(title)}">Share</button>
     </div>
   `;
@@ -134,17 +134,13 @@ function marketSummaryCard(item, actionLabel = "Open") {
   const importantMoveBadge = hasImportantMove(item.movement)
     ? `<span class="badge">Move ${movement(item.movement)}</span>`
     : "";
-  const healthBadge = item.market_health_score
-    ? `<span class="badge badge--muted">Health ${escapeHtml(item.market_health_score)}/100</span>`
-    : "";
   return `
     <article class="market-card">
       <h3 class="market-title">${escapeHtml(item.title || "Untitled market")}</h3>
       <div class="small-meta">
-        <span class="badge badge--accent">${percent(item.probability)}</span>
+        <span class="badge badge--accent">${probability(item)}</span>
         <span class="badge">Pulse ${escapeHtml(item.pulse_score ?? 0)}/100</span>
         ${importantMoveBadge}
-        ${healthBadge}
       </div>
       <p class="why-copy why-copy--short">${escapeHtml(shortReason(item))}</p>
       <div class="card-link-row">
@@ -159,7 +155,7 @@ function searchResultCard(item) {
     <article class="search-card">
       <h3 class="market-title">${escapeHtml(item.title || "Untitled market")}</h3>
       <div class="small-meta">
-        <span class="badge badge--accent">${percent(item.probability)}</span>
+        <span class="badge badge--accent">${probability(item)}</span>
         <span class="badge">Pulse ${escapeHtml(item.pulse_score ?? 0)}/100</span>
       </div>
       ${marketActions(item, "Open", true)}
@@ -187,14 +183,15 @@ function renderToday(payload) {
       <h3 class="market-title">${escapeHtml(top.title || "Untitled market")}</h3>
     </div>
     <div class="metric-row metric-row--hero">
-      ${metric("Probability", percent(top.probability), true)}
-      ${metric("Pulse Score", `${escapeHtml(top.pulse_score ?? 0)}/100`)}
+      ${metric("Probability", probability(top), true)}
+      ${metric(
+        "Pulse Score",
+        `${escapeHtml(top.pulse_score ?? 0)}/100`,
+        false,
+        "How interesting this market looks today.",
+      )}
     </div>
-    <p class="why-copy why-copy--hero">${escapeHtml(shortReason(top))}</p>
-    <div class="small-meta small-meta--quiet">
-      ${top.market_health_score ? `<span class="badge badge--muted">Market Health ${escapeHtml(top.market_health_score)}/100</span>` : ""}
-      ${hasImportantMove(top.movement) ? `<span class="badge">Move ${movement(top.movement)}</span>` : ""}
-    </div>
+    <p class="why-copy why-copy--hero"><span class="why-label">Why it matters</span>${escapeHtml(shortReason(top))}</p>
     ${marketActions(top, "Explore Market")}
   `;
 
@@ -210,20 +207,23 @@ function renderSmart(payload) {
   clearNode(hero);
 
   if (!items.length) {
-    hero.innerHTML = emptyState("No strong public activity detected right now.");
+    hero.innerHTML = emptyState(
+      "No strong public activity detected right now. PulseMarket will keep watching.",
+    );
     return;
   }
 
   const item = items[0];
   hero.innerHTML = `
     <div>
-      <p class="section-kicker">Smart Money Radar</p>
+      <p class="section-kicker">Activity Radar</p>
       <h3 class="market-title">${escapeHtml(item.title || "Public market activity")}</h3>
     </div>
     <div class="metric-row metric-row--single">
       ${metric("Public activity", compactUsd(item.public_activity), true)}
     </div>
     <p class="why-copy">
+      <span class="why-label">Why it matters</span>
       Public activity is above the visibility threshold.
     </p>
     <p class="micro-note">Research only · No trade execution</p>
@@ -253,9 +253,9 @@ function renderMoves(payload) {
       (item) => `
         <article class="move-card">
           <div>
-            <h3 class="market-title">${escapeHtml(item.title || "Untitled market")}</h3>
-            <div class="small-meta">
-              <span class="badge">Probability ${percent(item.probability)}</span>
+              <h3 class="market-title">${escapeHtml(item.title || "Untitled market")}</h3>
+              <div class="small-meta">
+              <span class="badge">Probability ${probability(item)}</span>
               <span class="badge">Pulse ${escapeHtml(item.pulse_score ?? 0)}/100</span>
             </div>
             <div class="card-link-row">
