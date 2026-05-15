@@ -43,6 +43,8 @@ async def test_ai_context_engine_fallback_works_without_api_key() -> None:
     assert context.category == "crypto"
     assert context.probability_interpretation == "Likely"
     assert len(context.why_people_care) <= 140
+    assert context.why_people_care == "Crypto volatility brought more attention to this market."
+    assert "People are watching because activity increased" not in context.why_people_care
 
 
 @pytest.mark.asyncio
@@ -58,6 +60,7 @@ async def test_ai_daily_narrative_fallback_is_short_and_safe() -> None:
 
     assert narrative.headline
     assert narrative.what_changed
+    assert any("Crypto" in item or "activity" in item for item in narrative.what_changed)
     assert all(len(item) <= 160 for item in narrative.what_changed)
     for fragment in ("buy " + "now", "sell " + "now", "trade " + "signal", "guaran" + "teed"):
         assert fragment not in combined

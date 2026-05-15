@@ -160,37 +160,38 @@ class AIContextEngine:
         probability_label = self.probability_interpretation(market.yes_probability, normalized)
         abs_delta = abs(delta or 0)
         high_volume = (market.volume or 0) >= 100_000
+        topic_reason = self._topic_reason(market.question, normalized)
 
         if normalized == "en":
             if abs_delta >= 0.05:
-                why = "People are watching because probability moved today."
-                attention = "Attention shifted after a noticeable probability change."
+                why = "Probability moved enough to make this market stand out."
+                attention = "Probability movement made the market more noticeable."
             elif high_volume:
-                why = "People are watching because activity increased."
-                attention = "Public activity makes this market stand out today."
+                why = topic_reason
+                attention = self._topic_attention(market.question, normalized)
             elif pulse_score.value >= 70:
-                why = "This market stands out in today’s briefing."
-                attention = "The market looks notable compared with nearby topics."
+                why = topic_reason
+                attention = "This market is one of the clearer stories in today’s briefing."
             else:
-                why = "People are paying attention, but the story is still early."
-                attention = "No major shift yet, but it is worth keeping on the radar."
+                why = "The story is still forming, but attention is present."
+                attention = "No major shift yet, but the topic is worth keeping on the radar."
 
             simple = "This market asks whether the event in the title will happen."
             watch = "Watch probability changes, public activity, time left, and resolution rules."
             narrative = f"{category_label(category, 'en')} markets are part of today’s attention map."
         else:
             if abs_delta >= 0.05:
-                why = "За этим следят, потому что вероятность сегодня изменилась."
-                attention = "Внимание сместилось после заметного движения вероятности."
+                why = "Вероятность заметно изменилась, и рынок стал заметнее."
+                attention = "Движение вероятности сделало рынок заметнее."
             elif high_volume:
-                why = "За этим следят, потому что активность выросла."
-                attention = "Публичная активность выделяет этот рынок сегодня."
+                why = topic_reason
+                attention = self._topic_attention(market.question, normalized)
             elif pulse_score.value >= 70:
-                why = "Этот рынок выделяется в сегодняшнем обзоре."
-                attention = "Рынок заметен на фоне близких тем."
+                why = topic_reason
+                attention = "Этот рынок стал одной из более понятных историй дня."
             else:
-                why = "Интерес есть, но история ещё формируется."
-                attention = "Сильного сдвига пока нет, но рынок стоит держать на радаре."
+                why = "История ещё формируется, но интерес уже есть."
+                attention = "Сильного сдвига пока нет, но тему стоит держать на радаре."
 
             simple = "Этот рынок спрашивает, произойдёт ли событие из названия."
             watch = "Следи за вероятностью, активностью, временем до завершения и правилами."
@@ -267,23 +268,17 @@ class AIContextEngine:
             grouped[category] = grouped.get(category, 0) + 1
 
         if normalized == "en":
-            headline = f"Markets are reacting most to {category_label(top_category, 'en').lower()} today."
-            changes = [
-                f"Attention moved toward {category_label(top_category, 'en').lower()} markets.",
-                "Several markets are worth checking for probability and rules.",
-            ]
+            headline = f"{category_label(top_category, 'en')} is the main market story today."
+            changes = self._editorial_changes(grouped, normalized)
             summaries = {
-                key: f"{category_label(key, 'en')} is noticeable in today’s briefing."
+                key: self._category_summary(key, normalized)
                 for key in grouped
             }
         else:
-            headline = f"Сегодня рынки сильнее всего реагируют на {category_label(top_category, 'ru').lower()}."
-            changes = [
-                f"Внимание сместилось к категории: {category_label(top_category, 'ru').lower()}.",
-                "Несколько рынков стоит проверить по вероятности и правилам.",
-            ]
+            headline = f"{category_label(top_category, 'ru')} — главная история рынка сегодня."
+            changes = self._editorial_changes(grouped, normalized)
             summaries = {
-                key: f"{category_label(key, 'ru')} заметны в сегодняшнем обзоре."
+                key: self._category_summary(key, normalized)
                 for key in grouped
             }
 
@@ -300,6 +295,91 @@ class AIContextEngine:
             what_changed=tuple(changes[:3]),
             category_summaries=summaries,
         )
+
+    def _topic_reason(self, title: str, language: str) -> str:
+        text = title.lower()
+        if any(word in text for word in ("bitcoin", "btc", "ethereum", "crypto", "binance")):
+            return (
+                "Crypto volatility brought more attention to this market."
+                if language == "en"
+                else "Активность усилилась после движения крипторынка."
+            )
+        if any(word in text for word in ("iran", "israel", "trump", "election", "president", "war", "diplomacy")):
+            return (
+                "Attention increased around political headlines."
+                if language == "en"
+                else "Внимание выросло вокруг политической повестки."
+            )
+        if any(word in text for word in ("nba", "nfl", "ufc", "soccer", "football", "tennis", "match", "playoff")):
+            return (
+                "Activity grew ahead of the event."
+                if language == "en"
+                else "Рынок оживился перед спортивным событием."
+            )
+        if any(word in text for word in ("openai", "nvidia", "anthropic", " ai ")):
+            return (
+                "AI-related attention increased today."
+                if language == "en"
+                else "Внимание к AI-теме усилилось."
+            )
+        return (
+            "Users started watching this topic more actively."
+            if language == "en"
+            else "Пользователи активнее следят за развитием темы."
+        )
+
+    def _topic_attention(self, title: str, language: str) -> str:
+        reason = self._topic_reason(title, language)
+        if language == "en":
+            return reason.replace("brought more attention to this market", "is shaping today’s attention").replace("increased today", "is rising")
+        return reason.replace("усилилась после движения крипторынка", "выделяет этот рынок сегодня").replace("усилилось", "растёт")
+
+    def _editorial_changes(self, grouped: Mapping[str, int], language: str) -> list[str]:
+        ranked = sorted(grouped, key=lambda key: grouped[key], reverse=True)
+        if language == "en":
+            labels = {
+                "politics": "🔥 Political markets became more active",
+                "crypto": "📈 Crypto activity returned",
+                "ai": "👀 AI attention increased",
+                "sports": "🔥 Sports markets heated up",
+                "esports": "🔥 Esports markets heated up",
+                "culture": "👀 Culture markets drew attention",
+                "global": "🔥 Global events became more active",
+            }
+            fallback = "👀 Market attention increased"
+        else:
+            labels = {
+                "politics": "🔥 Политические рынки оживились",
+                "crypto": "📈 Крипта снова активна",
+                "ai": "👀 Внимание к AI усилилось",
+                "sports": "🔥 Спорт разогревается",
+                "esports": "🔥 Киберспорт разогревается",
+                "culture": "👀 Культурные рынки заметнее",
+                "global": "🔥 Мировые события активнее",
+            }
+            fallback = "👀 Внимание к рынкам выросло"
+        return [labels.get(key, fallback) for key in ranked[:3]] or [fallback]
+
+    def _category_summary(self, category: str, language: str) -> str:
+        if language == "en":
+            return {
+                "politics": "Political markets are more active in today’s briefing.",
+                "crypto": "Crypto markets are drawing fresh attention.",
+                "ai": "AI-related markets are getting more attention.",
+                "sports": "Sports markets are heating up around upcoming events.",
+                "esports": "Esports markets are active around match narratives.",
+                "culture": "Culture markets are showing fresh interest.",
+                "global": "Global-event markets are shaping the day’s read.",
+            }.get(category, "This category is noticeable in today’s briefing.")
+        return {
+            "politics": "Политические рынки активнее в сегодняшнем обзоре.",
+            "crypto": "Крипторынки снова привлекают внимание.",
+            "ai": "AI-рынки получают больше внимания.",
+            "sports": "Спортивные рынки разогреваются вокруг ближайших событий.",
+            "esports": "Киберспорт активен вокруг матчевых сюжетов.",
+            "culture": "Культурные рынки стали заметнее.",
+            "global": "Мировые события формируют картину дня.",
+        }.get(category, "Эта категория заметна в сегодняшнем обзоре.")
 
     def search_summary(
         self,

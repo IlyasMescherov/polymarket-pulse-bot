@@ -68,14 +68,14 @@ def market_mood_reason(key: str, language: str | None = None) -> str:
     reasons = {
         "en": {
             "quiet": "No strong movement yet.",
-            "active": "People are watching this because activity is present.",
+            "active": "Public attention is present.",
             "heating_up": "Attention is rising around this market.",
             "volatile": "Probability moved enough to make the market noticeable.",
             "ending_soon": "The market is close to resolution.",
         },
         "ru": {
             "quiet": "Сильного движения пока нет.",
-            "active": "За этим следят, потому что активность уже есть.",
+            "active": "Публичное внимание уже есть.",
             "heating_up": "Внимание к этому рынку растёт.",
             "volatile": "Вероятность заметно изменилась, поэтому рынок выделяется.",
             "ending_soon": "Рынок близок к разрешению.",

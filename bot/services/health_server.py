@@ -130,6 +130,30 @@ def _market_to_api_object(
     }
 
 
+def _category_from_title(title: str) -> str:
+    text = title.lower()
+    if any(word in text for word in ("bitcoin", "btc", "ethereum", "crypto", "binance")):
+        return "crypto"
+    if any(word in text for word in ("iran", "israel", "trump", "election", "president", "war", "diplomacy")):
+        return "politics"
+    if any(word in text for word in ("nba", "nfl", "ufc", "soccer", "football", "tennis", "match", "playoff")):
+        return "sports"
+    if any(word in text for word in ("openai", "nvidia", "anthropic", " ai ")):
+        return "ai"
+    return "global"
+
+
+def _attention_reason_for_title(title: str) -> str:
+    category = _category_from_title(title)
+    return {
+        "crypto": "Crypto volatility brought more attention to this market.",
+        "politics": "Attention increased around political headlines.",
+        "sports": "Activity grew ahead of the event.",
+        "ai": "AI-related attention increased today.",
+        "global": "Public attention is rising around this market.",
+    }[category]
+
+
 def _today_item_to_api_object(item: TodayPulseItem) -> dict[str, Any]:
     result = _market_to_api_object(item.market, item.delta)
     result["why_it_matters"] = item.why_it_matters
@@ -142,6 +166,7 @@ def _market_movement_to_api_object(item: MarketMovement) -> dict[str, Any]:
 
 
 def _smart_market_to_api_object(activity: MarketActivity) -> dict[str, Any]:
+    category = _category_from_title(activity.market_title)
     return {
         "market_id": activity.market_id,
         "title": activity.market_title,
@@ -149,10 +174,10 @@ def _smart_market_to_api_object(activity: MarketActivity) -> dict[str, Any]:
         "trades_count": activity.trades_count,
         "top_side": None,
         "url": "https://polymarket.com",
-        "why_it_matters": "People are paying more attention to this market.",
-        "attention_summary": "Public attention is rising around this market.",
-        "category": "global",
-        "category_label": "Global",
+        "why_it_matters": _attention_reason_for_title(activity.market_title),
+        "attention_summary": _attention_reason_for_title(activity.market_title),
+        "category": category,
+        "category_label": category_label(category, "en"),
     }
 
 

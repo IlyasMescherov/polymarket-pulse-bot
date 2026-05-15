@@ -31,4 +31,4 @@ def test_market_mood_is_localized() -> None:
     mood = calculate_market_mood(_market(volume=120_000), language="ru")
 
     assert mood.label == "Активно"
-    assert "следят" in mood.reason
+    assert "Публичное внимание" in mood.reason

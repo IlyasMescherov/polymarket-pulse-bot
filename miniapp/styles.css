@@ -10,8 +10,8 @@
   --text-soft: #aebfcd;
   --muted: #6f8294;
   --blue: #4b8dff;
-  --green: #55e29a;
-  --green-soft: rgba(85, 226, 154, 0.13);
+  --green: #7bd6a4;
+  --green-soft: rgba(123, 214, 164, 0.09);
   --blue-soft: rgba(75, 141, 255, 0.14);
   --shadow: 0 18px 52px rgba(0, 0, 0, 0.28);
   --radius: 22px;
@@ -31,7 +31,7 @@
   --text-soft: #506172;
   --muted: #7d8a96;
   --blue-soft: rgba(47, 111, 235, 0.1);
-  --green-soft: rgba(9, 160, 92, 0.11);
+  --green-soft: rgba(9, 150, 92, 0.08);
   --shadow: 0 18px 48px rgba(34, 54, 82, 0.12);
 }
 
@@ -95,7 +95,7 @@ button {
 .app-shell {
   width: min(720px, calc(100% - 22px));
   margin: 0 auto;
-  padding: calc(10px + env(safe-area-inset-top)) 0 calc(92px + env(safe-area-inset-bottom));
+  padding: calc(8px + env(safe-area-inset-top)) 0 calc(92px + env(safe-area-inset-bottom));
 }
 
 .masthead {
@@ -187,8 +187,8 @@ button {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
-  margin: 2px 0 12px;
-  padding: 12px;
+  margin: 0 0 10px;
+  padding: 10px;
   border: 1px solid var(--line);
   border-radius: 20px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)), var(--bg-elevated);
@@ -221,7 +221,7 @@ button {
 .context-kicker,
 .section-kicker {
   margin: 0;
-  color: var(--green);
+  color: #9ccab3;
   font-size: 0.67rem;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -283,13 +283,13 @@ button {
 .insight-card,
 .narrative-card,
 .settings-card {
-  padding: 13px;
+  padding: 11px;
 }
 
 .narrative-card {
   display: grid;
-  gap: 8px;
-  margin-bottom: 11px;
+  gap: 6px;
+  margin-bottom: 9px;
   background:
     linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(85, 226, 154, 0.06)),
     var(--card);
@@ -346,8 +346,8 @@ button {
 
 .story-card h3,
 .insight-card h3 {
-  margin-top: 8px;
-  font-size: 1.08rem;
+  margin-top: 7px;
+  font-size: 1.02rem;
   line-height: 1.18;
 }
 
@@ -363,9 +363,9 @@ button {
 
 .story-card p,
 .insight-card p {
-  margin: 8px 0 0;
-  font-size: 0.84rem;
-  line-height: 1.32;
+  margin: 7px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.28;
 }
 
 .metric-line {
@@ -440,35 +440,29 @@ button {
 
 .pill {
   border-radius: var(--radius-pill);
-  padding: 4px 7px;
-  font-size: 0.68rem;
+  padding: 3px 7px;
+  font-size: 0.65rem;
   font-weight: 900;
 }
 
 .pill--prob {
-  color: #061018;
-  background: linear-gradient(135deg, var(--green), #a8ffd0);
-}
-
-.pill--pulse {
-  display: inline-flex;
-  gap: 5px;
-  align-items: baseline;
   color: var(--text);
-  border: 1px solid var(--line-strong);
-  background: var(--blue-soft);
-}
-
-.pill--pulse small {
-  color: var(--muted);
-  font-size: 0.63rem;
-  font-weight: 800;
+  border: 1px solid rgba(123, 214, 164, 0.2);
+  background: rgba(123, 214, 164, 0.1);
 }
 
 .pill--mood {
-  color: var(--green);
-  border: 1px solid rgba(85, 226, 154, 0.28);
+  color: #b7dec7;
+  border: 1px solid rgba(123, 214, 164, 0.22);
   background: var(--green-soft);
+}
+
+.pulse-subtle {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 850;
 }
 
 .simple-read {
@@ -534,7 +528,7 @@ button {
 }
 
 .action-row {
-  margin-top: 9px;
+  margin-top: 8px;
 }
 
 .action-row--compact {
@@ -548,15 +542,15 @@ button {
 .link-list button,
 .search-form button {
   border-radius: var(--radius-pill);
-  padding: 8px 11px;
-  font-size: 0.8rem;
+  padding: 7px 10px;
+  font-size: 0.78rem;
 }
 
 .primary-action,
 .wide-action {
   border-color: transparent;
   color: #061018;
-  background: linear-gradient(135deg, var(--blue), var(--green));
+  background: linear-gradient(135deg, #5f9bff, #9ad7b7);
 }
 
 .soft-action {
@@ -564,8 +558,9 @@ button {
 }
 
 .wide-action {
-  width: 100%;
-  margin-top: 12px;
+  width: auto;
+  margin-top: 10px;
+  justify-self: start;
 }
 
 .subsection {
@@ -598,8 +593,8 @@ button {
 .horizontal-strip {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(178px, 58%);
-  gap: 8px;
+  grid-auto-columns: minmax(252px, 82%);
+  gap: 9px;
   overflow-x: auto;
   padding-bottom: 2px;
   scroll-snap-type: x proximity;
@@ -709,9 +704,9 @@ button {
 
 .category-chip.is-active,
 .chip--interest.is-active {
-  border-color: rgba(85, 226, 154, 0.55);
+  border-color: rgba(123, 214, 164, 0.42);
   color: #071016;
-  background: linear-gradient(135deg, var(--blue), var(--green));
+  background: linear-gradient(135deg, #6aa0ff, #a7d9bd);
 }
 
 .chip-row--wrap {
@@ -876,7 +871,7 @@ button {
 
 .segmented button.is-selected {
   color: #061018;
-  background: linear-gradient(135deg, var(--blue), var(--green));
+  background: linear-gradient(135deg, #6aa0ff, #a7d9bd);
 }
 
 .toggle-row {
@@ -910,12 +905,12 @@ button {
 
 .switch.is-on {
   background: var(--green-soft);
-  border-color: rgba(85, 226, 154, 0.45);
+  border-color: rgba(123, 214, 164, 0.4);
 }
 
 .switch.is-on::after {
   transform: translateX(17px);
-  background: var(--green);
+  background: #9ed7b8;
 }
 
 .learn-grid {
@@ -1045,7 +1040,7 @@ button {
 
 .bottom-nav__item.is-active {
   color: #061018;
-  background: linear-gradient(135deg, var(--blue), var(--green));
+  background: linear-gradient(135deg, #6aa0ff, #a7d9bd);
 }
 
 .bot-link:hover,
@@ -1137,7 +1132,7 @@ html[data-compact="true"] .screen-intro {
   }
 
   .horizontal-strip {
-    grid-auto-columns: minmax(172px, 64%);
+    grid-auto-columns: minmax(254px, 86%);
   }
 
   .learn-grid,

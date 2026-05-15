@@ -65,4 +65,4 @@ def test_why_it_matters_template_is_language_aware() -> None:
         item.pulse_score,
         item.market_health,
         language="ru",
-    ).startswith("За этим следят")
+    ).startswith("Активность усилилась")

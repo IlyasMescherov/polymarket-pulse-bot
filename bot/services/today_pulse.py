@@ -11,6 +11,39 @@ from bot.services.risk_flags import market_risk_flags
 from bot.utils.i18n import normalize_language
 
 
+def _title_category_reason(market: Market, language: str) -> str:
+    title = market.question.lower()
+    if any(word in title for word in ("bitcoin", "btc", "ethereum", "crypto", "binance")):
+        return (
+            "Crypto volatility brought more attention to this market."
+            if language == "en"
+            else "Активность усилилась после движения крипторынка."
+        )
+    if any(word in title for word in ("iran", "israel", "trump", "election", "president", "war", "diplomacy")):
+        return (
+            "Attention increased around political headlines."
+            if language == "en"
+            else "Внимание выросло вокруг политической повестки."
+        )
+    if any(word in title for word in ("nba", "nfl", "ufc", "soccer", "football", "tennis", "match", "playoff")):
+        return (
+            "Activity grew ahead of the event."
+            if language == "en"
+            else "Рынок оживился перед спортивным событием."
+        )
+    if any(word in title for word in ("openai", "nvidia", "anthropic", " ai ")):
+        return (
+            "AI-related attention increased today."
+            if language == "en"
+            else "Внимание к AI-теме усилилось."
+        )
+    return (
+        "Users started watching this topic more actively."
+        if language == "en"
+        else "Пользователи активнее следят за развитием темы."
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class TodayPulseItem:
     market: Market
@@ -48,11 +81,7 @@ def explain_why_it_matters(
         )
 
     if market.volume is not None and market.volume >= 100_000:
-        return (
-            "People are watching this because activity increased."
-            if normalized == "en"
-            else "За этим следят, потому что активность выросла."
-        )
+        return _title_category_reason(market, normalized)
 
     if pulse_score.value >= 70:
         return (
@@ -69,9 +98,9 @@ def explain_why_it_matters(
         )
 
     return (
-        "People are paying attention, but the story is still early."
+        "The story is still forming, but attention is present."
         if normalized == "en"
-        else "Интерес есть, но история ещё только формируется."
+        else "История ещё формируется, но интерес уже есть."
     )
 
 

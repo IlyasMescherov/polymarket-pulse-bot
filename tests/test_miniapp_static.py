@@ -37,6 +37,7 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "Interests",
         "Language",
         "Theme",
+        "About PulseMarket AI",
         "Research only · No trading · No wallets · No deposits · No private keys · No financial advice",
     ):
         assert text in index_text
@@ -90,6 +91,7 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "segmented",
         "switch",
         "pill--mood",
+        "pulse-subtle",
         "simple-read",
         "search-summary",
         "skeleton-card",
@@ -216,12 +218,19 @@ def test_miniapp_cards_are_compressed_and_have_habit_layer() -> None:
     assert "detailActionRow" in script_text
     assert "buttonRow(item)" in script_text
     assert "data-explain-market" in script_text
+    assert "whatMarketAsks" in script_text
+    assert "whatInfluences" in script_text
+    assert "relatedTopics" in script_text
+    assert "resolutionRules" in script_text
     assert "probabilityDisplay" in script_text
     assert "simple-read" not in script_text
     assert "Worth watching" in script_text
     assert "High attention" in script_text
-    assert "grid-auto-columns: minmax(178px, 58%)" in styles_text
+    assert "grid-auto-columns: minmax(252px, 82%)" in styles_text
     assert ".daily-snapshot" in styles_text
+    assert "pill--pulse" not in styles_text
+    assert "People are watching this because activity increased" not in script_text
+    assert "Public activity is above the visibility threshold" not in script_text
 
 
 def test_health_server_can_resolve_miniapp_assets() -> None:

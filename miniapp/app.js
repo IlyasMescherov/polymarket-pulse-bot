@@ -98,6 +98,8 @@ const copy = {
     sharpMoveNotifications: "Sharp move alerts",
     compactMode: "Compact mode",
     reducedAnimations: "Reduced animations",
+    aboutPulse: "About PulseMarket AI",
+    aboutPulseCopy: "A calm daily intelligence companion for Polymarket.",
     whatPulse: "What is Pulse Score?",
     pulseMeaning: "How interesting this market looks today.",
     whatRadar: "What is Activity Radar?",
@@ -152,8 +154,8 @@ const copy = {
     lowButActive: "Low probability, but this market may still be active.",
     marketAttentionRising: "People are paying more attention to this market.",
     worthWatching: "Worth watching today.",
-    activeToday: "People are watching this because activity increased.",
-    attentionMoved: "Attention moved to this market.",
+    activeToday: "Attention grew around this market.",
+    attentionMoved: "Public attention is rising.",
     quietNote: "No major shift yet.",
     endingSoonOne: "market is ending soon.",
     endingSoonMany: "markets are ending soon.",
@@ -173,6 +175,13 @@ const copy = {
     categoryAll: "All",
     simpleReadTitle: "Simple Read",
     simpleReadCopy: "This market asks whether an event will happen. Watch the probability and rules before drawing conclusions.",
+    whatMarketAsks: "What this market asks",
+    whatChangedDetail: "What changed",
+    whatInfluences: "What can influence it",
+    influencingFactorsCopy: "News context, public activity, time left, and resolution rules.",
+    relatedTopics: "Related topics",
+    resolutionRules: "Resolution rules",
+    resolutionRulesCopy: "Open the market page and review the official resolution criteria.",
     moodQuiet: "Quiet",
     moodActive: "Active",
     moodHeating: "Heating up",
@@ -234,6 +243,8 @@ const copy = {
     sharpMoveNotifications: "Уведомления о движениях",
     compactMode: "Компактный режим",
     reducedAnimations: "Меньше анимаций",
+    aboutPulse: "О PulseMarket AI",
+    aboutPulseCopy: "Спокойный ежедневный помощник по Polymarket.",
     whatPulse: "Что такое Pulse Score?",
     pulseMeaning: "Насколько рынок сейчас интересен.",
     whatRadar: "Что такое Радар активности?",
@@ -288,8 +299,8 @@ const copy = {
     lowButActive: "Вероятность низкая, но рынок может быть активным.",
     marketAttentionRising: "К этому рынку растёт внимание.",
     worthWatching: "Сегодня стоит изучить.",
-    activeToday: "За этим следят, потому что активность выросла.",
-    attentionMoved: "Внимание сместилось к этому рынку.",
+    activeToday: "Интерес к этому рынку вырос.",
+    attentionMoved: "Публичное внимание растёт.",
     quietNote: "Без больших изменений.",
     endingSoonOne: "рынок скоро завершится.",
     endingSoonMany: "рынка скоро завершатся.",
@@ -309,6 +320,13 @@ const copy = {
     categoryAll: "Все",
     simpleReadTitle: "Простой смысл",
     simpleReadCopy: "Этот рынок спрашивает, произойдёт ли событие. Смотри на вероятность и правила разрешения, прежде чем делать выводы.",
+    whatMarketAsks: "О чём рынок",
+    whatChangedDetail: "Что изменилось",
+    whatInfluences: "Что влияет на рынок",
+    influencingFactorsCopy: "Новости, публичная активность, время до завершения и правила разрешения.",
+    relatedTopics: "Связанные темы",
+    resolutionRules: "Правила разрешения",
+    resolutionRulesCopy: "Открой страницу рынка и проверь официальные критерии разрешения.",
     moodQuiet: "Тихо",
     moodActive: "Активно",
     moodHeating: "Разогревается",
@@ -500,6 +518,56 @@ function probabilityDisplay(item) {
   return `${label} · ${number}`;
 }
 
+function isGenericReason(value) {
+  const text = String(value || "").trim().toLowerCase();
+  if (!text) return true;
+  return [
+    "this market is active today",
+    "public activity is above the visibility threshold",
+    "этот рынок выделяется в сегодняшнем обзоре",
+  ].some((fragment) => text.includes(fragment));
+}
+
+function matchesCurrentLanguage(value) {
+  const text = String(value || "");
+  if (!text.trim()) return false;
+  const hasCyrillic = /[а-яё]/i.test(text);
+  return isRu() ? hasCyrillic : !hasCyrillic;
+}
+
+function localizedText(value, fallback) {
+  return matchesCurrentLanguage(value) ? String(value).trim() : fallback;
+}
+
+function editorialReason(item) {
+  const mood = marketMood(item || {});
+  if (mood.key === "ending_soon") {
+    return isRu() ? "Рынок близок к разрешению, поэтому внимание выше." : "The market is close to resolution, so attention is higher.";
+  }
+  if (mood.key === "volatile") {
+    return isRu() ? "Вероятность заметно изменилась, и рынок стал заметнее." : "Probability moved enough to make this market stand out.";
+  }
+
+  const title = String((item && item.title) || "").toLowerCase();
+  const category = categoryForItem(item || {});
+  if (/(bitcoin|btc|ethereum|eth|crypto|binance|coinbase)/.test(title) || category === "crypto") {
+    return isRu() ? "Активность усилилась после движения крипторынка." : "Crypto volatility brought more attention to this market.";
+  }
+  if (/(iran|israel|trump|election|president|senate|war|diplomacy|china|russia|ukraine)/.test(title) || category === "politics" || category === "global") {
+    return isRu() ? "Внимание выросло вокруг политической повестки." : "Attention increased around political headlines.";
+  }
+  if (/(nba|nfl|ufc|soccer|football|tennis|baseball|fifa|playoff|match)/.test(title) || category === "sports") {
+    return isRu() ? "Рынок оживился перед спортивным событием." : "Activity grew ahead of the event.";
+  }
+  if (/(openai|nvidia|anthropic|robot| ai )/.test(` ${title} `) || category === "ai") {
+    return isRu() ? "Внимание к AI-теме усилилось." : "AI-related attention increased today.";
+  }
+  if (Number((item && item.public_activity) || 0) > 0) {
+    return isRu() ? "Публичное внимание к этому рынку растёт." : "Public attention is rising around this market.";
+  }
+  return isRu() ? "Пользователи активнее следят за развитием темы." : "Users started watching this topic more actively.";
+}
+
 function pulseLabel(item) {
   const score = Number((item && item.pulse_score) || 0);
   if (score >= 85) return t("pulseTrending");
@@ -511,6 +579,10 @@ function pulseLabel(item) {
 
 function pulseMeta(item) {
   return `Pulse ${escapeHtml((item && item.pulse_score) ?? 0)}/100`;
+}
+
+function pulseSecondary(item) {
+  return `<span class="pulse-subtle">${escapeHtml(pulseLabel(item))} · ${pulseMeta(item)}</span>`;
 }
 
 function marketId(item) {
@@ -546,19 +618,16 @@ function compactTitle(title, limit = 72) {
 }
 
 function shortReason(item) {
-  if (item && item.why_people_care) {
+  if (item && item.why_people_care && matchesCurrentLanguage(item.why_people_care) && !isGenericReason(item.why_people_care)) {
     const sentence = String(item.why_people_care).split(".")[0].trim();
     return sentence ? `${sentence}.` : t("selectedToday");
   }
-  if (!isRu() && item && item.why_it_matters) {
+  if (item && item.why_it_matters && matchesCurrentLanguage(item.why_it_matters) && !isGenericReason(item.why_it_matters)) {
     const sentence = String(item.why_it_matters).split(".")[0].trim();
     return sentence ? `${sentence}.` : t("selectedToday");
   }
   if (item && Number(item.probability) > 0 && Number(item.probability) < 1) return t("lowButActive");
-  if (item && Number(item.public_activity || 0) > 0) return t("marketAttentionRising");
-  if (Number((item && item.pulse_score) || 0) >= 70) return t("worthWatching");
-  if (Number((item && item.volume) || 0) >= 100000) return t("activeToday");
-  return t("selectedToday");
+  return editorialReason(item || {});
 }
 
 function marketMood(item) {
@@ -593,7 +662,7 @@ function moodReason(key) {
   if (isRu()) {
     return {
       quiet: "Сильного движения пока нет.",
-      active: "За этим следят, потому что активность уже есть.",
+      active: "Публичное внимание уже есть.",
       heating_up: "Внимание к этому рынку растёт.",
       volatile: "Вероятность заметно изменилась, поэтому рынок выделяется.",
       ending_soon: "Рынок близок к разрешению.",
@@ -601,7 +670,7 @@ function moodReason(key) {
   }
   return {
     quiet: "No strong movement yet.",
-    active: "People are watching this because activity is present.",
+    active: "Public attention is present.",
     heating_up: "Attention is rising around this market.",
     volatile: "Probability moved enough to make the market noticeable.",
     ending_soon: "The market is close to resolution.",
@@ -734,8 +803,8 @@ function marketCard(item, variant = "compact") {
       </div>
       <div class="pill-row">
         <span class="pill pill--prob">${escapeHtml(probabilityDisplay(item))}</span>
-        <span class="pill pill--pulse">${escapeHtml(pulseLabel(item))}<small>${pulseMeta(item)}</small></span>
       </div>
+      ${pulseSecondary(item)}
       ${buttonRow(item)}
     </article>
   `;
@@ -755,8 +824,8 @@ function savedCard(item, removable = false) {
       </div>
       <div class="pill-row">
         <span class="pill pill--prob">${escapeHtml(probabilityDisplay(item))}</span>
-        <span class="pill pill--pulse">${escapeHtml(pulseLabel(item))}<small>${pulseMeta(item)}</small></span>
       </div>
+      ${pulseSecondary(item)}
       <div class="action-row">
         <a class="primary-action" href="${escapeHtml(safeUrl(item.url))}" target="_blank" rel="noreferrer" data-open-market="${encoded}">${escapeHtml(t("open"))}</a>
         ${
@@ -782,24 +851,32 @@ function openExplain(item) {
   body.innerHTML = `
     <div class="detail-list">
       <div>
+        <span>${escapeHtml(t("whatMarketAsks"))}</span>
+        <strong>${escapeHtml(localizedText(normalized.simple_read, t("simpleReadCopy")))}</strong>
+      </div>
+      <div>
         <span>${escapeHtml(t("whyPeopleCare"))}</span>
         <strong>${escapeHtml(normalized.why || shortReason(normalized))}</strong>
       </div>
       <div>
-        <span>${escapeHtml(t("simpleReadTitle"))}</span>
-        <strong>${escapeHtml(normalized.simple_read || t("simpleReadCopy"))}</strong>
+        <span>${escapeHtml(t("whatChangedDetail"))}</span>
+        <strong>${escapeHtml(localizedText(normalized.attention_summary, mood.reason || editorialReason(normalized)))}</strong>
       </div>
       <div>
-        <span>${escapeHtml(t("watchNext"))}</span>
-        <strong>${escapeHtml(normalized.what_to_watch || t("watchNextCopy"))}</strong>
-      </div>
-      <div>
-        <span>${escapeHtml(t("narrativeKicker"))}</span>
-        <strong>${escapeHtml(normalized.topic_narrative || normalized.attention_summary || t("selectedToday"))}</strong>
+        <span>${escapeHtml(t("whatInfluences"))}</span>
+        <strong>${escapeHtml(localizedText(normalized.what_to_watch, t("influencingFactorsCopy")))}</strong>
       </div>
       <div>
         <span>${escapeHtml(t("marketMood"))}</span>
         <strong>${escapeHtml(mood.label)} · ${escapeHtml(mood.reason)}</strong>
+      </div>
+      <div>
+        <span>${escapeHtml(t("relatedTopics"))}</span>
+        <strong>${escapeHtml(localizedText(normalized.topic_narrative, categoryLabel(normalized.category || "global")))}</strong>
+      </div>
+      <div>
+        <span>${escapeHtml(t("resolutionRules"))}</span>
+        <strong>${escapeHtml(t("resolutionRulesCopy"))}</strong>
       </div>
     </div>
   `;
@@ -830,6 +907,70 @@ function moodSummaryWord(key) {
   return t("moodLineQuiet");
 }
 
+function editorialChange(category, moodKey = "active") {
+  const heating = moodKey === "heating_up" || moodKey === "volatile" || moodKey === "ending_soon";
+  const en = {
+    politics: heating ? "🔥 Political markets became more active" : "👀 Political attention increased",
+    crypto: heating ? "📈 Crypto activity returned" : "👀 Crypto attention increased",
+    ai: "👀 AI attention increased",
+    sports: heating ? "🔥 Sports markets heated up" : "👀 Sports activity increased",
+    esports: heating ? "🔥 Esports markets heated up" : "👀 Esports activity increased",
+    culture: "👀 Culture markets drew attention",
+    global: "🔥 Global events became more active",
+    other: "👀 Market attention increased",
+  };
+  const ru = {
+    politics: heating ? "🔥 Политические рынки оживились" : "👀 Внимание к политике усилилось",
+    crypto: heating ? "📈 Крипта снова активна" : "👀 Внимание к крипте усилилось",
+    ai: "👀 Внимание к AI усилилось",
+    sports: heating ? "🔥 Спорт разогревается" : "👀 Активность в спорте выросла",
+    esports: heating ? "🔥 Киберспорт разогревается" : "👀 Активность в киберспорте выросла",
+    culture: "👀 Культурные рынки заметнее",
+    global: "🔥 Мировые события активнее",
+    other: "👀 Внимание к рынкам выросло",
+  };
+  return (isRu() ? ru : en)[category] || (isRu() ? ru.other : en.other);
+}
+
+function editorialHeadline(category) {
+  const en = {
+    politics: "Politics is the main market story today.",
+    crypto: "Crypto is the main market story today.",
+    ai: "AI attention is shaping today’s market read.",
+    sports: "Sports markets are heating up today.",
+    esports: "Esports markets are active today.",
+    culture: "Culture markets are drawing attention today.",
+    global: "Global events are shaping today’s market read.",
+    other: "PulseMarket is reading today’s market attention.",
+  };
+  const ru = {
+    politics: "Политика — главная история рынка сегодня.",
+    crypto: "Крипта — главная история рынка сегодня.",
+    ai: "AI формирует сегодняшнюю картину рынка.",
+    sports: "Спортивные рынки сегодня разогреваются.",
+    esports: "Киберспорт сегодня активен.",
+    culture: "Культурные рынки сегодня заметнее.",
+    global: "Мировые события формируют картину дня.",
+    other: "PulseMarket читает сегодняшнее внимание рынка.",
+  };
+  return (isRu() ? ru : en)[category] || (isRu() ? ru.other : en.other);
+}
+
+function rankedMoodCategories(markets) {
+  const summary = new Map();
+  for (const item of markets) {
+    const category = categoryForItem(item);
+    const mood = marketMood(item);
+    const current = summary.get(category);
+    if (!current || moodWeight(mood.key) > moodWeight(current.key)) {
+      summary.set(category, mood);
+    }
+  }
+  return Array.from(summary.entries())
+    .sort((left, right) => moodWeight(right[1].key) - moodWeight(left[1].key))
+    .filter(([category]) => category !== "other");
+}
+
 function renderDailySnapshot() {
   const changed = document.getElementById("what-changed");
   const moodTarget = document.getElementById("mood-summary");
@@ -840,38 +981,27 @@ function renderDailySnapshot() {
 
   const allMarkets = [...state.today, ...state.hot, ...state.moves];
   const notes = [];
-  if (Array.isArray(state.todayMeta.what_changed)) {
-    notes.push(...state.todayMeta.what_changed.slice(0, 2));
-  }
+  const moodCategories = rankedMoodCategories(allMarkets);
+  notes.push(...moodCategories.slice(0, 2).map(([category, mood]) => editorialChange(category, mood.key)));
   if (state.radar[0]) {
-    notes.push(`👀 ${t("attentionMoved")} ${compactTitle(state.radar[0].title, 46)}`);
+    notes.push(editorialChange(categoryForItem(state.radar[0]), "heating_up"));
   }
   const endingSoon = allMarkets.filter((item) => marketMood(item).key === "ending_soon").length;
   if (endingSoon) notes.push(`⚠️ ${endingSoon} ${t(endingSoon === 1 ? "endingSoonOne" : "endingSoonMany")}`);
   if (state.moves.length) notes.push(`⚡ ${state.moves.length} ${t(state.moves.length === 1 ? "movesOne" : "movesMany")}`);
-  if (!notes.length) notes.push(`• ${t("quietNote")}`);
+  const uniqueNotes = [...new Set(notes)];
+  if (!uniqueNotes.length) uniqueNotes.push(`• ${t("quietNote")}`);
 
   changed.innerHTML = `
     <div class="mini-panel__header">
       <h3>${escapeHtml(t("whatChangedTitle"))}</h3>
     </div>
     <div class="change-list">
-      ${notes.slice(0, 3).map((note) => `<p>${escapeHtml(note)}</p>`).join("")}
+      ${uniqueNotes.slice(0, 3).map((note) => `<p>${escapeHtml(note)}</p>`).join("")}
     </div>
   `;
 
-  const summary = new Map();
-  for (const item of allMarkets) {
-    const category = categoryForItem(item);
-    const mood = marketMood(item);
-    const current = summary.get(category);
-    if (!current || moodWeight(mood.key) > moodWeight(current.key)) {
-      summary.set(category, mood);
-    }
-  }
-  const rows = Array.from(summary.entries())
-    .filter(([category]) => category !== "other")
-    .slice(0, 3);
+  const rows = moodCategories.slice(0, 3);
   const fallbackRows = rows.length ? rows : [["other", { key: "quiet" }]];
 
   moodTarget.innerHTML = `
@@ -895,10 +1025,12 @@ function renderNarrative() {
   clearNode(target);
 
   const category = selectedCategory();
-  const summaries = state.todayMeta.category_summaries || {};
-  const categorySummary = category !== "all" ? summaries[category] : null;
-  const headline = categorySummary || state.todayMeta.narrative || t("narrativeTitle");
-  const changes = Array.isArray(state.todayMeta.what_changed) ? state.todayMeta.what_changed.slice(0, 3) : [];
+  const moodCategories = rankedMoodCategories([...state.today, ...state.hot, ...state.moves]);
+  const topCategory = category !== "all" ? category : (moodCategories[0] && moodCategories[0][0]) || "other";
+  const headline = editorialHeadline(topCategory);
+  const changes = moodCategories
+    .slice(0, 3)
+    .map(([itemCategory, mood]) => editorialChange(itemCategory, mood.key));
 
   target.innerHTML = `
     <p class="section-kicker">${escapeHtml(t("aiBriefingLabel"))}</p>
@@ -941,8 +1073,8 @@ function renderToday(payload) {
     <div class="pill-row">
       <span class="pill pill--prob">${escapeHtml(probabilityDisplay(top))}</span>
       <span class="pill pill--mood">${escapeHtml(topMood.label)}</span>
-      <span class="pill pill--pulse">${escapeHtml(pulseLabel(top))}<small>${pulseMeta(top)}</small></span>
     </div>
+    ${pulseSecondary(top)}
     <p>${escapeHtml(shortReason(top))}</p>
     ${buttonRow(top)}
   `;
@@ -970,7 +1102,7 @@ function renderRadar(payload) {
       <span>${escapeHtml(compactUsd(top.public_activity))}</span>
     </div>
     <h3>${escapeHtml(compactTitle(top.title || "Public market activity", 82))}</h3>
-    <p>${escapeHtml(top.why_it_matters || t("radarReason"))}</p>
+    <p>${escapeHtml(shortReason(top))}</p>
     ${buttonRow({ ...top, pulse_score: top.pulse_score || 0, probability: top.probability })}
   `;
 
@@ -984,7 +1116,7 @@ function renderRadar(payload) {
             <article class="activity-row">
               <div>
                 <h4>${escapeHtml(item.title || "Public market activity")}</h4>
-                <p>${escapeHtml(item.why_it_matters || t("radarReason"))}</p>
+                <p>${escapeHtml(shortReason(item))}</p>
               </div>
               <div class="activity-row__side">
                 <strong>${compactUsd(item.public_activity)}</strong>
@@ -1012,8 +1144,12 @@ function renderSearch(payload) {
   state.searchResults = dataFrom(payload);
   state.searchMeta = { summary: payload && payload.summary };
   const target = document.getElementById("search-results");
-  const summary = state.searchMeta.summary
-    ? `<div class="search-summary"><span>${escapeHtml(t("searchContextSummary"))}</span><strong>${escapeHtml(state.searchMeta.summary)}</strong></div>`
+  const localizedSummary = localizedText(
+    state.searchMeta.summary,
+    state.searchResults[0] ? editorialReason(state.searchResults[0]) : "",
+  );
+  const summary = localizedSummary
+    ? `<div class="search-summary"><span>${escapeHtml(t("searchContextSummary"))}</span><strong>${escapeHtml(localizedSummary)}</strong></div>`
     : "";
   target.innerHTML = state.searchResults.length
     ? summary + state.searchResults.slice(0, 5).map((item) => marketCard(item, "search")).join("")
