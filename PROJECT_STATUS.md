@@ -4,13 +4,15 @@
 
 PulseMarket Bot is a live MVP available on Telegram as [@PulseMarketAIBot](https://t.me/PulseMarketAIBot).
 
-The current version focuses on public Polymarket market discovery, market movement alerts, and beginner-friendly explanations. It uses public Polymarket Gamma API data and stores user settings plus market snapshots in PostgreSQL.
+The current version focuses on becoming a daily market intelligence companion for Polymarket: it selects what matters, explains why people care, and points users to public source market pages.
 
 ## Working Features
 
 - Telegram `/start` onboarding flow
 - Main menu with inline buttons
 - Today's Pulse discovery screen and `/today` command
+- Morning Briefing layer for a short daily read of what matters
+- Market Mood labels for Quiet, Active, Heating up, Volatile, and Ending soon
 - Activity Radar screen and `/smart` command
 - Hot Markets view
 - New Markets view
@@ -27,6 +29,7 @@ The current version focuses on public Polymarket market discovery, market moveme
 - Daily digest opt-in with topic personalization
 - Market timeline from stored snapshots
 - Beginner explanation mode
+- Simple Read copy that explains what a market asks, why people care, and what to watch
 - Resolution explainer for market rules and settlement context
 - Share bot and share market cards
 - Inline query handler in code and BotFather inline mode enabled
@@ -151,6 +154,18 @@ The project now includes a static Telegram Mini App preview:
 - Setup docs: [docs/MINI_APP_SETUP.md](docs/MINI_APP_SETUP.md)
 - Read-only API endpoints for Today's Pulse, hot markets, new markets, sharp moves, Activity Radar, public traders, and search
 - Dashboard button in the Telegram main menu
+
+## Daily Market Intelligence Companion Layer
+
+The next product direction is now documented and partially implemented:
+
+- Product strategy: [docs/PRODUCT_STRATEGY_NEXT.md](docs/PRODUCT_STRATEGY_NEXT.md)
+- Morning Briefing: [docs/MORNING_BRIEFING.md](docs/MORNING_BRIEFING.md)
+- Market Mood: [docs/MARKET_MOOD.md](docs/MARKET_MOOD.md)
+- `/start` positions PulseMarket AI as a daily Polymarket intelligence companion.
+- Mini App Today tab starts with Morning Briefing instead of a raw dashboard.
+- Market cards now include Market Mood and a short why people care line.
+- Activity Radar remains focused on public attention, not trade execution.
 
 Telegram requires HTTPS for a real Mini App URL in BotFather. The current HTTP route is a browser preview until a domain and HTTPS are configured.
 

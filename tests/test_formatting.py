@@ -47,6 +47,7 @@ def test_market_card_contains_core_fields() -> None:
     assert "63%" in card
     assert "$120K" in card
     assert "До завершения:" in card
+    assert "Настроение рынка:" in card
 
 
 def test_market_card_supports_english_demo_labels() -> None:
@@ -68,7 +69,9 @@ def test_market_card_supports_english_demo_labels() -> None:
     assert "Title:" in card
     assert "Probability:" in card
     assert "Time left:" in card
+    assert "Market Mood:" in card
     assert "🧠 Explain simply" in beginner
+    assert "This market asks whether a specific event will happen." in beginner
     assert "📤 Polymarket market" in share
 
 

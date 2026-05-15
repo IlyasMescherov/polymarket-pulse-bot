@@ -13,6 +13,7 @@ from bot.database.db import ping_database
 from bot.database.repositories import get_latest_snapshots
 from bot.services.market_analyzer import MarketAnalyzer, MarketMovement
 from bot.services.market_health import calculate_market_health
+from bot.services.market_mood import calculate_market_mood
 from bot.services.polymarket_client import Market
 from bot.services.pulse_score import calculate_pulse_score
 from bot.services.risk_flags import market_risk_flags
@@ -53,6 +54,7 @@ def _iso_datetime(value: datetime | None) -> str | None:
 def _market_to_api_object(market: Market, delta: float | None = None) -> dict[str, Any]:
     pulse = calculate_pulse_score(market, delta=delta)
     health = calculate_market_health(market)
+    mood = calculate_market_mood(market, delta=delta, language="en")
     return {
         "market_id": market.id,
         "title": market.question,
@@ -67,6 +69,9 @@ def _market_to_api_object(market: Market, delta: float | None = None) -> dict[st
         "market_health_label": health.label,
         "pulse_description": "How interesting this market looks today.",
         "market_health_description": "How clean and readable the market looks.",
+        "market_mood": mood.key,
+        "market_mood_label": mood.label,
+        "market_mood_reason": mood.reason,
         "risk_flags": market_risk_flags(market, delta=delta),
         "url": market.url,
     }
@@ -75,6 +80,7 @@ def _market_to_api_object(market: Market, delta: float | None = None) -> dict[st
 def _today_item_to_api_object(item: TodayPulseItem) -> dict[str, Any]:
     result = _market_to_api_object(item.market, item.delta)
     result["why_it_matters"] = item.why_it_matters
+    result["why_people_care"] = result["market_mood_reason"]
     return result
 
 
@@ -90,7 +96,7 @@ def _smart_market_to_api_object(activity: MarketActivity) -> dict[str, Any]:
         "trades_count": activity.trades_count,
         "top_side": None,
         "url": "https://polymarket.com",
-        "why_it_matters": "Public activity is above the visibility threshold.",
+        "why_it_matters": "People are paying more attention to this market.",
     }
 
 

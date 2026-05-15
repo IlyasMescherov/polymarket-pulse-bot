@@ -86,7 +86,7 @@ def test_public_trader_card_localizes_wallet_label() -> None:
     assert "Wallet:" in en
     assert "0x1111…1111" in en
     assert "Кошелёк:" in ru
-    assert "Почему это важно:" in ru
+    assert "Почему людям это интересно:" in ru
     assert "Оценка активности" in ru
     assert "Публичная активность:" in ru
 

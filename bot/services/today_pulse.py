@@ -42,36 +42,36 @@ def explain_why_it_matters(
     normalized = normalize_language(language)
     if delta is not None and abs(delta) >= 0.05:
         return (
-            "Probability moved enough to make this market worth checking."
+            "Attention is rising because probability moved today."
             if normalized == "en"
-            else "Вероятность заметно изменилась, поэтому рынок стоит проверить."
+            else "Внимание растёт, потому что вероятность сегодня изменилась."
         )
 
     if market.volume is not None and market.volume >= 100_000:
         return (
-            "Activity and volume make this market noticeable today."
+            "People are watching this because activity increased."
             if normalized == "en"
-            else "Активность и объём делают этот рынок заметным сегодня."
+            else "За этим следят, потому что активность выросла."
         )
 
     if pulse_score.value >= 70:
         return (
-            "Pulse Score puts this market among today’s stronger stories."
+            "Pulse Score makes this one of today’s clearer stories."
             if normalized == "en"
-            else "Pulse Score выделяет этот рынок среди важных историй дня."
+            else "Pulse Score выделяет этот рынок среди понятных историй дня."
         )
 
     if market_health.value >= 70:
         return (
-            "The market has enough public data to be easy to read."
+            "The market has enough public data to read quickly."
             if normalized == "en"
             else "По рынку достаточно публичных данных, чтобы быстро понять ситуацию."
         )
 
     return (
-        "This market is active enough to keep on your radar today."
+        "People are paying attention, but the story is still early."
         if normalized == "en"
-        else "Этот рынок достаточно активен, чтобы держать его в поле зрения."
+        else "Интерес есть, но история ещё только формируется."
     )
 
 

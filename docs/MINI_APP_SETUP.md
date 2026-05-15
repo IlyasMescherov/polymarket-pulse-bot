@@ -7,7 +7,8 @@ discovery and market intelligence.
 
 It shows:
 
-- Today's Pulse
+- Morning Briefing / Today's Pulse
+- Market Mood
 - Activity Radar
 - Hot markets
 - Sharp moves
@@ -115,18 +116,19 @@ trading terminal.
 The first screen answers one question:
 
 ```text
-What matters today?
+What matters on Polymarket today?
 ```
 
 The dashboard prioritizes:
 
-- Today's Pulse as the main editorial story.
-- Activity Radar as public activity context.
+- Morning Briefing as the main daily companion screen.
+- Market Mood as a simple read of whether a market is Quiet, Active, Heating up, Volatile, or Ending soon.
+- Activity Radar as public attention context.
 - Hot markets and sharp moves as secondary discovery.
 - Search as a fast way to explore a topic.
 - Bottom navigation as the main app navigation layer.
 - A compact contextual header that explains the current screen.
-- Safety scope as a visible product boundary.
+- Safety scope as a compact product boundary.
 
 ## Market Intelligence Positioning
 

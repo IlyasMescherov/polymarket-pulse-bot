@@ -6,14 +6,11 @@ SUPPORTED_LANGUAGES = {"ru", "en"}
 TEXTS: dict[str, dict[str, str]] = {
     "ru": {
         "dashboard": (
-            "PulseMarket AI помогает быстро понять, что важно на Polymarket.\n\n"
-            "Начни отсюда:\n\n"
-            "📰 Пульс дня\n"
-            "Короткая подборка рынков, за которыми стоит следить.\n\n"
-            "🧠 Радар активности\n"
-            "Показывает, где растёт публичное внимание.\n\n"
-            "🔍 Поиск\n"
-            "Найди любой рынок Polymarket и получи простое объяснение.\n\n"
+            "PulseMarket AI — твой ежедневный помощник по Polymarket.\n\n"
+            "Он помогает:\n"
+            "📰 увидеть, что сегодня важно\n"
+            "🧠 заметить, где растёт внимание\n"
+            "🔍 понять любой рынок простыми словами\n\n"
             "Для анализа · Без сделок"
         ),
         "quick_start": (
@@ -64,14 +61,11 @@ TEXTS: dict[str, dict[str, str]] = {
     },
     "en": {
         "dashboard": (
-            "PulseMarket AI helps you understand what matters on Polymarket.\n\n"
-            "Start here:\n\n"
-            "📰 Today’s Pulse\n"
-            "A short daily selection of markets worth watching.\n\n"
-            "🧠 Activity Radar\n"
-            "Shows where public attention is rising.\n\n"
-            "🔍 Search\n"
-            "Find any Polymarket market and get a simple explanation.\n\n"
+            "PulseMarket AI is your daily Polymarket intelligence companion.\n\n"
+            "It helps you:\n"
+            "📰 See what matters today\n"
+            "🧠 Spot where attention is rising\n"
+            "🔍 Understand any market simply\n\n"
             "Research only · No trade execution"
         ),
         "quick_start": (

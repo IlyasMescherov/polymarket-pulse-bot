@@ -48,7 +48,7 @@ def format_today_pulse_channel_post(
                 f"{index}. {_title(item.market.question)}",
                 f"Probability: {format_probability(item.market.yes_probability, 'en')}",
                 f"Pulse Score: {item.pulse_score.value}/100",
-                f"Why it matters: {item.why_it_matters}",
+                f"Why people care: {item.why_it_matters}",
                 "",
             ]
         )
@@ -83,7 +83,7 @@ def format_smart_money_channel_post(
             [
                 f"{index}. {_title(activity.market_title)}",
                 f"Public activity: {format_compact_usd(activity.amount_usd, 'en')}",
-                "Why it matters: Public activity is above the visibility threshold.",
+                "Why people care: Attention is rising around this market.",
                 "",
             ]
         )

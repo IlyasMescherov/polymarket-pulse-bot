@@ -251,7 +251,7 @@ async def _send_today_pulse_cards(
 ) -> None:
     if not items:
         await message.answer(
-            "No strong Today’s Pulse candidates yet. Please try again later."
+            "No strong Morning Briefing candidates yet. Please try again later."
             if language == "en"
             else "Пока нет сильных кандидатов для Пульса дня. Попробуйте позже."
         )
@@ -340,7 +340,7 @@ async def today_pulse(
 ) -> None:
     log_callback_action(logger, callback, "today_pulse")
     language = await _language(session_factory, callback.from_user)
-    await callback.answer("Building Today’s Pulse" if language == "en" else "Собираю Пульс дня")
+    await callback.answer("Building Morning Briefing" if language == "en" else "Собираю Пульс дня")
     if not callback.message:
         return
     try:
@@ -362,7 +362,7 @@ async def today_pulse(
     except Exception:
         logger.exception("Could not build today's pulse")
         await callback.message.answer(
-            "Could not build Today’s Pulse. Please try again later."
+            "Could not build Morning Briefing. Please try again later."
             if language == "en"
             else "Не смог собрать Пульс дня. Попробуйте позже."
         )
@@ -398,7 +398,7 @@ async def today_pulse_command(
     except Exception:
         logger.exception("Could not build today's pulse")
         await message.answer(
-            "Could not build Today’s Pulse. Please try again later."
+            "Could not build Morning Briefing. Please try again later."
             if language == "en"
             else "Не смог собрать Пульс дня. Попробуйте позже."
         )

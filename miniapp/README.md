@@ -4,11 +4,11 @@ Static Telegram Mini App preview for PulseMarket AI.
 
 ## Product Direction
 
-PulseMarket AI is a market intelligence assistant for Polymarket. The Mini App is intentionally not a terminal: it is built around curated screens that help a user understand what matters today.
+PulseMarket AI is a daily market intelligence companion for Polymarket. The Mini App is intentionally not a terminal: it is built around curated screens that help a user understand what matters today.
 
 ## App Structure
 
-- **Today**: daily market story, secondary picks, compact hot markets, and sharp-move summary.
+- **Today**: Morning Briefing, one main story, secondary picks, attention shift, and Market Mood badges.
 - **Radar**: public-attention insight cards, focused on markets rather than technical account data.
 - **Search**: Spotlight-like market search with trending and recent searches.
 - **Saved**: local saved markets and recently opened markets.
@@ -19,6 +19,7 @@ PulseMarket AI is a market intelligence assistant for Polymarket. The Mini App i
 - Bottom navigation is the primary navigation layer.
 - The sticky top area is contextual, not duplicated navigation.
 - Cards are compact and meaning-first.
+- Market Mood turns activity into a plain-language read: Quiet, Active, Heating up, Volatile, or Ending soon.
 - Metrics are secondary to the reason a market is shown.
 - Settings are local-only and stored in the browser.
 - Light and dark themes are supported without a build step.

@@ -46,9 +46,9 @@ const copy = {
     savedContext: "Markets to return to later.",
     moreContext: "Settings and product links.",
     mainReason: "Daily briefing",
-    todayTitle: "Today’s Pulse",
-    todaySubtitle: "Open once and get the market story of the day.",
-    shareSnapshot: "Share Today’s Pulse",
+    todayTitle: "Morning Briefing",
+    todaySubtitle: "Your quick read of what matters today.",
+    shareSnapshot: "Share briefing",
     attentionLayer: "Attention layer",
     radarTitle: "Activity Radar",
     radarSubtitle: "Markets where public attention is rising.",
@@ -72,7 +72,7 @@ const copy = {
     languageHint: "Use Telegram language or choose manually.",
     theme: "Theme",
     themeHint: "Clean light mode or focused dark mode.",
-    todayNotifications: "Today’s Pulse notifications",
+    todayNotifications: "Morning Briefing notifications",
     activityNotifications: "Activity alerts",
     sharpMoveNotifications: "Sharp move alerts",
     compactMode: "Compact mode",
@@ -81,6 +81,8 @@ const copy = {
     pulseMeaning: "How interesting this market looks today.",
     whatRadar: "What is Activity Radar?",
     radarMeaning: "It shows where public attention is increasing.",
+    whatMood: "What is Market Mood?",
+    moodMeaning: "A plain-language read of how active a market feels.",
     channel: "Channel",
     support: "Support",
     shareApp: "Share app",
@@ -91,9 +93,11 @@ const copy = {
     secondaryStories: "Also worth a look",
     probability: "Probability",
     pulseScore: "Pulse Score",
-    whyItMatters: "Why it matters",
+    whyItMatters: "Why people care",
+    whyPeopleCare: "Why people care",
     watchNext: "Watch",
     watchNextCopy: "Probability, activity, and resolution rules.",
+    marketMood: "Market Mood",
     exploreMarket: "Explore Market",
     open: "Open",
     save: "Save",
@@ -103,7 +107,7 @@ const copy = {
     publicActivity: "Public activity",
     activityLevel: "Activity level",
     radarEmpty: "No strong public activity detected right now. PulseMarket will keep watching.",
-    radarReason: "People are paying more attention to this market.",
+    radarReason: "Attention is rising around this market.",
     radarListTitle: "More markets getting attention",
     todayEmpty: "PulseMarket is preparing today’s intelligence.",
     hotTitle: "Hot markets",
@@ -121,8 +125,15 @@ const copy = {
     lowButActive: "Low probability, but this market may still be active.",
     marketAttentionRising: "People are paying more attention to this market.",
     worthWatching: "Worth watching today.",
-    activeToday: "This market is active today.",
+    activeToday: "People are watching this because activity increased.",
     selectedToday: "Selected for today’s market scan.",
+    simpleReadTitle: "Simple Read",
+    simpleReadCopy: "This market asks whether an event will happen. Watch the probability and rules before drawing conclusions.",
+    moodQuiet: "Quiet",
+    moodActive: "Active",
+    moodHeating: "Heating up",
+    moodVolatile: "Volatile",
+    moodEnding: "Ending soon",
     copied: "Copied",
     appShared: "PulseMarket AI helps you understand what matters on Polymarket.",
   },
@@ -143,8 +154,8 @@ const copy = {
     moreContext: "Настройки и ссылки продукта.",
     mainReason: "Утренний обзор",
     todayTitle: "Пульс дня",
-    todaySubtitle: "Открой один раз и пойми картину дня.",
-    shareSnapshot: "Поделиться Пульсом дня",
+    todaySubtitle: "Короткая картина дня.",
+    shareSnapshot: "Поделиться обзором",
     attentionLayer: "Слой внимания",
     radarTitle: "Радар активности",
     radarSubtitle: "Рынки, где растёт публичное внимание.",
@@ -177,6 +188,8 @@ const copy = {
     pulseMeaning: "Насколько рынок сейчас интересен.",
     whatRadar: "Что такое Радар активности?",
     radarMeaning: "Показывает, где растёт публичное внимание.",
+    whatMood: "Что такое Market Mood?",
+    moodMeaning: "Простая оценка того, насколько рынок сейчас активен.",
     channel: "Канал",
     support: "Поддержка",
     shareApp: "Поделиться",
@@ -188,8 +201,10 @@ const copy = {
     probability: "Вероятность",
     pulseScore: "Pulse Score",
     whyItMatters: "Почему это важно",
+    whyPeopleCare: "Почему людям это интересно",
     watchNext: "За чем следить",
     watchNextCopy: "Вероятность, активность и правила разрешения.",
+    marketMood: "Настроение рынка",
     exploreMarket: "Открыть рынок",
     open: "Открыть",
     save: "Сохранить",
@@ -199,7 +214,7 @@ const copy = {
     publicActivity: "Публичная активность",
     activityLevel: "Уровень активности",
     radarEmpty: "Сейчас нет сильной публичной активности. PulseMarket продолжит отслеживание.",
-    radarReason: "Люди обращают больше внимания на этот рынок.",
+    radarReason: "Внимание к этому рынку растёт.",
     radarListTitle: "Ещё рынки с ростом внимания",
     todayEmpty: "PulseMarket готовит обзор на сегодня.",
     hotTitle: "Горячие рынки",
@@ -217,8 +232,15 @@ const copy = {
     lowButActive: "Вероятность низкая, но рынок может быть активным.",
     marketAttentionRising: "К этому рынку растёт внимание.",
     worthWatching: "Сегодня стоит изучить.",
-    activeToday: "Рынок сегодня активен.",
+    activeToday: "За этим следят, потому что активность выросла.",
     selectedToday: "Отобран для короткого обзора.",
+    simpleReadTitle: "Простой смысл",
+    simpleReadCopy: "Этот рынок спрашивает, произойдёт ли событие. Смотри на вероятность и правила разрешения, прежде чем делать выводы.",
+    moodQuiet: "Тихо",
+    moodActive: "Активно",
+    moodHeating: "Разогревается",
+    moodVolatile: "Волатильно",
+    moodEnding: "Скоро завершение",
     copied: "Скопировано",
     appShared: "PulseMarket AI помогает быстро понять, что важно на Polymarket.",
   },
@@ -395,6 +417,53 @@ function shortReason(item) {
   return t("selectedToday");
 }
 
+function marketMood(item) {
+  const key = item && item.market_mood ? String(item.market_mood) : inferMoodKey(item || {});
+  const labels = {
+    quiet: t("moodQuiet"),
+    active: t("moodActive"),
+    heating_up: t("moodHeating"),
+    volatile: t("moodVolatile"),
+    ending_soon: t("moodEnding"),
+  };
+  return {
+    key,
+    label: labels[key] || labels.quiet,
+    reason: !isRu() && item && item.market_mood_reason ? item.market_mood_reason : moodReason(key),
+  };
+}
+
+function inferMoodKey(item) {
+  const movement = Math.abs(Number(item.movement || 0));
+  const volume = Number(item.volume || item.public_activity || 0);
+  const endDate = item.end_date ? new Date(item.end_date).getTime() : null;
+  const hoursLeft = endDate ? (endDate - Date.now()) / 36e5 : null;
+  if (hoursLeft !== null && hoursLeft <= 24) return "ending_soon";
+  if (movement >= 10) return "volatile";
+  if (movement >= 5 || volume >= 500000) return "heating_up";
+  if (volume >= 100000 || Number(item.public_activity || 0) > 0) return "active";
+  return "quiet";
+}
+
+function moodReason(key) {
+  if (isRu()) {
+    return {
+      quiet: "Сильного движения пока нет.",
+      active: "За этим следят, потому что активность уже есть.",
+      heating_up: "Внимание к этому рынку растёт.",
+      volatile: "Вероятность заметно изменилась, поэтому рынок выделяется.",
+      ending_soon: "Рынок близок к разрешению.",
+    }[key] || "Сильного движения пока нет.";
+  }
+  return {
+    quiet: "No strong movement yet.",
+    active: "People are watching this because activity is present.",
+    heating_up: "Attention is rising around this market.",
+    volatile: "Probability moved enough to make the market noticeable.",
+    ending_soon: "The market is close to resolution.",
+  }[key] || "No strong movement yet.";
+}
+
 function savedMarkets() {
   return readJsonStorage("savedMarkets", []);
 }
@@ -423,6 +492,7 @@ function addRecentMarket(item) {
 }
 
 function normalizeMarket(item) {
+  const mood = marketMood(item || {});
   return {
     id: marketId(item),
     title: item && item.title ? item.title : "Untitled market",
@@ -430,6 +500,9 @@ function normalizeMarket(item) {
     probability: item && item.probability,
     pulse_score: item && item.pulse_score,
     why: shortReason(item || {}),
+    market_mood: mood.key,
+    market_mood_label: mood.label,
+    market_mood_reason: mood.reason,
   };
 }
 
@@ -454,7 +527,8 @@ function removeSaved(id) {
 }
 
 function marketText(item) {
-  return `${item.title || "Polymarket market"}\n${t("probability")}: ${probability(item)}\n${t("pulseScore")}: ${item.pulse_score ?? 0}/100\n${t("whyItMatters")}: ${shortReason(item)}\n${safeUrl(item.url)}`;
+  const mood = marketMood(item);
+  return `${item.title || "Polymarket market"}\n${t("probability")}: ${probability(item)}\n${t("marketMood")}: ${mood.label}\n${t("pulseScore")}: ${item.pulse_score ?? 0}/100\n${t("whyPeopleCare")}: ${shortReason(item)}\n${safeUrl(item.url)}`;
 }
 
 async function shareText(text) {
@@ -485,16 +559,19 @@ function buttonRow(item) {
 }
 
 function marketCard(item, variant = "compact") {
+  const mood = marketMood(item);
   return `
     <article class="market-card market-card--${variant}">
       <div class="market-card__main">
         <h3>${escapeHtml(item.title || "Untitled market")}</h3>
-        <p>${escapeHtml(shortReason(item))}</p>
+        <p><strong>${escapeHtml(t("whyPeopleCare"))}:</strong> ${escapeHtml(shortReason(item))}</p>
       </div>
       <div class="pill-row">
         <span class="pill pill--prob">${escapeHtml(probability(item))}</span>
+        <span class="pill pill--mood">${escapeHtml(mood.label)}</span>
         <span class="pill pill--pulse">Pulse ${escapeHtml(item.pulse_score ?? 0)}/100</span>
       </div>
+      <p class="simple-read"><strong>${escapeHtml(t("simpleReadTitle"))}:</strong> ${escapeHtml(t("simpleReadCopy"))}</p>
       ${buttonRow(item)}
     </article>
   `;
@@ -502,6 +579,7 @@ function marketCard(item, variant = "compact") {
 
 function savedCard(item, removable = false) {
   const encoded = encodeURIComponent(JSON.stringify(item));
+  const mood = marketMood(item);
   return `
     <article class="market-card market-card--saved">
       <div class="market-card__main">
@@ -510,6 +588,7 @@ function savedCard(item, removable = false) {
       </div>
       <div class="pill-row">
         <span class="pill pill--prob">${escapeHtml(percent(item.probability))}</span>
+        <span class="pill pill--mood">${escapeHtml(mood.label)}</span>
         <span class="pill pill--pulse">Pulse ${escapeHtml(item.pulse_score ?? 0)}/100</span>
       </div>
       <div class="action-row">
@@ -537,17 +616,22 @@ function renderToday(payload) {
   }
 
   const top = state.today[0];
+  const topMood = marketMood(top);
   hero.innerHTML = `
     <div class="story-card__topline">
       <span>${escapeHtml(t("mainStory"))}</span>
-      <span>${escapeHtml(t("pulseScore"))} ${escapeHtml(top.pulse_score ?? 0)}/100</span>
+      <span>${escapeHtml(topMood.label)}</span>
     </div>
     <h3>${escapeHtml(top.title || "Untitled market")}</h3>
     <div class="metric-line">
       <span>${escapeHtml(t("probability"))}</span>
       <strong>${escapeHtml(probability(top))}</strong>
     </div>
-    <p><strong>${escapeHtml(t("whyItMatters"))}:</strong> ${escapeHtml(shortReason(top))}</p>
+    <div class="pill-row">
+      <span class="pill pill--pulse">Pulse ${escapeHtml(top.pulse_score ?? 0)}/100</span>
+      <span class="pill pill--mood">${escapeHtml(topMood.label)}</span>
+    </div>
+    <p><strong>${escapeHtml(t("whyPeopleCare"))}:</strong> ${escapeHtml(shortReason(top))}</p>
     <p class="watch-copy"><strong>${escapeHtml(t("watchNext"))}:</strong> ${escapeHtml(t("watchNextCopy"))}</p>
     ${buttonRow(top)}
   `;
@@ -578,7 +662,7 @@ function renderRadar(payload) {
       <span>${escapeHtml(t("publicActivity"))}</span>
       <strong>${compactUsd(top.public_activity)}</strong>
     </div>
-    <p><strong>${escapeHtml(t("whyItMatters"))}:</strong> ${escapeHtml(top.why_it_matters || t("radarReason"))}</p>
+    <p><strong>${escapeHtml(t("whyPeopleCare"))}:</strong> ${escapeHtml(top.why_it_matters || t("radarReason"))}</p>
     ${buttonRow({ ...top, pulse_score: top.pulse_score || 0, probability: top.probability })}
   `;
 

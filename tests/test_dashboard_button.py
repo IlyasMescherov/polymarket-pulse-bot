@@ -36,13 +36,13 @@ def test_main_menu_prioritizes_curated_onboarding_actions() -> None:
     buttons = _buttons(main_menu_keyboard("en"))
 
     assert [button.text for button in buttons] == [
-        "📰 Today’s Pulse",
+        "📰 Today’s Briefing",
         "📊 Dashboard",
         "🧠 Activity Radar",
         "🔍 Search",
         "🔥 Hot",
         "📈 Moves",
-        "⭐ Watchlist",
+        "⭐ Saved",
         "⚙️ Settings",
         "ℹ️ About",
         "🤝 Share",

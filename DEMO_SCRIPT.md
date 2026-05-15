@@ -40,36 +40,36 @@ Show the main menu in English mode if possible.
 
 Highlight:
 
-- Analytics only
-- No wallets
-- No deposits
-- No trading
+- Daily Polymarket intelligence companion
+- See what matters today
+- Spot where attention is rising
+- Research only
 
-### 10-17 sec: Hot Markets
+### 10-17 sec: Morning Briefing
 
 Tap:
 
 ```text
-Hot
+Today's Briefing
 ```
 
-Show a market card with:
+Show the daily companion flow:
 
 - Probability
-- Volume
 - Pulse Score
-- Market Health
-- Risk flags if present
+- Market Mood
+- Why people care
+- What to watch
 
-### 17-21 sec: Today's Pulse
+### 17-21 sec: Activity Radar
 
 Tap:
 
 ```text
-Today's Pulse
+Activity Radar
 ```
 
-Show the ranked daily discovery card.
+Show where public attention is rising without presenting it as trade execution.
 
 ### 21-25 sec: Mini App preview
 
@@ -79,7 +79,7 @@ Open:
 https://app.pulsemarketai.com/app
 ```
 
-Show the dashboard preview with Today's Pulse, Activity Radar, and Hot Markets.
+Show the Mini App with Morning Briefing, Activity Radar, Search, Saved, and More.
 
 Note: full Telegram Mini App launch requires HTTPS.
 
@@ -92,6 +92,7 @@ bitcoin
 ```
 
 Show the search result cards.
+Point out the Simple Read line.
 
 ### 30-34 sec: Open Polymarket link
 

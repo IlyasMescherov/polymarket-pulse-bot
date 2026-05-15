@@ -258,7 +258,7 @@ def _format_public_trader_card(
         lines = [
             f"{index}. Активный публичный участник",
             "",
-            "Почему это важно:",
+            "Почему людям это интересно:",
             "Этот кошелёк сегодня заметно активен на публичных рынках Polymarket.",
         ]
         if trader.volume is not None:
@@ -279,7 +279,7 @@ def _format_public_trader_card(
     lines = [
         f"{index}. Active public participant",
         "",
-        "Why it matters:",
+        "Why people care:",
         "This wallet has been active across public Polymarket markets today.",
     ]
     if trader.volume is not None:

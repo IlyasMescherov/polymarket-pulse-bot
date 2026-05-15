@@ -6,6 +6,7 @@ from typing import Any
 from bot.database.models import MarketSnapshot, UserWatchlist
 from bot.services.market_analyzer import MarketMovement
 from bot.services.market_health import MarketHealth
+from bot.services.market_mood import calculate_market_mood
 from bot.services.polymarket_client import Market
 from bot.services.pulse_score import PulseScore
 from bot.utils.i18n import normalize_language
@@ -115,6 +116,19 @@ def format_market_card(
         _label("До завершения:", "Time left:", language),
         format_time_until(market.end_date, language=language),
     ]
+    mood = calculate_market_mood(market, delta=movement_delta, language=language)
+    lines.extend(
+        [
+            "",
+            _label("Настроение рынка:", "Market Mood:", language),
+            f"{mood.label} · {mood.reason}",
+            _label(
+                "Почему люди сейчас обращают внимание.",
+                "Why people are paying attention.",
+                language,
+            ),
+        ]
+    )
     if pulse_score is not None:
         lines.extend(
             [
@@ -220,16 +234,20 @@ def format_today_pulse_card(
 ) -> str:
     market = item.market
     why = ai_why or item.why_it_matters
+    mood = calculate_market_mood(market, delta=item.delta, language=language)
     if normalize_language(language) == "en":
         lines = [
-            "📰 Today’s Pulse",
+            "📰 Morning Briefing",
             "",
-            "3 markets worth watching today.",
+            "Your quick read of what matters today.",
             "",
             f"{index}. {market.question}",
             "",
-            "Why it matters:",
+            "Why people care:",
             why,
+            "",
+            "Market Mood:",
+            f"{mood.label} · {mood.reason}",
             "",
             "Watch:",
             "Probability, activity, and resolution rules.",
@@ -246,14 +264,17 @@ def format_today_pulse_card(
         return "\n".join(lines)
 
     lines = [
-        "📰 Пульс дня",
+        "📰 Утренний обзор",
         "",
-        "3 рынка, за которыми сегодня стоит следить.",
+        "Короткая картина дня.",
         "",
         f"{index}. {market.question}",
         "",
-        "Почему это важно:",
+        "Почему людям это интересно:",
         why,
+        "",
+        "Настроение рынка:",
+        f"{mood.label} · {mood.reason}",
         "",
         "За чем следить:",
         "Вероятность, активность и правила разрешения.",
@@ -279,7 +300,7 @@ def format_channel_digest(
         lines = [
             "📰 Today’s Pulse",
             "",
-            "3 interesting Polymarket markets today:",
+            "3 Polymarket markets worth watching today:",
         ]
         for index, item in enumerate(items[:3], start=1):
             lines.extend(
@@ -288,7 +309,7 @@ def format_channel_digest(
                     f"{index}. {item.market.question}",
                     f"Probability: {format_probability(item.market.yes_probability, 'en')}",
                     f"Pulse Score: {item.pulse_score.value}/100",
-                    f"Why it matters: {item.why_it_matters}",
+                    f"Why people care: {item.why_it_matters}",
                 ]
             )
         lines.extend(
@@ -305,7 +326,7 @@ def format_channel_digest(
     lines = [
         "📰 Пульс дня",
         "",
-        "3 интересных рынка Polymarket сегодня:",
+        "3 рынка Polymarket, за которыми сегодня стоит следить:",
     ]
     for index, item in enumerate(items[:3], start=1):
         lines.extend(
@@ -314,7 +335,7 @@ def format_channel_digest(
                 f"{index}. {item.market.question}",
                 f"Вероятность: {format_probability(item.market.yes_probability, 'ru')}",
                 f"Pulse Score: {item.pulse_score.value}/100",
-                f"Почему важно: {item.why_it_matters}",
+                f"Почему людям интересно: {item.why_it_matters}",
             ]
         )
     lines.extend(
@@ -378,8 +399,9 @@ def format_beginner_explanation(
             "🧠 Explain simply",
             "",
             "In plain English:",
-            "This market is active today because people are paying more attention to it.",
-            "Watch the probability and the rules before drawing conclusions.",
+            "This market asks whether a specific event will happen.",
+            "People care because the topic is getting attention today.",
+            "Watch the probability, public activity, and resolution rules before drawing conclusions.",
             "",
             f"Current probability: {format_probability(market.yes_probability, language)}",
         ]
@@ -391,8 +413,9 @@ def format_beginner_explanation(
         "🧠 Объяснить проще",
         "",
         "Простыми словами:",
-        "Этот рынок сегодня заметен, потому что к нему вырос интерес.",
-        "Смотри на вероятность и правила разрешения, прежде чем делать выводы.",
+        "Этот рынок спрашивает, произойдёт ли конкретное событие.",
+        "За ним следят, потому что тема сегодня получает внимание.",
+        "Смотри на вероятность, публичную активность и правила разрешения, прежде чем делать выводы.",
         "",
         f"Текущая вероятность: {format_probability(market.yes_probability)}",
     ]

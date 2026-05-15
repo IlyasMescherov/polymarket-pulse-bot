@@ -24,7 +24,7 @@ Mini App preview:
 
 ## Short Description
 
-PulseMarket AI is a Telegram discovery and analytics assistant for Polymarket. It helps users discover markets, understand probabilities, track sharp movements, and open markets directly on Polymarket.
+PulseMarket AI is a daily market intelligence companion for Polymarket. It helps users understand what matters today, why people are watching specific markets, where public attention is rising, and what to inspect next.
 
 ## Problem
 
@@ -32,7 +32,7 @@ New users often struggle to find relevant Polymarket markets and understand prob
 
 ## Solution
 
-PulseMarket AI gives users a simple Telegram interface for hot markets, new markets, Today's Pulse, Activity Radar, search, watchlists, smart alerts, beginner explanations, resolution guidance, and direct links to Polymarket.
+PulseMarket AI gives users a simple Telegram and Mini App interface for Morning Briefing, Activity Radar, search, saved markets, smart alerts, plain-language explanations, resolution guidance, and direct links to Polymarket.
 
 It also includes a Telegram Mini App dashboard preview for Today's Pulse, Activity Radar, hot markets, sharp moves, and search. A full Telegram Mini App launch requires an HTTPS domain.
 
@@ -40,7 +40,9 @@ It also includes a Telegram Mini App dashboard preview for Today's Pulse, Activi
 
 - Hot markets
 - New markets
-- Today's Pulse
+- Morning Briefing / Today's Pulse
+- Market Mood
+- Simple Read
 - Activity Radar
 - Sharp movement detection
 - Why it moved
@@ -84,7 +86,7 @@ Builder code is prepared for future official trading integration, but the curren
 
 ## Ecosystem Value
 
-PulseMarket AI helps new users discover Polymarket markets, understand probabilities in simple language, track market movement, identify active public market activity, and open market pages on Polymarket. It also tracks engagement metrics such as searches, feedback, watchlist activity, digest activity, Smart Money interactions, and market opens.
+PulseMarket AI helps new users discover Polymarket markets, understand probabilities in simple language, see why people care about specific markets, identify where public attention is rising, and open market pages on Polymarket. It also tracks engagement metrics such as searches, feedback, saved markets, digest activity, Activity Radar interactions, and market opens.
 
 ## Future Roadmap
 

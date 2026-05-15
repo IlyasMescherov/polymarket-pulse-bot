@@ -39,7 +39,7 @@ PUBLIC_BOT_COMMANDS = [
     BotCommand(command="start", description="Main menu"),
     BotCommand(command="hot", description="Hot markets"),
     BotCommand(command="new", description="New markets"),
-    BotCommand(command="today", description="Today’s Pulse"),
+    BotCommand(command="today", description="Morning Briefing"),
     BotCommand(command="smart", description="Activity Radar"),
     BotCommand(command="moves", description="Sharp movements"),
     BotCommand(command="search", description="Search markets"),

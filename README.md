@@ -7,7 +7,7 @@
 - **Mini App preview:** [https://app.pulsemarketai.com/app](https://app.pulsemarketai.com/app)
 - **Production health:** [https://pulsemarketai.com/health](https://pulsemarketai.com/health)
 
-PulseMarket AI is a Telegram analytics bot for Polymarket discovery. It helps users find active prediction markets, understand market probabilities in plain language, save markets to a watchlist, and receive alerts when probabilities move sharply.
+PulseMarket AI is a daily market intelligence companion for Polymarket. It helps users understand what matters today, why people are watching a market, where public attention is rising, and what to inspect next.
 
 This project is prepared for a Polymarket Builders Program submission. The current MVP is intentionally scoped around analytics, notifications, and public market links.
 
@@ -41,6 +41,9 @@ Builder submission package:
 - X/Twitter setup doc: [docs/X_PUBLIC_SETUP.md](docs/X_PUBLIC_SETUP.md)
 - X/Twitter launch thread: [docs/X_LAUNCH_THREAD.md](docs/X_LAUNCH_THREAD.md)
 - Competitor analysis: [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md)
+- Next product strategy: [docs/PRODUCT_STRATEGY_NEXT.md](docs/PRODUCT_STRATEGY_NEXT.md)
+- Morning Briefing: [docs/MORNING_BRIEFING.md](docs/MORNING_BRIEFING.md)
+- Market Mood: [docs/MARKET_MOOD.md](docs/MARKET_MOOD.md)
 - Static landing page: [landing/](landing/)
 - Telegram Mini App preview: [miniapp/](miniapp/)
 - Avatar guide: [docs/brand/AVATAR_GUIDE.md](docs/brand/AVATAR_GUIDE.md)
@@ -49,7 +52,7 @@ Recommended public channel username: `@PulseMarketAI`. If unavailable, use `@Pul
 
 ## What is PulseMarket Bot
 
-PulseMarket Bot is a lightweight Telegram companion for Polymarket. It watches public Polymarket markets, highlights interesting activity, and presents market data in a beginner-friendly format.
+PulseMarket Bot is a lightweight daily companion for Polymarket. It watches public Polymarket markets, highlights what matters, and turns market data into a short read of the day.
 
 The bot is designed for users who want a simple way to follow Polymarket without opening multiple dashboards or learning advanced trading terminology.
 
@@ -65,7 +68,8 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 
 - Hot markets: shows 5 active Polymarket markets ranked by recent volume.
 - New markets: shows 5 newly created active markets.
-- Today's Pulse: shows 3-5 high-signal markets ranked by Pulse Score, volume, movement, and data quality.
+- Morning Briefing / Today's Pulse: shows a short daily selection of high-signal markets with why people care and what to watch.
+- Market Mood: adds a human-readable label such as Quiet, Active, Heating up, Volatile, or Ending soon.
 - Activity Radar: read-only view of unusual public activity, public leaderboard data, active market attention, and user-tracked public wallet addresses.
 - Sharp movements: compares stored market snapshots and surfaces probability changes above each user's selected threshold.
 - Why it moved: explains probability movement using public market data, volume, time to resolution, and risk flags.
@@ -101,7 +105,7 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - No-AI fallback: when `OPENAI_API_KEY` is missing, the bot still works normally.
 - Public market links: every market card links users back to Polymarket.
 - Public landing page: a no-build page is served from [https://pulsemarketai.com](https://pulsemarketai.com) and kept in [landing/](landing/).
-- Telegram Mini App Dashboard: a no-build mobile dashboard preview is served from [https://app.pulsemarketai.com/app](https://app.pulsemarketai.com/app). Telegram Mini App launch requires an HTTPS domain.
+- Telegram Mini App Dashboard: a no-build mobile companion is served from [https://app.pulsemarketai.com/app](https://app.pulsemarketai.com/app), centered on Morning Briefing, Activity Radar, Search, Saved markets, and settings.
 
 ## How it works
 
@@ -313,6 +317,21 @@ Phase 5 adds a lightweight traction layer for public launch:
 - The static landing page in [landing/](landing/) gives the project a public website, currently served at [https://pulsemarketai.com](https://pulsemarketai.com).
 - [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md) explains how PulseMarket AI differs from trading terminals and copy-trading tools.
 - [docs/SMART_MONEY_ANALYTICS.md](docs/SMART_MONEY_ANALYTICS.md) explains the read-only Activity Radar scope.
+
+## Daily Market Intelligence Companion
+
+PulseMarket AI's next product direction is:
+
+> Understand what matters on Polymarket today.
+
+The Mini App and bot now prioritize meaning before metrics:
+
+- Morning Briefing gives users one main story and a few secondary markets.
+- Market Mood explains whether a market feels Quiet, Active, Heating up, Volatile, or Ending soon.
+- Simple Read turns a market into plain language: what it asks, why people care, what to watch, and where to inspect rules.
+- Activity Radar focuses on where public attention is rising instead of leading with raw wallet data.
+
+See [docs/PRODUCT_STRATEGY_NEXT.md](docs/PRODUCT_STRATEGY_NEXT.md), [docs/MORNING_BRIEFING.md](docs/MORNING_BRIEFING.md), and [docs/MARKET_MOOD.md](docs/MARKET_MOOD.md).
 
 ## Roadmap
 

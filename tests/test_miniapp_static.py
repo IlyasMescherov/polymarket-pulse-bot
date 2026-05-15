@@ -26,7 +26,8 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
     styles_text = (root / "miniapp" / "styles.css").read_text()
 
     for text in (
-        "Today’s Pulse",
+        "Morning Briefing",
+        "Market Mood",
         "Activity Radar",
         "Search",
         "Saved markets",
@@ -36,7 +37,7 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
     ):
         assert text in index_text
 
-    assert index_text.find("Today’s Pulse") < index_text.find("Activity Radar")
+    assert index_text.find("Morning Briefing") < index_text.find("Activity Radar")
     assert "Safety scope" not in index_text
     assert "Markets worth watching today." in index_text
     assert "public attention is rising" in index_text
@@ -72,6 +73,8 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "settings-card",
         "segmented",
         "switch",
+        "pill--mood",
+        "simple-read",
         "skeleton-card",
         "empty-state--compact",
         "footer-note",
@@ -123,6 +126,8 @@ def test_miniapp_settings_language_theme_and_saved_features_exist() -> None:
     assert "removeSaved" in script_text
     assert "recentSearches" in script_text
     assert "SEARCH_SUGGESTIONS" in script_text
+    assert "marketMood" in script_text
+    assert "simpleReadCopy" in script_text
 
 
 def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
@@ -138,6 +143,8 @@ def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
     assert "no private keys" in text
     assert "no financial advice" in text
     assert "where public attention is rising" in text
+    assert "market mood" in text
+    assert "morning briefing" in text
     assert "wallet list" not in text
     assert "wallet hash" not in text
 
@@ -163,7 +170,7 @@ def test_landing_and_screenshot_docs_reference_miniapp_polish() -> None:
 
     assert guide.exists()
     assert "Telegram Mini App Dashboard" in landing
-    assert "Today’s Pulse" in landing
+    assert "Morning Briefing" in landing
     assert "Activity Radar" in landing
     assert "Home dashboard" in guide.read_text()
 
