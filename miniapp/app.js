@@ -1,150 +1,276 @@
 const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 const BOT_URL = "https://t.me/PulseMarketAIBot";
+const APP_URL = "https://app.pulsemarketai.com/app";
 const POLYMARKET_URL = "https://polymarket.com";
 const EMPTY_MESSAGE = "No data yet. PulseMarket will keep watching.";
-const IMPORTANT_MOVE = 5;
+const STORAGE_PREFIX = "pulsemarket-miniapp:";
+const SEARCH_SUGGESTIONS = ["bitcoin", "election", "fed", "ai", "sports"];
 
-const languageCode =
+const browserLanguage =
   (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code) ||
   navigator.language ||
   "en";
-const isRu = String(languageCode).toLowerCase().startsWith("ru");
-const lang = isRu ? "ru" : "en";
+
+const state = {
+  activeTab: "today",
+  languageSetting: readStorage("language", "auto"),
+  themeSetting: readStorage("theme", "system"),
+  toggles: readJsonStorage("toggles", {
+    todayNotifications: false,
+    activityNotifications: false,
+    sharpMoveNotifications: false,
+    compactMode: false,
+    reducedAnimations: false,
+  }),
+  today: [],
+  radar: [],
+  hot: [],
+  moves: [],
+  searchResults: [],
+};
 
 const copy = {
   en: {
+    productLine: "Understand what matters on Polymarket.",
     researchLabel: "Research only · No trade execution",
     botLink: "Bot",
-    tabToday: "Today",
-    tabRadar: "Radar",
-    tabHot: "Hot",
-    tabSearch: "Search",
-    tabSaved: "Saved",
-    tabMore: "More",
-    todayKicker: "Curated for today",
-    todayTitle: "Today’s Pulse",
-    todaySubtitle: "Markets worth watching today.",
     refresh: "Refresh",
-    radarKicker: "Public attention",
+    todayTab: "Today",
+    radarTab: "Radar",
+    searchTab: "Search",
+    savedTab: "Saved",
+    moreTab: "More",
+    todayContext: "Markets worth watching today.",
+    radarContext: "Where public attention is rising.",
+    searchContext: "Find markets fast.",
+    savedContext: "Markets to return to later.",
+    moreContext: "Settings and product links.",
+    mainReason: "Daily briefing",
+    todayTitle: "Today’s Pulse",
+    todaySubtitle: "Open once and get the market story of the day.",
+    shareSnapshot: "Share Today’s Pulse",
+    attentionLayer: "Attention layer",
     radarTitle: "Activity Radar",
-    radarSubtitle: "Where public attention is rising.",
-    intelligenceLabel: "Intelligence",
-    hotKicker: "Secondary scan",
-    hotTitle: "Hot Markets",
-    hotSubtitle: "Markets with strong current activity.",
-    swipeLabel: "Swipe",
-    movesKicker: "Only meaningful moves",
-    movesTitle: "Sharp Moves",
-    movesSubtitle: "Markets where probability changed.",
-    searchKicker: "Quick access",
+    radarSubtitle: "Markets where public attention is rising.",
+    spotlight: "Spotlight search",
     searchTitle: "Search",
     searchSubtitle: "Find a market and get a simple read.",
     searchPlaceholder: "Search markets, topics, names...",
     searchButton: "Search",
-    searchEmpty: "Search markets, topics, names...",
-    savedKicker: "Saved markets",
+    searchEmpty: "Search like Spotlight. Try bitcoin, election, fed, AI.",
+    trendingSearches: "Trending searches",
+    recentSearches: "Recent searches",
+    returnLater: "Return later",
     savedTitle: "Saved markets",
-    savedSubtitle: "Save markets to return later.",
-    savedEmptyTitle: "No saved markets yet.",
-    savedEmptyCopy: "Add markets from the bot.",
-    openBot: "Open bot",
+    savedSubtitle: "Keep markets you want to revisit.",
+    recentlyOpened: "Recently opened",
+    localOnly: "Stored on this device",
+    controls: "Controls",
+    moreTitle: "More",
+    moreSubtitle: "Tune the app and learn what the signals mean.",
+    language: "Language",
+    languageHint: "Use Telegram language or choose manually.",
+    theme: "Theme",
+    themeHint: "Clean light mode or focused dark mode.",
+    todayNotifications: "Today’s Pulse notifications",
+    activityNotifications: "Activity alerts",
+    sharpMoveNotifications: "Sharp move alerts",
+    compactMode: "Compact mode",
+    reducedAnimations: "Reduced animations",
+    whatPulse: "What is Pulse Score?",
+    pulseMeaning: "How interesting this market looks today.",
+    whatRadar: "What is Activity Radar?",
+    radarMeaning: "It shows where public attention is increasing.",
+    channel: "Channel",
+    support: "Support",
+    shareApp: "Share app",
+    feedback: "Send feedback",
     footerSafety: "Research only · No trading · No wallets · No deposits · No private keys · No financial advice",
     footerCopy: "PulseMarket AI helps users understand public market data. It does not execute trades.",
-    mainStory: "Main story today",
+    mainStory: "Main story",
+    secondaryStories: "Also worth a look",
     probability: "Probability",
     pulseScore: "Pulse Score",
     whyItMatters: "Why it matters",
+    watchNext: "Watch",
+    watchNextCopy: "Probability, activity, and resolution rules.",
     exploreMarket: "Explore Market",
     open: "Open",
+    save: "Save",
+    saved: "Saved",
+    remove: "Remove",
+    share: "Share",
     publicActivity: "Public activity",
+    activityLevel: "Activity level",
     radarEmpty: "No strong public activity detected right now. PulseMarket will keep watching.",
-    radarReason: "Public attention is rising.",
+    radarReason: "People are paying more attention to this market.",
+    radarListTitle: "More markets getting attention",
     todayEmpty: "PulseMarket is preparing today’s intelligence.",
+    hotTitle: "Hot markets",
+    hotSubtitle: "Markets with strong current activity.",
     hotEmpty: "No hot markets available yet.",
-    movesEmpty: "Sharp Moves\nNo strong move yet.",
+    movesTitle: "Sharp moves",
+    movesSubtitle: "Markets where probability changed.",
+    movesEmpty: "No strong move yet.",
+    savedEmptyTitle: "No saved markets yet.",
+    savedEmptyCopy: "Save markets from Today, Radar, Hot, or Search.",
+    recentEmpty: "No opened markets yet.",
     searchLoading: "Searching markets...",
     searchNoResults: "No markets found.",
     veryLow: "Very low probability",
-    marketAttentionRising: "Market attention is rising.",
+    lowButActive: "Low probability, but this market may still be active.",
+    marketAttentionRising: "People are paying more attention to this market.",
     worthWatching: "Worth watching today.",
     activeToday: "This market is active today.",
     selectedToday: "Selected for today’s market scan.",
-    shareCopied: "Copied",
+    copied: "Copied",
+    appShared: "PulseMarket AI helps you understand what matters on Polymarket.",
   },
   ru: {
+    productLine: "Быстро понять, что важно на Polymarket.",
     researchLabel: "Для анализа · Без сделок",
     botLink: "Бот",
-    tabToday: "Сегодня",
-    tabRadar: "Радар",
-    tabHot: "Горячие",
-    tabSearch: "Поиск",
-    tabSaved: "Сохранённые",
-    tabMore: "Ещё",
-    todayKicker: "Отобрано на сегодня",
-    todayTitle: "Пульс дня",
-    todaySubtitle: "Рынки, за которыми сегодня стоит следить.",
     refresh: "Обновить",
-    radarKicker: "Публичное внимание",
+    todayTab: "Сегодня",
+    radarTab: "Радар",
+    searchTab: "Поиск",
+    savedTab: "Сохранённые",
+    moreTab: "Ещё",
+    todayContext: "Рынки, за которыми сегодня стоит следить.",
+    radarContext: "Где растёт публичное внимание.",
+    searchContext: "Быстро найти рынок.",
+    savedContext: "Рынки, к которым можно вернуться.",
+    moreContext: "Настройки и ссылки продукта.",
+    mainReason: "Утренний обзор",
+    todayTitle: "Пульс дня",
+    todaySubtitle: "Открой один раз и пойми картину дня.",
+    shareSnapshot: "Поделиться Пульсом дня",
+    attentionLayer: "Слой внимания",
     radarTitle: "Радар активности",
-    radarSubtitle: "Где растёт публичное внимание.",
-    intelligenceLabel: "Аналитика",
-    hotKicker: "Быстрый обзор",
-    hotTitle: "Горячие рынки",
-    hotSubtitle: "Рынки с высокой текущей активностью.",
-    swipeLabel: "Свайп",
-    movesKicker: "Только заметные движения",
-    movesTitle: "Резкие движения",
-    movesSubtitle: "Рынки, где изменилась вероятность.",
-    searchKicker: "Быстрый доступ",
+    radarSubtitle: "Рынки, где растёт публичное внимание.",
+    spotlight: "Быстрый поиск",
     searchTitle: "Поиск",
     searchSubtitle: "Найди рынок и получи простой смысл.",
     searchPlaceholder: "Ищи рынки, темы, имена...",
     searchButton: "Найти",
-    searchEmpty: "Ищи рынки, темы, имена...",
-    savedKicker: "Сохранённые рынки",
+    searchEmpty: "Поиск как Spotlight. Попробуй bitcoin, election, fed, AI.",
+    trendingSearches: "Популярные запросы",
+    recentSearches: "Недавние запросы",
+    returnLater: "Вернуться позже",
     savedTitle: "Сохранённые рынки",
-    savedSubtitle: "Сохраняй рынки, чтобы вернуться позже.",
-    savedEmptyTitle: "Сохранённых рынков пока нет.",
-    savedEmptyCopy: "Добавь рынки из бота.",
-    openBot: "Открыть бот",
+    savedSubtitle: "Сохраняй рынки, к которым хочешь вернуться.",
+    recentlyOpened: "Недавно открытые",
+    localOnly: "Сохранено на этом устройстве",
+    controls: "Управление",
+    moreTitle: "Ещё",
+    moreSubtitle: "Настройки и объяснение сигналов.",
+    language: "Язык",
+    languageHint: "Авто по Telegram или выбор вручную.",
+    theme: "Тема",
+    themeHint: "Светлый режим или сфокусированный тёмный.",
+    todayNotifications: "Уведомления Пульса дня",
+    activityNotifications: "Уведомления активности",
+    sharpMoveNotifications: "Уведомления о движениях",
+    compactMode: "Компактный режим",
+    reducedAnimations: "Меньше анимаций",
+    whatPulse: "Что такое Pulse Score?",
+    pulseMeaning: "Насколько рынок сейчас интересен.",
+    whatRadar: "Что такое Радар активности?",
+    radarMeaning: "Показывает, где растёт публичное внимание.",
+    channel: "Канал",
+    support: "Поддержка",
+    shareApp: "Поделиться",
+    feedback: "Отзыв",
     footerSafety: "Для анализа · Без торговли · Без кошельков · Без пополнений · Без private keys · Без финансовых советов",
     footerCopy: "PulseMarket AI помогает понимать публичные данные рынков. Бот не выполняет сделки.",
-    mainStory: "Главное сегодня",
+    mainStory: "Главное",
+    secondaryStories: "Ещё стоит посмотреть",
     probability: "Вероятность",
     pulseScore: "Pulse Score",
     whyItMatters: "Почему это важно",
+    watchNext: "За чем следить",
+    watchNextCopy: "Вероятность, активность и правила разрешения.",
     exploreMarket: "Открыть рынок",
     open: "Открыть",
+    save: "Сохранить",
+    saved: "Сохранено",
+    remove: "Удалить",
+    share: "Поделиться",
     publicActivity: "Публичная активность",
+    activityLevel: "Уровень активности",
     radarEmpty: "Сейчас нет сильной публичной активности. PulseMarket продолжит отслеживание.",
-    radarReason: "Публичное внимание растёт.",
+    radarReason: "Люди обращают больше внимания на этот рынок.",
+    radarListTitle: "Ещё рынки с ростом внимания",
     todayEmpty: "PulseMarket готовит обзор на сегодня.",
+    hotTitle: "Горячие рынки",
+    hotSubtitle: "Рынки с сильной текущей активностью.",
     hotEmpty: "Пока нет горячих рынков.",
-    movesEmpty: "Резкие движения\nСильных движений пока нет.",
+    movesTitle: "Резкие движения",
+    movesSubtitle: "Рынки, где изменилась вероятность.",
+    movesEmpty: "Сильных движений пока нет.",
+    savedEmptyTitle: "Сохранённых рынков пока нет.",
+    savedEmptyCopy: "Сохраняй рынки из Сегодня, Радара, Горячих или Поиска.",
+    recentEmpty: "Открытых рынков пока нет.",
     searchLoading: "Ищу рынки...",
     searchNoResults: "Рынки не найдены.",
     veryLow: "Очень низкая вероятность",
-    marketAttentionRising: "Внимание к рынку растёт.",
+    lowButActive: "Вероятность низкая, но рынок может быть активным.",
+    marketAttentionRising: "К этому рынку растёт внимание.",
     worthWatching: "Сегодня стоит изучить.",
     activeToday: "Рынок сегодня активен.",
     selectedToday: "Отобран для короткого обзора.",
-    shareCopied: "Скопировано",
+    copied: "Скопировано",
+    appShared: "PulseMarket AI помогает быстро понять, что важно на Polymarket.",
   },
 };
 
+function readStorage(key, fallback) {
+  try {
+    return localStorage.getItem(`${STORAGE_PREFIX}${key}`) || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeStorage(key, value) {
+  try {
+    localStorage.setItem(`${STORAGE_PREFIX}${key}`, value);
+  } catch {
+    // Local storage can be disabled inside some embedded browsers.
+  }
+}
+
+function readJsonStorage(key, fallback) {
+  try {
+    const value = localStorage.getItem(`${STORAGE_PREFIX}${key}`);
+    return value ? JSON.parse(value) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJsonStorage(key, value) {
+  writeStorage(key, JSON.stringify(value));
+}
+
+function currentLanguage() {
+  if (state.languageSetting === "en" || state.languageSetting === "ru") return state.languageSetting;
+  return String(browserLanguage).toLowerCase().startsWith("ru") ? "ru" : "en";
+}
+
 function t(key) {
-  return copy[lang][key] || copy.en[key] || key;
+  const language = currentLanguage();
+  return copy[language][key] || copy.en[key] || key;
+}
+
+function isRu() {
+  return currentLanguage() === "ru";
 }
 
 if (tg) {
   tg.ready();
   tg.expand();
-  if (tg.themeParams && tg.themeParams.bg_color) {
-    document.documentElement.style.setProperty("--bg", tg.themeParams.bg_color);
-  }
-  if (tg.BackButton) {
-    tg.BackButton.hide();
-  }
+  if (tg.BackButton) tg.BackButton.hide();
 }
 
 const money = new Intl.NumberFormat("en-US", {
@@ -153,13 +279,40 @@ const money = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
+function applyTheme() {
+  const preferredLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+  const theme =
+    state.themeSetting === "system" ? (preferredLight ? "light" : "dark") : state.themeSetting;
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.dataset.compact = state.toggles.compactMode ? "true" : "false";
+  document.documentElement.dataset.reducedMotion = state.toggles.reducedAnimations ? "true" : "false";
+}
+
 function applyCopy() {
-  document.documentElement.lang = lang;
+  const language = currentLanguage();
+  document.documentElement.lang = language;
   for (const node of document.querySelectorAll("[data-i18n]")) {
     node.textContent = t(node.getAttribute("data-i18n"));
   }
   for (const node of document.querySelectorAll("[data-i18n-placeholder]")) {
     node.setAttribute("placeholder", t(node.getAttribute("data-i18n-placeholder")));
+  }
+  updateContext();
+  updateSettingsControls();
+}
+
+function updateSettingsControls() {
+  for (const button of document.querySelectorAll("[data-setting='language']")) {
+    button.classList.toggle("is-selected", button.dataset.value === state.languageSetting);
+  }
+  for (const button of document.querySelectorAll("[data-setting='theme']")) {
+    button.classList.toggle("is-selected", button.dataset.value === state.themeSetting);
+  }
+  for (const button of document.querySelectorAll("[data-toggle]")) {
+    const key = button.dataset.toggle;
+    const enabled = Boolean(state.toggles[key]);
+    button.classList.toggle("is-on", enabled);
+    button.setAttribute("aria-pressed", String(enabled));
   }
 }
 
@@ -203,15 +356,8 @@ function probability(item) {
   return percent(null);
 }
 
-function movement(value) {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) return "n/a";
-  const rounded = Math.round(Number(value));
-  const prefix = rounded > 0 ? "+" : "";
-  return `${prefix}${rounded}%`;
-}
-
-function hasImportantMove(value) {
-  return value !== null && value !== undefined && Math.abs(Number(value)) >= IMPORTANT_MOVE;
+function marketId(item) {
+  return String((item && (item.market_id || item.id || item.url || item.title)) || "unknown");
 }
 
 function dataFrom(payload) {
@@ -223,7 +369,7 @@ async function loadJson(path) {
     const response = await fetch(path, { headers: { Accept: "application/json" } });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     return await response.json();
-  } catch (error) {
+  } catch {
     return { data: [], message: EMPTY_MESSAGE };
   }
 }
@@ -234,175 +380,326 @@ function clearNode(node) {
 }
 
 function emptyState(message, compact = false) {
-  return `<div class="empty-state${compact ? " empty-state--compact" : ""}">${escapeHtml(message || EMPTY_MESSAGE).replaceAll("\n", "<br>")}</div>`;
+  return `<div class="empty-state${compact ? " empty-state--compact" : ""}">${escapeHtml(message || EMPTY_MESSAGE)}</div>`;
 }
 
 function shortReason(item) {
-  if (!isRu && item && item.why_it_matters) {
+  if (!isRu() && item && item.why_it_matters) {
     const sentence = String(item.why_it_matters).split(".")[0].trim();
     return sentence ? `${sentence}.` : t("selectedToday");
   }
-  if (item && hasImportantMove(item.movement)) return t("marketAttentionRising");
+  if (item && Number(item.probability) > 0 && Number(item.probability) < 1) return t("lowButActive");
+  if (item && Number(item.public_activity || 0) > 0) return t("marketAttentionRising");
   if (Number((item && item.pulse_score) || 0) >= 70) return t("worthWatching");
   if (Number((item && item.volume) || 0) >= 100000) return t("activeToday");
   return t("selectedToday");
 }
 
-function openLink(url) {
-  const safe = escapeHtml(safeUrl(url));
-  return `<a href="${safe}" target="_blank" rel="noreferrer">${escapeHtml(t("open"))}</a>`;
+function savedMarkets() {
+  return readJsonStorage("savedMarkets", []);
 }
 
-function actionLink(item, label = t("open")) {
-  const safe = escapeHtml(safeUrl(item && item.url));
+function recentlyOpened() {
+  return readJsonStorage("recentlyOpened", []);
+}
+
+function recentSearches() {
+  return readJsonStorage("recentSearches", []);
+}
+
+function saveRecentSearch(query) {
+  const normalized = query.trim();
+  if (!normalized) return;
+  const next = [normalized, ...recentSearches().filter((item) => item.toLowerCase() !== normalized.toLowerCase())].slice(0, 5);
+  writeJsonStorage("recentSearches", next);
+  renderSearchSuggestions();
+}
+
+function addRecentMarket(item) {
+  const normalized = normalizeMarket(item);
+  const next = [normalized, ...recentlyOpened().filter((saved) => saved.id !== normalized.id)].slice(0, 5);
+  writeJsonStorage("recentlyOpened", next);
+  renderSaved();
+}
+
+function normalizeMarket(item) {
+  return {
+    id: marketId(item),
+    title: item && item.title ? item.title : "Untitled market",
+    url: safeUrl(item && item.url),
+    probability: item && item.probability,
+    pulse_score: item && item.pulse_score,
+    why: shortReason(item || {}),
+  };
+}
+
+function isSaved(item) {
+  const id = typeof item === "string" ? item : marketId(item);
+  return savedMarkets().some((saved) => saved.id === id);
+}
+
+function saveMarket(item) {
+  const normalized = normalizeMarket(item);
+  if (!isSaved(normalized.id)) {
+    writeJsonStorage("savedMarkets", [normalized, ...savedMarkets()].slice(0, 24));
+  }
+  renderAllSavedButtons();
+  renderSaved();
+}
+
+function removeSaved(id) {
+  writeJsonStorage("savedMarkets", savedMarkets().filter((item) => item.id !== id));
+  renderAllSavedButtons();
+  renderSaved();
+}
+
+function marketText(item) {
+  return `${item.title || "Polymarket market"}\n${t("probability")}: ${probability(item)}\n${t("pulseScore")}: ${item.pulse_score ?? 0}/100\n${t("whyItMatters")}: ${shortReason(item)}\n${safeUrl(item.url)}`;
+}
+
+async function shareText(text) {
+  const finalText = `${text}\n\n${t("researchLabel")}\n${BOT_URL}`;
+  if (tg && tg.openTelegramLink) {
+    tg.openTelegramLink(`https://t.me/share/url?text=${encodeURIComponent(finalText)}`);
+    return;
+  }
+  if (navigator.share) {
+    await navigator.share({ text: finalText });
+    return;
+  }
+  if (navigator.clipboard) {
+    await navigator.clipboard.writeText(finalText);
+  }
+}
+
+function buttonRow(item) {
+  const encoded = encodeURIComponent(JSON.stringify(normalizeMarket(item)));
+  const saved = isSaved(item);
   return `
-    <div class="market-actions">
-      <a class="market-action market-action--primary" href="${safe}" target="_blank" rel="noreferrer">${escapeHtml(label)}</a>
+    <div class="action-row">
+      <a class="primary-action" href="${escapeHtml(safeUrl(item && item.url))}" target="_blank" rel="noreferrer" data-open-market="${encoded}">${escapeHtml(t("open"))}</a>
+      <button type="button" class="soft-action" data-save-market="${encoded}">${escapeHtml(saved ? t("saved") : t("save"))}</button>
+      <button type="button" class="soft-action" data-share-market="${encoded}">${escapeHtml(t("share"))}</button>
     </div>
   `;
 }
 
-function marketSummaryCard(item) {
-  const importantMoveBadge = hasImportantMove(item.movement)
-    ? `<span class="badge">Move ${movement(item.movement)}</span>`
-    : "";
+function marketCard(item, variant = "compact") {
   return `
-    <article class="market-card compact-market-card">
-      <h3 class="card-title">${escapeHtml(item.title || "Untitled market")}</h3>
-      <div class="small-meta">
-        <span class="badge badge--accent">${probability(item)}</span>
-        <span class="badge badge--blue">Pulse ${escapeHtml(item.pulse_score ?? 0)}/100</span>
-        ${importantMoveBadge}
+    <article class="market-card market-card--${variant}">
+      <div class="market-card__main">
+        <h3>${escapeHtml(item.title || "Untitled market")}</h3>
+        <p>${escapeHtml(shortReason(item))}</p>
       </div>
-      <p class="why-copy why-copy--short">${escapeHtml(shortReason(item))}</p>
-      <div class="card-link-row">
-        ${openLink(item.url)}
+      <div class="pill-row">
+        <span class="pill pill--prob">${escapeHtml(probability(item))}</span>
+        <span class="pill pill--pulse">Pulse ${escapeHtml(item.pulse_score ?? 0)}/100</span>
       </div>
+      ${buttonRow(item)}
     </article>
   `;
 }
 
-function searchResultCard(item) {
+function savedCard(item, removable = false) {
+  const encoded = encodeURIComponent(JSON.stringify(item));
   return `
-    <article class="search-card compact-market-card">
-      <h3 class="card-title">${escapeHtml(item.title || "Untitled market")}</h3>
-      <div class="small-meta">
-        <span class="badge badge--accent">${probability(item)}</span>
-        <span class="badge badge--blue">Pulse ${escapeHtml(item.pulse_score ?? 0)}/100</span>
+    <article class="market-card market-card--saved">
+      <div class="market-card__main">
+        <h3>${escapeHtml(item.title || "Untitled market")}</h3>
+        <p>${escapeHtml(item.why || t("selectedToday"))}</p>
       </div>
-      <p class="why-copy why-copy--short">${escapeHtml(shortReason(item))}</p>
-      <div class="card-link-row">
-        ${openLink(item.url)}
+      <div class="pill-row">
+        <span class="pill pill--prob">${escapeHtml(percent(item.probability))}</span>
+        <span class="pill pill--pulse">Pulse ${escapeHtml(item.pulse_score ?? 0)}/100</span>
+      </div>
+      <div class="action-row">
+        <a class="primary-action" href="${escapeHtml(safeUrl(item.url))}" target="_blank" rel="noreferrer" data-open-market="${encoded}">${escapeHtml(t("open"))}</a>
+        ${
+          removable
+            ? `<button type="button" class="soft-action" data-remove-market="${escapeHtml(item.id)}">${escapeHtml(t("remove"))}</button>`
+            : `<button type="button" class="soft-action" data-save-market="${encoded}">${escapeHtml(isSaved(item.id) ? t("saved") : t("save"))}</button>`
+        }
       </div>
     </article>
   `;
 }
 
 function renderToday(payload) {
+  state.today = dataFrom(payload);
   const hero = document.getElementById("today-hero");
   const secondary = document.getElementById("today-secondary");
-  const items = dataFrom(payload);
-
   clearNode(hero);
   secondary.innerHTML = "";
 
-  if (!items.length) {
+  if (!state.today.length) {
     hero.innerHTML = emptyState(t("todayEmpty"));
     return;
   }
 
-  const top = items[0];
+  const top = state.today[0];
   hero.innerHTML = `
-    <div>
-      <p class="section-kicker">${escapeHtml(t("mainStory"))}</p>
-      <h3 class="story-title">${escapeHtml(top.title || "Untitled market")}</h3>
+    <div class="story-card__topline">
+      <span>${escapeHtml(t("mainStory"))}</span>
+      <span>${escapeHtml(t("pulseScore"))} ${escapeHtml(top.pulse_score ?? 0)}/100</span>
     </div>
-    <div class="hero-meta">
-      <span class="badge badge--accent">${escapeHtml(t("probability"))}: ${probability(top)}</span>
-      <span class="badge badge--blue">${escapeHtml(t("pulseScore"))}: ${escapeHtml(top.pulse_score ?? 0)}/100</span>
+    <h3>${escapeHtml(top.title || "Untitled market")}</h3>
+    <div class="metric-line">
+      <span>${escapeHtml(t("probability"))}</span>
+      <strong>${escapeHtml(probability(top))}</strong>
     </div>
-    <p class="why-copy"><span class="why-label">${escapeHtml(t("whyItMatters"))}</span>${escapeHtml(shortReason(top))}</p>
-    ${actionLink(top, t("exploreMarket"))}
+    <p><strong>${escapeHtml(t("whyItMatters"))}:</strong> ${escapeHtml(shortReason(top))}</p>
+    <p class="watch-copy"><strong>${escapeHtml(t("watchNext"))}:</strong> ${escapeHtml(t("watchNextCopy"))}</p>
+    ${buttonRow(top)}
   `;
 
-  secondary.innerHTML = items.slice(1, 3).map((item) => marketSummaryCard(item)).join("");
+  secondary.innerHTML = state.today.slice(1, 4).map((item) => marketCard(item, "secondary")).join("");
 }
 
-function renderSmart(payload) {
+function renderRadar(payload) {
+  state.radar = dataFrom(payload);
   const hero = document.getElementById("smart-hero");
-  const items = dataFrom(payload);
+  const list = document.getElementById("radar-list");
   clearNode(hero);
+  list.innerHTML = "";
 
-  if (!items.length) {
+  if (!state.radar.length) {
     hero.innerHTML = emptyState(t("radarEmpty"), true);
     return;
   }
 
-  const item = items[0];
+  const top = state.radar[0];
   hero.innerHTML = `
-    <div>
-      <p class="section-kicker">${escapeHtml(t("radarTitle"))}</p>
-      <h3 class="story-title">${escapeHtml(item.title || "Public market activity")}</h3>
+    <div class="story-card__topline">
+      <span>${escapeHtml(t("radarTitle"))}</span>
+      <span>${escapeHtml(t("activityLevel"))}</span>
     </div>
-    <div class="hero-meta">
-      <span class="badge badge--accent">${escapeHtml(t("publicActivity"))}: ${compactUsd(item.public_activity)}</span>
+    <h3>${escapeHtml(top.title || "Public market activity")}</h3>
+    <div class="metric-line">
+      <span>${escapeHtml(t("publicActivity"))}</span>
+      <strong>${compactUsd(top.public_activity)}</strong>
     </div>
-    <p class="why-copy"><span class="why-label">${escapeHtml(t("whyItMatters"))}</span>${escapeHtml(t("radarReason"))}</p>
-    <p class="micro-note">${escapeHtml(t("researchLabel"))}</p>
-    <div class="card-link-row">
-      ${openLink(item.url)}
-    </div>
+    <p><strong>${escapeHtml(t("whyItMatters"))}:</strong> ${escapeHtml(top.why_it_matters || t("radarReason"))}</p>
+    ${buttonRow({ ...top, pulse_score: top.pulse_score || 0, probability: top.probability })}
   `;
+
+  const rest = state.radar.slice(1, 5);
+  if (rest.length) {
+    list.innerHTML = `
+      <h3 class="list-title">${escapeHtml(t("radarListTitle"))}</h3>
+      ${rest
+        .map(
+          (item) => `
+            <article class="activity-row">
+              <div>
+                <h4>${escapeHtml(item.title || "Public market activity")}</h4>
+                <p>${escapeHtml(item.why_it_matters || t("radarReason"))}</p>
+              </div>
+              <div class="activity-row__side">
+                <strong>${compactUsd(item.public_activity)}</strong>
+                <a href="${escapeHtml(safeUrl(item.url))}" target="_blank" rel="noreferrer" data-open-market="${encodeURIComponent(
+                  JSON.stringify(normalizeMarket(item)),
+                )}">${escapeHtml(t("open"))}</a>
+              </div>
+            </article>
+          `,
+        )
+        .join("")}
+    `;
+  }
 }
 
 function renderHot(payload) {
-  const target = document.getElementById("hot-strip");
-  const items = dataFrom(payload);
-  target.innerHTML = items.length
-    ? items.slice(0, 5).map((item) => marketSummaryCard(item)).join("")
-    : emptyState(payload.message || t("hotEmpty"), true);
+  state.hot = dataFrom(payload);
 }
 
 function renderMoves(payload) {
-  const target = document.getElementById("moves-list");
-  const items = dataFrom(payload).filter((item) => hasImportantMove(item.movement));
-  if (!items.length) {
-    target.innerHTML = emptyState(t("movesEmpty"), true);
-    return;
-  }
-
-  target.innerHTML = items
-    .slice(0, 4)
-    .map(
-      (item) => `
-        <article class="move-card">
-          <div>
-            <h3 class="card-title">${escapeHtml(item.title || "Untitled market")}</h3>
-            <div class="small-meta">
-              <span class="badge badge--accent">${probability(item)}</span>
-              <span class="badge badge--blue">Pulse ${escapeHtml(item.pulse_score ?? 0)}/100</span>
-            </div>
-            <div class="card-link-row">
-              ${openLink(item.url)}
-            </div>
-          </div>
-          <span class="movement-pill">${movement(item.movement)}</span>
-        </article>
-      `,
-    )
-    .join("");
+  state.moves = dataFrom(payload).filter((item) => Math.abs(Number(item.movement || 0)) >= 5);
 }
 
 function renderSearch(payload) {
+  state.searchResults = dataFrom(payload);
   const target = document.getElementById("search-results");
-  const items = dataFrom(payload);
-  target.innerHTML = items.length
-    ? items.slice(0, 5).map(searchResultCard).join("")
+  target.innerHTML = state.searchResults.length
+    ? state.searchResults.slice(0, 5).map((item) => marketCard(item, "search")).join("")
     : emptyState(payload.message || t("searchNoResults"), true);
 }
 
+function renderTodayExtras() {
+  const todayScreen = document.getElementById("screen-today");
+  let existing = document.getElementById("today-extras");
+  if (!existing) {
+    existing = document.createElement("div");
+    existing.id = "today-extras";
+    existing.className = "subsection";
+    todayScreen.appendChild(existing);
+  }
+
+  const hotCards = state.hot.slice(0, 5).map((item) => marketCard(item, "compact")).join("");
+  const movesCards = state.moves.slice(0, 3).map((item) => marketCard(item, "compact")).join("");
+
+  existing.innerHTML = `
+    <div class="subsection-heading">
+      <h3>${escapeHtml(t("hotTitle"))}</h3>
+      <span>${escapeHtml(t("hotSubtitle"))}</span>
+    </div>
+    <div class="horizontal-strip">${hotCards || emptyState(t("hotEmpty"), true)}</div>
+    <div class="subsection-heading subsection-heading--spaced">
+      <h3>${escapeHtml(t("movesTitle"))}</h3>
+      <span>${escapeHtml(state.moves.length ? t("movesSubtitle") : t("movesEmpty"))}</span>
+    </div>
+    <div class="compact-list">${movesCards || emptyState(t("movesEmpty"), true)}</div>
+  `;
+}
+
+function renderSearchSuggestions() {
+  const trending = document.getElementById("trending-searches");
+  const recentBlock = document.getElementById("recent-searches-block");
+  const recent = document.getElementById("recent-searches");
+
+  trending.innerHTML = SEARCH_SUGGESTIONS.map(
+    (item) => `<button type="button" class="chip" data-search-chip="${escapeHtml(item)}">${escapeHtml(item)}</button>`,
+  ).join("");
+
+  const searches = recentSearches();
+  recentBlock.hidden = !searches.length;
+  recent.innerHTML = searches
+    .map((item) => `<button type="button" class="chip" data-search-chip="${escapeHtml(item)}">${escapeHtml(item)}</button>`)
+    .join("");
+}
+
+function renderSaved() {
+  const savedTarget = document.getElementById("saved-list");
+  const recentTarget = document.getElementById("recently-opened-list");
+  const saved = savedMarkets();
+  const recent = recentlyOpened();
+
+  savedTarget.innerHTML = saved.length
+    ? saved.map((item) => savedCard(item, true)).join("")
+    : `
+      <div class="empty-state empty-state--compact">
+        <strong>${escapeHtml(t("savedEmptyTitle"))}</strong>
+        <span>${escapeHtml(t("savedEmptyCopy"))}</span>
+      </div>
+    `;
+
+  recentTarget.innerHTML = recent.length
+    ? recent.map((item) => savedCard(item, false)).join("")
+    : emptyState(t("recentEmpty"), true);
+}
+
+function renderAllSavedButtons() {
+  for (const button of document.querySelectorAll("[data-save-market]")) {
+    try {
+      const item = JSON.parse(decodeURIComponent(button.getAttribute("data-save-market")));
+      button.textContent = isSaved(item.id) ? t("saved") : t("save");
+    } catch {
+      button.textContent = t("save");
+    }
+  }
+}
+
 async function refreshDashboard() {
-  const [today, smart, hot, moves] = await Promise.all([
+  const [today, radar, hot, moves] = await Promise.all([
     loadJson("/api/today"),
     loadJson("/api/smart-money/active"),
     loadJson("/api/markets/hot"),
@@ -410,101 +707,172 @@ async function refreshDashboard() {
   ]);
 
   renderToday(today);
-  renderSmart(smart);
+  renderRadar(radar);
   renderHot(hot);
   renderMoves(moves);
+  renderTodayExtras();
+  renderSaved();
 }
 
-function openBot() {
-  if (tg && tg.openTelegramLink) {
-    tg.openTelegramLink(BOT_URL);
-  } else {
-    window.open(BOT_URL, "_blank", "noreferrer");
+function updateContext() {
+  const title = document.getElementById("context-title");
+  const subtitle = document.getElementById("context-subtitle");
+  const titleKeys = {
+    today: "todayTab",
+    radar: "radarTab",
+    search: "searchTab",
+    saved: "savedTab",
+    more: "moreTab",
+  };
+  const subtitleKeys = {
+    today: "todayContext",
+    radar: "radarContext",
+    search: "searchContext",
+    saved: "savedContext",
+    more: "moreContext",
+  };
+  title.textContent = t(titleKeys[state.activeTab]);
+  subtitle.textContent = t(subtitleKeys[state.activeTab]);
+}
+
+function switchTab(tabName) {
+  state.activeTab = tabName;
+  for (const screen of document.querySelectorAll("[data-screen]")) {
+    const active = screen.getAttribute("data-screen") === tabName;
+    screen.classList.toggle("is-active", active);
+    screen.hidden = !active;
   }
-}
-
-function scrollToSection(sectionId) {
-  const section = document.getElementById(sectionId);
-  if (section) {
-    section.scrollIntoView({ behavior: "smooth", block: "start" });
+  for (const button of document.querySelectorAll("[data-tab]")) {
+    button.classList.toggle("is-active", button.getAttribute("data-tab") === tabName);
   }
+  updateContext();
+  window.scrollTo({ top: 0, behavior: state.toggles.reducedAnimations ? "auto" : "smooth" });
 }
 
-function setActiveSection(sectionId) {
-  const activeId = sectionId === "more" ? "moves" : sectionId;
-  for (const button of document.querySelectorAll("[data-nav-target]")) {
-    button.classList.toggle("is-active", button.getAttribute("data-nav-target") === activeId);
-  }
-}
-
-function setupNavigation() {
-  document.addEventListener("click", (event) => {
+function setupEvents() {
+  document.addEventListener("click", async (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
-    const navButton = target.closest("[data-nav-target]");
-    if (!(navButton instanceof HTMLElement)) return;
-    const sectionId = navButton.getAttribute("data-nav-target");
-    if (sectionId) {
-      setActiveSection(sectionId);
-      scrollToSection(sectionId);
+
+    const tabButton = target.closest("[data-tab]");
+    if (tabButton instanceof HTMLElement) {
+      switchTab(tabButton.getAttribute("data-tab"));
+      return;
+    }
+
+    if (target.matches("[data-refresh]")) {
+      await refreshDashboard();
+      return;
+    }
+
+    const searchChip = target.getAttribute("data-search-chip");
+    if (searchChip) {
+      document.getElementById("search-input").value = searchChip;
+      await runSearch(searchChip);
+      return;
+    }
+
+    const savePayload = target.getAttribute("data-save-market");
+    if (savePayload) {
+      saveMarket(JSON.parse(decodeURIComponent(savePayload)));
+      return;
+    }
+
+    const removeId = target.getAttribute("data-remove-market");
+    if (removeId) {
+      removeSaved(removeId);
+      return;
+    }
+
+    const openPayload = target.getAttribute("data-open-market");
+    if (openPayload) {
+      addRecentMarket(JSON.parse(decodeURIComponent(openPayload)));
+      return;
+    }
+
+    const sharePayload = target.getAttribute("data-share-market");
+    if (sharePayload) {
+      await shareText(marketText(JSON.parse(decodeURIComponent(sharePayload))));
+      target.textContent = t("copied");
+      return;
+    }
+
+    const settingButton = target.closest("[data-setting]");
+    if (settingButton instanceof HTMLElement) {
+      const setting = settingButton.getAttribute("data-setting");
+      const value = settingButton.getAttribute("data-value");
+      if (setting === "language") {
+        state.languageSetting = value;
+        writeStorage("language", value);
+      }
+      if (setting === "theme") {
+        state.themeSetting = value;
+        writeStorage("theme", value);
+      }
+      applyTheme();
+      applyCopy();
+      rerenderCurrentData();
+      return;
+    }
+
+    const toggleButton = target.closest("[data-toggle]");
+    if (toggleButton instanceof HTMLElement) {
+      const key = toggleButton.getAttribute("data-toggle");
+      state.toggles[key] = !state.toggles[key];
+      writeJsonStorage("toggles", state.toggles);
+      applyTheme();
+      updateSettingsControls();
+      return;
+    }
+
+    const action = target.getAttribute("data-action");
+    if (action === "share-today") {
+      const text = state.today.slice(0, 3).map((item, index) => `${index + 1}. ${marketText(item)}`).join("\n\n");
+      await shareText(text || t("todayEmpty"));
+      target.textContent = t("copied");
+      return;
+    }
+    if (action === "share-app") {
+      await shareText(`${t("appShared")}\n${APP_URL}`);
+      target.textContent = t("copied");
+      return;
+    }
+    if (action === "feedback") {
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(`${BOT_URL}?start=feedback`);
+      } else {
+        window.open(BOT_URL, "_blank", "noreferrer");
+      }
     }
   });
 
-  if (!("IntersectionObserver" in window)) return;
-  const observer = new IntersectionObserver(
-    (entries) => {
-      const visible = entries
-        .filter((entry) => entry.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (visible && visible.target.id) {
-        setActiveSection(visible.target.id);
-      }
-    },
-    { rootMargin: "-28% 0px -58% 0px", threshold: [0.14, 0.28, 0.42] },
-  );
-  for (const section of document.querySelectorAll("[data-section]")) {
-    observer.observe(section);
-  }
+  document.getElementById("search-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const query = document.getElementById("search-input").value.trim();
+    await runSearch(query);
+  });
 }
 
-document.addEventListener("click", async (event) => {
-  const target = event.target;
-  if (!(target instanceof HTMLElement)) return;
-
-  if (target.matches("[data-refresh]")) {
-    await refreshDashboard();
-    return;
-  }
-
-  if (target.matches("[data-bot-action]")) {
-    openBot();
-    return;
-  }
-
-  const shareText = target.getAttribute("data-share");
-  if (shareText) {
-    const text = `${decodeURIComponent(shareText)}\n\n${t("researchLabel")}\n${BOT_URL}`;
-    if (tg && tg.openTelegramLink) {
-      tg.openTelegramLink(`https://t.me/share/url?text=${encodeURIComponent(text)}`);
-    } else if (navigator.share) {
-      await navigator.share({ text });
-    } else if (navigator.clipboard) {
-      await navigator.clipboard.writeText(text);
-      target.textContent = t("shareCopied");
-    }
-  }
-});
-
-document.getElementById("search-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const query = document.getElementById("search-input").value.trim();
+async function runSearch(query) {
   if (!query) return;
+  saveRecentSearch(query);
   const target = document.getElementById("search-results");
   target.innerHTML = emptyState(t("searchLoading"), true);
   const payload = await loadJson(`/api/search?q=${encodeURIComponent(query)}`);
   renderSearch(payload);
-});
+}
 
+function rerenderCurrentData() {
+  renderToday({ data: state.today });
+  renderRadar({ data: state.radar });
+  renderTodayExtras();
+  renderSearch({ data: state.searchResults, message: t("searchNoResults") });
+  renderSearchSuggestions();
+  renderSaved();
+}
+
+applyTheme();
 applyCopy();
-setupNavigation();
+renderSearchSuggestions();
+setupEvents();
 refreshDashboard();

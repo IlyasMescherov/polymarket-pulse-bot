@@ -124,7 +124,8 @@ The dashboard prioritizes:
 - Activity Radar as public activity context.
 - Hot markets and sharp moves as secondary discovery.
 - Search as a fast way to explore a topic.
-- Sticky top tabs and bottom navigation for one-hand mobile use.
+- Bottom navigation as the main app navigation layer.
+- A compact contextual header that explains the current screen.
 - Safety scope as a visible product boundary.
 
 ## Market Intelligence Positioning
@@ -289,7 +290,7 @@ PulseMarket AI Mini App — это продукт для рыночной ана
 Дашборд делает акцент на:
 
 - Пульсе дня как главной истории.
-- Activity Radar как контексте публичной активности.
+- Activity Radar как контекст публичной активности.
 - Горячих рынках и резких движениях как discovery-слое.
 - Поиске по теме.
 - Видимом safety scope.
@@ -298,6 +299,9 @@ PulseMarket AI Mini App — это продукт для рыночной ана
 
 Конкуренты помогают пользователям быстрее торговать. PulseMarket AI помогает
 быстрее понимать рынки.
+
+Mini App использует нижнюю навигацию как основной слой управления и компактный
+контекстный заголовок вместо дублирующих верхних вкладок.
 
 Mini App избегает биржевых таблиц, экранов исполнения, блоков баланса и языка
 сделок. Вместо этого используются крупные карточки, короткие объяснения,

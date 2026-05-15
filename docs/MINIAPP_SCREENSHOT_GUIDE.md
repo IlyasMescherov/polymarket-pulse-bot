@@ -11,7 +11,7 @@ Telegram Mini App.
 4. Hot Markets
 5. Search
 6. Saved markets empty state
-7. Sticky top tabs and bottom navigation
+7. Contextual header and bottom navigation
 8. Mobile scroll view
 
 ## Capture Rules
@@ -30,10 +30,10 @@ Telegram Mini App.
 2. For Telegram review, use the Mini App only after HTTPS is configured.
 3. Take vertical mobile screenshots first.
 4. Keep the compact safety footer visible in at least one screenshot.
-5. Include one screenshot where the bottom navigation is visible.
+5. Include one screenshot where the bottom navigation and contextual header are visible.
 
 ## Notes
 
 PulseMarket AI is positioned as market intelligence, not trade execution. The
 screenshots should emphasize discovery, Today’s Pulse, Activity Radar, search,
-sticky navigation, and safety scope.
+bottom navigation, and the compact safety boundary.

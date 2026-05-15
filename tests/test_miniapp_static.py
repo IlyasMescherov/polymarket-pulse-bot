@@ -28,10 +28,10 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
     for text in (
         "Today’s Pulse",
         "Activity Radar",
-        "Hot Markets",
-        "Sharp Moves",
         "Search",
         "Saved markets",
+        "Language",
+        "Theme",
         "Research only · No trading · No wallets · No deposits · No private keys · No financial advice",
     ):
         assert text in index_text
@@ -39,14 +39,14 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
     assert index_text.find("Today’s Pulse") < index_text.find("Activity Radar")
     assert "Safety scope" not in index_text
     assert "Markets worth watching today." in index_text
-    assert "Where public attention is rising." in index_text
+    assert "public attention is rising" in index_text
 
     for target_id in (
-        'id="today"',
-        'id="radar"',
-        'id="hot"',
-        'id="search"',
-        'id="saved"',
+        'id="screen-today"',
+        'id="screen-radar"',
+        'id="screen-search"',
+        'id="screen-saved"',
+        'id="screen-more"',
     ):
         assert target_id in index_text
 
@@ -54,22 +54,24 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "today-hero",
         "today-secondary",
         "smart-hero",
-        "hot-strip",
-        "moves-list",
         "search-results",
+        "saved-list",
+        "recently-opened-list",
     ):
         assert target_id in index_text
         assert target_id in script_text
 
     for class_name in (
-        "top-tabs",
+        "context-bar",
         "bottom-nav",
-        "nav-pill",
         "bottom-nav__item",
-        "today-primary",
-        "pulse-hero",
+        "screen-stack",
+        "story-card--hero",
         "insight-card",
         "horizontal-strip",
+        "settings-card",
+        "segmented",
+        "switch",
         "skeleton-card",
         "empty-state--compact",
         "footer-note",
@@ -85,21 +87,42 @@ def test_miniapp_navigation_and_search_are_app_like() -> None:
     index_text = (root / "miniapp" / "index.html").read_text()
     script_text = (root / "miniapp" / "app.js").read_text()
 
-    assert 'class="top-tabs"' in index_text
+    assert 'class="top-tabs"' not in index_text
+    assert "top-tabs" not in script_text
     assert 'class="bottom-nav"' in index_text
-    assert 'data-nav-target="today"' in index_text
-    assert 'data-nav-target="radar"' in index_text
-    assert 'data-nav-target="search"' in index_text
-    assert 'data-nav-target="saved"' in index_text
-    assert 'data-nav-target="moves"' in index_text
+    assert 'class="context-bar"' in index_text
+    assert 'data-tab="today"' in index_text
+    assert 'data-tab="radar"' in index_text
+    assert 'data-tab="search"' in index_text
+    assert 'data-tab="saved"' in index_text
+    assert 'data-tab="more"' in index_text
 
     for label in ("Today", "Radar", "Search", "Saved", "More"):
         assert label in index_text
 
     assert index_text.count('type="search"') == 1
     assert index_text.count('id="search-input"') == 1
-    assert "IntersectionObserver" in script_text
-    assert "scrollToSection" in script_text
+    assert "switchTab" in script_text
+    assert "scrollToSection" not in script_text
+
+
+def test_miniapp_settings_language_theme_and_saved_features_exist() -> None:
+    root = Path(__file__).resolve().parents[1]
+    index_text = (root / "miniapp" / "index.html").read_text()
+    script_text = (root / "miniapp" / "app.js").read_text()
+    styles_text = (root / "miniapp" / "styles.css").read_text()
+
+    assert 'data-setting="language"' in index_text
+    assert 'data-setting="theme"' in index_text
+    assert 'data-toggle="compactMode"' in index_text
+    assert 'data-toggle="reducedAnimations"' in index_text
+    assert 'data-theme="light"' in styles_text
+    assert "savedMarkets" in script_text
+    assert "recentlyOpened" in script_text
+    assert "saveMarket" in script_text
+    assert "removeSaved" in script_text
+    assert "recentSearches" in script_text
+    assert "SEARCH_SUGGESTIONS" in script_text
 
 
 def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
@@ -115,6 +138,8 @@ def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
     assert "no private keys" in text
     assert "no financial advice" in text
     assert "where public attention is rising" in text
+    assert "wallet list" not in text
+    assert "wallet hash" not in text
 
     banned = (
         "insider",
