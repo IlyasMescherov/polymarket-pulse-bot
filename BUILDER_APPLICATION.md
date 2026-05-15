@@ -14,7 +14,7 @@ PulseMarket AI
 
 ## 4. Live health endpoint
 
-[http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
+[https://pulsemarketai.com/health](https://pulsemarketai.com/health)
 
 ## 5. Problem
 

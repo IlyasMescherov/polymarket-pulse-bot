@@ -51,7 +51,7 @@ def test_main_menu_prioritizes_curated_onboarding_actions() -> None:
 
 @dataclass(slots=True)
 class PreviewSettings:
-    project_public_url: str = "http://2.26.80.27:8080"
+    project_public_url: str = "https://pulsemarketai.com"
 
 
 def test_dashboard_fallback_explains_https_requirement() -> None:
@@ -59,4 +59,4 @@ def test_dashboard_fallback_explains_https_requirement() -> None:
 
     assert "Mini App preview is ready." in text
     assert "Telegram requires HTTPS" in text
-    assert "http://2.26.80.27:8080/app" in text
+    assert "https://pulsemarketai.com/app" in text

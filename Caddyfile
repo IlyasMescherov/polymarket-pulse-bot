@@ -1,0 +1,9 @@
+pulsemarketai.com {
+	encode zstd gzip
+	reverse_proxy bot:8080
+}
+
+app.pulsemarketai.com {
+	encode zstd gzip
+	reverse_proxy bot:8080
+}

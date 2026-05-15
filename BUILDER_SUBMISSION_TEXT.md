@@ -14,13 +14,13 @@ PulseMarket AI
 
 ## Website / Health
 
-[http://2.26.80.27:8080](http://2.26.80.27:8080)
+[https://pulsemarketai.com](https://pulsemarketai.com)
 
-[http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
+[https://pulsemarketai.com/health](https://pulsemarketai.com/health)
 
 Mini App preview:
 
-[http://2.26.80.27:8080/app](http://2.26.80.27:8080/app)
+[https://app.pulsemarketai.com/app](https://app.pulsemarketai.com/app)
 
 ## Short Description
 
@@ -32,16 +32,16 @@ New users often struggle to find relevant Polymarket markets and understand prob
 
 ## Solution
 
-PulseMarket AI gives users a simple Telegram interface for hot markets, new markets, Today's Pulse, Smart Money Radar, search, watchlists, smart alerts, beginner explanations, resolution guidance, and direct links to Polymarket.
+PulseMarket AI gives users a simple Telegram interface for hot markets, new markets, Today's Pulse, Activity Radar, search, watchlists, smart alerts, beginner explanations, resolution guidance, and direct links to Polymarket.
 
-It also includes a Telegram Mini App dashboard preview for Today's Pulse, Smart Money Radar, hot markets, sharp moves, and search. A full Telegram Mini App launch requires an HTTPS domain.
+It also includes a Telegram Mini App dashboard preview for Today's Pulse, Activity Radar, hot markets, sharp moves, and search. A full Telegram Mini App launch requires an HTTPS domain.
 
 ## Current MVP
 
 - Hot markets
 - New markets
 - Today's Pulse
-- Smart Money Radar
+- Activity Radar
 - Sharp movement detection
 - Why it moved
 - Pulse Score
@@ -68,9 +68,9 @@ It also includes a Telegram Mini App dashboard preview for Today's Pulse, Smart 
 - Competitor analysis
 - Telegram comments and translation setup docs
 
-## Smart Money Radar
+## Activity Radar
 
-Smart Money Radar highlights unusual public activity, public leaderboard context, active market attention, and user-tracked public wallet addresses using public Polymarket data only.
+Activity Radar highlights unusual public activity, public leaderboard context, active market attention, and user-tracked public wallet addresses using public Polymarket data only.
 
 It is research-only. It does not connect wallets, place orders, manage positions, or provide financial advice.
 

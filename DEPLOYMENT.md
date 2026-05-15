@@ -18,7 +18,7 @@ Live project references:
 
 - Telegram handle: [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
 - GitHub repo: [https://github.com/IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
-- Production health: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
+- Production health: [https://pulsemarketai.com/health](https://pulsemarketai.com/health)
 
 ## Requirements
 

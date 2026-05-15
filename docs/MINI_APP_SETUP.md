@@ -8,23 +8,29 @@ discovery and market intelligence.
 It shows:
 
 - Today's Pulse
-- Smart Money Radar
+- Activity Radar
 - Hot markets
 - Sharp moves
 - Market search
 - Safety scope
 
-Current preview URL:
+Production Mini App URL:
 
 ```text
-http://2.26.80.27:8080/app
+https://app.pulsemarketai.com/app
 ```
 
 ## Production Requirement
 
 Telegram Mini App URLs must use HTTPS.
 
-Recommended final URL:
+Production URL for `@PulseMarketAIBot`:
+
+```text
+https://app.pulsemarketai.com/app
+```
+
+Generic format for future projects:
 
 ```text
 https://app.YOUR_DOMAIN/app
@@ -46,7 +52,14 @@ Manual setup in BotFather:
 4. Open `Bot Settings`.
 5. Choose `Configure Mini App`.
 6. Enable Mini App.
-7. Set the HTTPS Mini App URL.
+7. Set the HTTPS Mini App URL:
+
+```text
+https://app.pulsemarketai.com/app
+```
+
+Successful setup means Telegram accepts the URL and the Dashboard button opens
+inside the Telegram Mini App browser, not as a plain external HTTP preview.
 
 Optional menu button setup:
 
@@ -55,6 +68,23 @@ Optional menu button setup:
 3. Choose Web App.
 4. Set button text: `Dashboard`.
 5. Set the same HTTPS URL.
+
+## How To Check
+
+- Open a private chat with `@PulseMarketAIBot`.
+- Send `/start`.
+- Press `Dashboard`.
+- The Mini App should open inside Telegram.
+- The first screen should show Today's Pulse and the `Research only · No trade execution` label.
+
+Troubleshooting:
+
+- If Telegram opens a normal message instead of the Mini App, confirm
+  `MINI_APP_URL=https://app.pulsemarketai.com/app` is set on production and
+  restart the bot container.
+- If BotFather rejects the URL, confirm the URL starts with `https://`.
+- If the page does not load, check `https://app.pulsemarketai.com/app` in a
+  browser and confirm Caddy is healthy.
 
 ## HTTPS Options
 
@@ -91,7 +121,7 @@ What matters today?
 The dashboard prioritizes:
 
 - Today's Pulse as the main editorial story.
-- Smart Money Radar as public activity context.
+- Activity Radar as public activity context.
 - Hot markets and sharp moves as secondary discovery.
 - Search as a fast way to explore a topic.
 - Safety scope as a visible product boundary.
@@ -145,23 +175,29 @@ Polymarket и просмотра рыночной аналитики.
 Он показывает:
 
 - Пульс дня
-- Smart Money Radar
+- Activity Radar
 - Горячие рынки
 - Резкие движения
 - Поиск рынков
 - Безопасный scope проекта
 
-Текущий preview:
+Production Mini App URL:
 
 ```text
-http://2.26.80.27:8080/app
+https://app.pulsemarketai.com/app
 ```
 
 ## Важное требование
 
 Telegram Mini App URL должен быть HTTPS.
 
-Рекомендуемый финальный URL:
+Production URL для `@PulseMarketAIBot`:
+
+```text
+https://app.pulsemarketai.com/app
+```
+
+Общий формат для будущих проектов:
 
 ```text
 https://app.YOUR_DOMAIN/app
@@ -183,7 +219,14 @@ https://YOUR_DOMAIN/app
 4. Открой `Bot Settings`.
 5. Выбери `Configure Mini App`.
 6. Включи Mini App.
-7. Укажи HTTPS URL Mini App.
+7. Укажи HTTPS URL Mini App:
+
+```text
+https://app.pulsemarketai.com/app
+```
+
+Успешная настройка означает, что Telegram принимает URL, а кнопка Dashboard
+открывает Mini App внутри Telegram, а не обычную HTTP preview-ссылку.
 
 Опционально можно настроить кнопку меню:
 
@@ -192,6 +235,23 @@ https://YOUR_DOMAIN/app
 3. Выбери Web App.
 4. Текст кнопки: `Dashboard`.
 5. Укажи тот же HTTPS URL.
+
+## Как проверить
+
+- Открой private chat с `@PulseMarketAIBot`.
+- Отправь `/start`.
+- Нажми `Dashboard`.
+- Mini App должен открыться внутри Telegram.
+- Первый экран должен показать Today's Pulse и метку `Research only · No trade execution`.
+
+Troubleshooting:
+
+- Если Telegram показывает обычное сообщение вместо Mini App, проверь, что на
+  production установлено `MINI_APP_URL=https://app.pulsemarketai.com/app`, и
+  перезапусти bot container.
+- Если BotFather не принимает URL, проверь, что URL начинается с `https://`.
+- Если страница не открывается, проверь `https://app.pulsemarketai.com/app` в
+  браузере и Caddy container.
 
 ## Варианты HTTPS
 
@@ -228,7 +288,7 @@ PulseMarket AI Mini App — это продукт для рыночной ана
 Дашборд делает акцент на:
 
 - Пульсе дня как главной истории.
-- Smart Money Radar как контексте публичной активности.
+- Activity Radar как контексте публичной активности.
 - Горячих рынках и резких движениях как discovery-слое.
 - Поиске по теме.
 - Видимом safety scope.

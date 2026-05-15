@@ -53,7 +53,7 @@ Competitors help users trade faster. PulseMarket AI helps users understand marke
 ## Differentiators
 
 - Today's Pulse
-- Smart Money Radar
+- Activity Radar
 - Beginner explanations
 - Resolution Explainer
 - Market Health

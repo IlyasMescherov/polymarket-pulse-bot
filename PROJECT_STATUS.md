@@ -11,7 +11,7 @@ The current version focuses on public Polymarket market discovery, market moveme
 - Telegram `/start` onboarding flow
 - Main menu with inline buttons
 - Today's Pulse discovery screen and `/today` command
-- Smart Money Radar screen and `/smart` command
+- Activity Radar screen and `/smart` command
 - Hot Markets view
 - New Markets view
 - Sharp Movement detection based on stored market snapshots
@@ -35,7 +35,7 @@ The current version focuses on public Polymarket market discovery, market moveme
 - Admin stats command gated by `ADMIN_TELEGRAM_IDS`
 - Admin channel digest command gated by `ADMIN_TELEGRAM_IDS`
 - User feedback command and admin feedback review
-- Read-only Smart Money Radar using public Polymarket Data API fallback
+- Read-only Activity Radar using public Polymarket Data API fallback
 - Public wallet address tracking without wallet connection
 - `/whoami` command for safe admin id discovery
 - User notification toggle and alert settings for sharp movement alerts
@@ -109,10 +109,10 @@ Phase 5 adds the public traction layer for first users and Builders Program revi
 - Channel digest text generation for `@PulseMarketAI`
 - User feedback collection
 - Admin feedback review
-- Public landing page served from [http://2.26.80.27:8080](http://2.26.80.27:8080) and sourced from [landing/](landing/)
+- Public landing page served from [https://pulsemarketai.com](https://pulsemarketai.com) and sourced from [landing/](landing/)
 - Competitor analysis in [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md)
 
-## Phase 6 Read-only Smart Money Radar Completed
+## Phase 6 Read-only Activity Radar Completed
 
 Phase 6 adds public market intelligence without trading or wallet connection:
 
@@ -124,7 +124,7 @@ Phase 6 adds public market intelligence without trading or wallet connection:
 - Smart Money alerts setting
 - Admin stats for Smart Money snapshots, tracked public wallets, alerts, and large public activity
 - Optional Smart Money block in `/admin_digest`
-- Public landing page Smart Money Radar section
+- Public landing page Activity Radar section
 - [docs/SMART_MONEY_ANALYTICS.md](docs/SMART_MONEY_ANALYTICS.md)
 
 ## Safe Publishing Layer Completed
@@ -146,24 +146,24 @@ The project now includes a conservative publishing workflow:
 
 The project now includes a static Telegram Mini App preview:
 
-- Mini App route: [http://2.26.80.27:8080/app](http://2.26.80.27:8080/app)
+- Mini App route: [https://app.pulsemarketai.com/app](https://app.pulsemarketai.com/app)
 - Static source: [miniapp/](miniapp/)
 - Setup docs: [docs/MINI_APP_SETUP.md](docs/MINI_APP_SETUP.md)
-- Read-only API endpoints for Today's Pulse, hot markets, new markets, sharp moves, Smart Money Radar, public traders, and search
+- Read-only API endpoints for Today's Pulse, hot markets, new markets, sharp moves, Activity Radar, public traders, and search
 - Dashboard button in the Telegram main menu
 
 Telegram requires HTTPS for a real Mini App URL in BotFather. The current HTTP route is a browser preview until a domain and HTTPS are configured.
 
 ## What is live on VPS
 
-- Production VPS health endpoint: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
-- Public landing page: [http://2.26.80.27:8080](http://2.26.80.27:8080)
-- Mini App preview: [http://2.26.80.27:8080/app](http://2.26.80.27:8080/app)
+- Production VPS health endpoint: [https://pulsemarketai.com/health](https://pulsemarketai.com/health)
+- Public landing page: [https://pulsemarketai.com](https://pulsemarketai.com)
+- Mini App preview: [https://app.pulsemarketai.com/app](https://app.pulsemarketai.com/app)
 - Telegram bot: [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
 - Public channel: [@PulseMarketAI](https://t.me/PulseMarketAI)
 - Support: [@PulseMarketAISupport](https://t.me/PulseMarketAISupport)
 - X/Twitter: [@PulseMarketBot](https://x.com/PulseMarketBot)
-- Smart Money Radar is available from `/smart`
+- Activity Radar is available from `/smart`
 - Admin publishing preview is available from `/admin_publish_today`
 - X draft generation is available from `/admin_x_draft`
 - Inline search is enabled and manually verified with `@PulseMarketAIBot bitcoin`
@@ -176,7 +176,7 @@ Telegram requires HTTPS for a real Mini App URL in BotFather. The current HTTP r
 1. Switch bot UI to English for screenshots.
 2. Take clean screenshots.
 3. Record a 45-second demo video if the application form asks for one.
-4. Keep the public landing page updated at [http://2.26.80.27:8080](http://2.26.80.27:8080).
+4. Keep the public landing page updated at [https://pulsemarketai.com](https://pulsemarketai.com).
 5. Post the first manual digest in [@PulseMarketAI](https://t.me/PulseMarketAI).
 6. Run `/admin_check_channel` before enabling channel autoposting.
 7. Keep `AUTO_CHANNEL_POSTING_ENABLED=false` until preview publishing is manually verified.
@@ -205,7 +205,7 @@ Telegram requires HTTPS for a real Mini App URL in BotFather. The current HTTP r
 - Use `/admin_publish_today` for preview-and-publish channel flow.
 - Use `/admin_x_draft` for manual X/Twitter draft generation.
 - Ask first users to send `/feedback`.
-- Ask early users whether Smart Money Radar is understandable without trading terminology.
+- Ask early users whether Activity Radar is understandable without trading terminology.
 
 ## Next Milestones
 

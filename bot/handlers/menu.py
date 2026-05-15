@@ -50,7 +50,7 @@ def _telegram_bot_url(settings: Settings) -> str:
 def _mini_app_preview_url(settings: Settings) -> str:
     if settings.project_public_url:
         return f"{settings.project_public_url.rstrip('/')}/app"
-    return "http://2.26.80.27:8080/app"
+    return "https://app.pulsemarketai.com/app"
 
 
 def _mini_app_preview_text(settings: Settings, language: str) -> str:

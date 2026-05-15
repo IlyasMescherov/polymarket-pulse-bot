@@ -7,7 +7,7 @@ Telegram Mini App.
 
 1. Home dashboard
 2. Today's Pulse hero
-3. Smart Money Radar
+3. Activity Radar
 4. Hot Markets
 5. Search
 6. Watchlist empty state
@@ -25,7 +25,7 @@ Telegram Mini App.
 
 ## Recommended Flow
 
-1. Open `http://2.26.80.27:8080/app` for browser preview.
+1. Open `https://app.pulsemarketai.com/app` for browser preview.
 2. For Telegram review, use the Mini App only after HTTPS is configured.
 3. Take vertical mobile screenshots first.
 4. Keep the safety footer visible in at least one screenshot.
@@ -33,5 +33,5 @@ Telegram Mini App.
 ## Notes
 
 PulseMarket AI is positioned as market intelligence, not trade execution. The
-screenshots should emphasize discovery, Today’s Pulse, Smart Money Radar, search,
+screenshots should emphasize discovery, Today’s Pulse, Activity Radar, search,
 and safety scope.

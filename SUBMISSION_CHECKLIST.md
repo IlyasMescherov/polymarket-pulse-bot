@@ -5,9 +5,9 @@
 - Product: PulseMarket AI
 - Telegram: [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
 - GitHub: [https://github.com/IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
-- Landing page: [http://2.26.80.27:8080](http://2.26.80.27:8080)
-- Mini App preview: [http://2.26.80.27:8080/app](http://2.26.80.27:8080/app)
-- Production health: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
+- Landing page: [https://pulsemarketai.com](https://pulsemarketai.com)
+- Mini App preview: [https://app.pulsemarketai.com/app](https://app.pulsemarketai.com/app)
+- Production health: [https://pulsemarketai.com/health](https://pulsemarketai.com/health)
 - Channel: [@PulseMarketAI](https://t.me/PulseMarketAI)
 - Support: [@PulseMarketAISupport](https://t.me/PulseMarketAISupport)
 - X/Twitter: [@PulseMarketBot](https://x.com/PulseMarketBot)
@@ -29,7 +29,7 @@ Recommended flow:
 2. Show the main menu.
 3. Open Hot Markets and show Pulse Score plus Market Health.
 4. Open Today's Pulse.
-5. Open Smart Money Radar.
+5. Open Activity Radar.
 6. Search for `bitcoin`.
 7. Open a Polymarket market link.
 8. Show Resolution Explainer and Why it moved.
@@ -42,7 +42,7 @@ Recommended flow:
 - Main menu `/start`
 - Hot Markets with Pulse Score and Market Health
 - Today's Pulse
-- Smart Money Radar
+- Activity Radar
 - Search `bitcoin` results
 - Resolution Explainer
 - Why it moved
@@ -80,7 +80,7 @@ PulseMarket AI does not execute trades, manage wallets, hold funds, request priv
 - Hot markets
 - New markets
 - Today's Pulse
-- Smart Money Radar
+- Activity Radar
 - Sharp movement detection
 - Why it moved
 - Pulse Score
@@ -142,7 +142,7 @@ Builder code is prepared for future official trading integration, but the curren
 - Optional Telegram channel autoposting after admin verification
 - X/Twitter draft workflow
 - More advanced market health signals
-- More advanced Smart Money Radar summaries
+- More advanced Activity Radar summaries
 - Better topic personalization
 - More Polymarket discovery endpoints
 - Official builder code order attribution in a future non-custodial trading integration

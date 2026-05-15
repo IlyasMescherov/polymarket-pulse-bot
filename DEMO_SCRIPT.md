@@ -4,9 +4,9 @@
 
 - Telegram handle: [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
 - GitHub repo: [https://github.com/IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
-- Landing page: [http://2.26.80.27:8080](http://2.26.80.27:8080)
-- Mini App preview: [http://2.26.80.27:8080/app](http://2.26.80.27:8080/app)
-- Production health: [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
+- Landing page: [https://pulsemarketai.com](https://pulsemarketai.com)
+- Mini App preview: [https://app.pulsemarketai.com/app](https://app.pulsemarketai.com/app)
+- Production health: [https://pulsemarketai.com/health](https://pulsemarketai.com/health)
 - Status: Live MVP
 
 ## Safety note
@@ -76,10 +76,10 @@ Show the ranked daily discovery card.
 Open:
 
 ```text
-http://2.26.80.27:8080/app
+https://app.pulsemarketai.com/app
 ```
 
-Show the dashboard preview with Today's Pulse, Smart Money Radar, and Hot Markets.
+Show the dashboard preview with Today's Pulse, Activity Radar, and Hot Markets.
 
 Note: full Telegram Mini App launch requires HTTPS.
 
@@ -146,8 +146,8 @@ Show:
 ```text
 Telegram: @PulseMarketAIBot
 GitHub: https://github.com/IlyasMescherov/polymarket-pulse-bot
-Landing: http://2.26.80.27:8080
-Mini App preview: http://2.26.80.27:8080/app
-Health: http://2.26.80.27:8080/health
+Landing: https://pulsemarketai.com
+Mini App preview: https://app.pulsemarketai.com/app
+Health: https://pulsemarketai.com/health
 Status: Live MVP
 ```

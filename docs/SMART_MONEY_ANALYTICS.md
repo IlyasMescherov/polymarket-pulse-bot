@@ -1,12 +1,12 @@
-# Smart Money Radar
+# Activity Radar
 
-Smart Money Radar is a read-only market intelligence layer for PulseMarket AI.
+Activity Radar is a read-only market intelligence layer for PulseMarket AI.
 
 It highlights unusual public activity and active market attention using public Polymarket data only.
 
 ## Scope
 
-Smart Money Radar is research-only.
+Activity Radar is research-only.
 
 - No trading
 - No wallet connection
@@ -46,7 +46,7 @@ The explanation is intentionally conservative:
 - It asks users to check movement and resolution rules.
 - It never tells users what action to take.
 
-### Public Traders
+### Active Participants
 
 Shows public leaderboard context when available.
 
@@ -54,14 +54,14 @@ The screen includes:
 
 ```text
 Past performance does not guarantee future results.
-Use this for research, not copy trading.
+Use this for research, not as instructions.
 ```
 
-### Active Markets
+### Markets Getting Attention
 
 Aggregates public activity by market and highlights markets with stronger attention.
 
-### Track Public Wallet
+### Follow Public Activity
 
 Users can save a public EVM wallet address for read-only monitoring.
 
@@ -85,7 +85,7 @@ Phase 6 adds:
 - Smart Money alerts sent today
 - Large public activities detected today
 
-`/admin_digest` may include a Smart Money Radar block when recent public activity snapshots exist.
+`/admin_digest` may include an Activity Radar block when recent public activity snapshots exist.
 
 ## Builder Program Value
 

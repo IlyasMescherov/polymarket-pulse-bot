@@ -3,9 +3,9 @@
 - **Status:** Live MVP
 - **Telegram bot:** [@PulseMarketAIBot](https://t.me/PulseMarketAIBot)
 - **GitHub repo:** [IlyasMescherov/polymarket-pulse-bot](https://github.com/IlyasMescherov/polymarket-pulse-bot)
-- **Landing page:** [http://2.26.80.27:8080](http://2.26.80.27:8080)
-- **Mini App preview:** [http://2.26.80.27:8080/app](http://2.26.80.27:8080/app)
-- **Production health:** [http://2.26.80.27:8080/health](http://2.26.80.27:8080/health)
+- **Landing page:** [https://pulsemarketai.com](https://pulsemarketai.com)
+- **Mini App preview:** [https://app.pulsemarketai.com/app](https://app.pulsemarketai.com/app)
+- **Production health:** [https://pulsemarketai.com/health](https://pulsemarketai.com/health)
 
 PulseMarket AI is a Telegram analytics bot for Polymarket discovery. It helps users find active prediction markets, understand market probabilities in plain language, save markets to a watchlist, and receive alerts when probabilities move sharply.
 
@@ -15,7 +15,7 @@ This project is prepared for a Polymarket Builders Program submission. The curre
 
 PulseMarket AI is live on Telegram as [@PulseMarketAIBot](https://t.me/PulseMarketAIBot) and deployed on a VPS with a health endpoint.
 
-Public landing page: [http://2.26.80.27:8080](http://2.26.80.27:8080)
+Public landing page: [https://pulsemarketai.com](https://pulsemarketai.com)
 
 Builder submission package:
 
@@ -66,7 +66,7 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - Hot markets: shows 5 active Polymarket markets ranked by recent volume.
 - New markets: shows 5 newly created active markets.
 - Today's Pulse: shows 3-5 high-signal markets ranked by Pulse Score, volume, movement, and data quality.
-- Smart Money Radar: read-only view of unusual public activity, public leaderboard data, active market attention, and user-tracked public wallet addresses.
+- Activity Radar: read-only view of unusual public activity, public leaderboard data, active market attention, and user-tracked public wallet addresses.
 - Sharp movements: compares stored market snapshots and surfaces probability changes above each user's selected threshold.
 - Why it moved: explains probability movement using public market data, volume, time to resolution, and risk flags.
 - Pulse Score: each market gets a 0-100 signal score based on movement, volume, time to close, and data quality.
@@ -100,8 +100,8 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - Optional AI explanations: when `OPENAI_API_KEY` is configured, the bot adds short plain-language explanations.
 - No-AI fallback: when `OPENAI_API_KEY` is missing, the bot still works normally.
 - Public market links: every market card links users back to Polymarket.
-- Public landing page: a no-build page is served from [http://2.26.80.27:8080](http://2.26.80.27:8080) and kept in [landing/](landing/).
-- Telegram Mini App Dashboard: a no-build mobile dashboard preview is served from [http://2.26.80.27:8080/app](http://2.26.80.27:8080/app). Telegram Mini App launch requires an HTTPS domain.
+- Public landing page: a no-build page is served from [https://pulsemarketai.com](https://pulsemarketai.com) and kept in [landing/](landing/).
+- Telegram Mini App Dashboard: a no-build mobile dashboard preview is served from [https://app.pulsemarketai.com/app](https://app.pulsemarketai.com/app). Telegram Mini App launch requires an HTTPS domain.
 
 ## How it works
 
@@ -113,7 +113,7 @@ https://gamma-api.polymarket.com
 
 The bot reads public market fields such as `question`, `outcomePrices`, `volume`, `endDate`, and `slug`.
 
-For Smart Money Radar, the bot also uses the public Polymarket Data API when available:
+For Activity Radar, the bot also uses the public Polymarket Data API when available:
 
 ```text
 https://data-api.polymarket.com
@@ -219,13 +219,13 @@ It is based on public market quality signals such as volume, probability availab
 
 Market Health is not a recommendation to trade.
 
-## Smart Money Radar
+## Activity Radar
 
-Smart Money Radar is a read-only market intelligence layer. It highlights unusual public activity, public leaderboard context, active market attention, and public wallet addresses that users choose to track.
+Activity Radar is a read-only market intelligence layer. It highlights unusual public activity, public leaderboard context, active market attention, and public wallet addresses that users choose to track.
 
 It does not connect wallets, manage positions, place orders, or tell users what decision to make. The feature is for research only and uses public Polymarket data.
 
-Current Smart Money Radar surfaces:
+Current Activity Radar surfaces:
 
 - Unusual Activity: large public activity detected from public trade data.
 - Public Traders: public leaderboard context with a clear past-performance warning.
@@ -307,12 +307,12 @@ Phase 5 adds a lightweight traction layer for public launch:
 
 - Today's Pulse gives users a simple daily discovery surface.
 - Why it moved explains market movement without giving directional financial advice.
-- Smart Money Radar highlights unusual public activity as research-only market intelligence.
+- Activity Radar highlights unusual public activity as research-only market intelligence.
 - `/admin_digest` generates a channel-ready post for [@PulseMarketAI](https://t.me/PulseMarketAI).
 - `/feedback` gives early users a direct product feedback loop.
-- The static landing page in [landing/](landing/) gives the project a public website, currently served at [http://2.26.80.27:8080](http://2.26.80.27:8080).
+- The static landing page in [landing/](landing/) gives the project a public website, currently served at [https://pulsemarketai.com](https://pulsemarketai.com).
 - [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md) explains how PulseMarket AI differs from trading terminals and copy-trading tools.
-- [docs/SMART_MONEY_ANALYTICS.md](docs/SMART_MONEY_ANALYTICS.md) explains the read-only Smart Money Radar scope.
+- [docs/SMART_MONEY_ANALYTICS.md](docs/SMART_MONEY_ANALYTICS.md) explains the read-only Activity Radar scope.
 
 ## Roadmap
 

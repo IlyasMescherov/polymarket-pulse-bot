@@ -5,7 +5,7 @@ Static Telegram Mini App dashboard preview for PulseMarket AI.
 Preview route:
 
 ```text
-http://2.26.80.27:8080/app
+https://app.pulsemarketai.com/app
 ```
 
 Telegram Mini Apps require an HTTPS URL in BotFather. The HTTP preview is only
