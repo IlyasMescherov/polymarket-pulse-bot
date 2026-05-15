@@ -16,28 +16,16 @@
       <header class="masthead fade-in">
         <div class="brand-mark" aria-hidden="true">P</div>
         <div class="masthead__copy">
-          <p class="safety-chip">Research only · No trade execution</p>
           <h1>PulseMarket AI</h1>
-          <p>Polymarket market intelligence dashboard</p>
+          <p>Research only · No trade execution</p>
         </div>
         <a class="bot-link" href="https://t.me/PulseMarketAIBot">Bot</a>
       </header>
 
-      <section class="story-hero fade-in" aria-labelledby="hero-title">
-        <div>
-          <p class="section-kicker">Market intelligence layer</p>
-          <h2 id="hero-title">Understand what matters today.</h2>
-          <p>
-            PulseMarket AI turns public Polymarket data into calm discovery:
-            Today’s Pulse, Smart Money Radar, sharp moves, and clean search.
-          </p>
-        </div>
-      </section>
-
-      <section class="section-block fade-in" aria-labelledby="today-title">
+      <section class="section-block today-primary fade-in" aria-labelledby="today-title">
         <div class="section-heading">
           <div>
-            <p class="section-kicker">Daily intelligence</p>
+            <p class="section-kicker">Curated market intelligence</p>
             <h2 id="today-title">Today’s Pulse</h2>
           </div>
           <button class="text-button" type="button" data-refresh>Refresh</button>
@@ -60,7 +48,7 @@
       <section class="section-block fade-in" aria-labelledby="hot-title">
         <div class="section-heading">
           <div>
-            <p class="section-kicker">High activity</p>
+            <p class="section-kicker">Secondary scan</p>
             <h2 id="hot-title">Hot Markets</h2>
           </div>
           <span class="quiet-label">Swipe</span>
@@ -71,10 +59,9 @@
       <section class="section-block fade-in" aria-labelledby="moves-title">
         <div class="section-heading">
           <div>
-            <p class="section-kicker">Probability changes</p>
+            <p class="section-kicker">Only if something moved</p>
             <h2 id="moves-title">Sharp Moves</h2>
           </div>
-          <span class="quiet-label">Snapshot based</span>
         </div>
         <div id="moves-list" class="compact-list" aria-live="polite"></div>
       </section>
@@ -91,13 +78,13 @@
             id="search-input"
             name="q"
             type="search"
-            placeholder="Search Polymarket markets..."
+            placeholder="Search markets, topics, names..."
             autocomplete="off"
           />
           <button type="submit">Search</button>
         </form>
         <div id="search-results" class="search-results" aria-live="polite">
-          <div class="empty-state">Search Polymarket markets...</div>
+          <div class="empty-state empty-state--compact">Search markets, topics, names...</div>
         </div>
       </section>
 
@@ -111,24 +98,14 @@
         </div>
         <div class="watchlist-empty">
           <strong>Your watchlist is empty.</strong>
-          <p>Add markets from the Telegram bot to keep a simple reading list.</p>
+          <p>Add markets from the bot.</p>
           <a href="https://t.me/PulseMarketAIBot">Open bot</a>
         </div>
       </section>
 
-      <section class="safety-footer fade-in" aria-labelledby="safety-title">
-        <h2 id="safety-title">Safety scope</h2>
-        <div class="safety-grid">
-          <span>No trading.</span>
-          <span>No wallets.</span>
-          <span>No deposits.</span>
-          <span>No private keys.</span>
-          <span>No financial advice.</span>
-        </div>
-      </section>
-
-      <footer class="footer-note">
-        Market intelligence, not trade execution.
+      <footer class="footer-note fade-in">
+        <strong>Research only · No trading · No wallet access · No financial advice</strong>
+        <span>PulseMarket AI helps users understand public market data. It does not execute trades.</span>
       </footer>
     </main>
     <script src="/app/app.js"></script>

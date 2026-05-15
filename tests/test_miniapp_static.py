@@ -32,9 +32,12 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "Sharp Moves",
         "Search",
         "Watchlist",
-        "Safety scope",
+        "Research only · No trading · No wallet access · No financial advice",
     ):
         assert text in index_text
+
+    assert index_text.find("Today’s Pulse") < index_text.find("Smart Money Radar")
+    assert "Safety scope" not in index_text
 
     for target_id in (
         "today-hero",
@@ -48,13 +51,18 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         assert target_id in script_text
 
     for class_name in (
-        "story-hero",
+        "today-primary",
         "pulse-hero",
         "smart-hero",
         "horizontal-strip",
         "skeleton-card",
+        "empty-state--compact",
+        "footer-note",
     ):
         assert class_name in styles_text
+
+    assert "story-hero" not in styles_text
+    assert "safety-grid" not in styles_text
 
 
 def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:

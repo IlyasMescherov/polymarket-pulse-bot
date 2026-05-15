@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
+from bot.handlers.menu import _mini_app_preview_text
 from bot.keyboards.main import DASHBOARD, label, main_menu_keyboard
 
 
@@ -27,3 +30,33 @@ def test_dashboard_button_uses_web_app_only_for_https_url() -> None:
     assert dashboard.callback_data is None
     assert dashboard.web_app is not None
     assert dashboard.web_app.url == "https://example.com/app"
+
+
+def test_main_menu_prioritizes_curated_onboarding_actions() -> None:
+    buttons = _buttons(main_menu_keyboard("en"))
+
+    assert [button.text for button in buttons] == [
+        "📰 Today’s Pulse",
+        "📊 Dashboard",
+        "🧠 Smart Money",
+        "🔍 Search",
+        "🔥 Hot",
+        "📈 Moves",
+        "⭐ Watchlist",
+        "⚙️ Settings",
+        "ℹ️ About",
+        "🤝 Share",
+    ]
+
+
+@dataclass(slots=True)
+class PreviewSettings:
+    project_public_url: str = "http://2.26.80.27:8080"
+
+
+def test_dashboard_fallback_explains_https_requirement() -> None:
+    text = _mini_app_preview_text(PreviewSettings(), "en")
+
+    assert "Mini App preview is ready." in text
+    assert "Telegram requires HTTPS" in text
+    assert "http://2.26.80.27:8080/app" in text

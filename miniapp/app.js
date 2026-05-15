@@ -2,6 +2,7 @@ const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : 
 const BOT_URL = "https://t.me/PulseMarketAIBot";
 const POLYMARKET_URL = "https://polymarket.com";
 const EMPTY_MESSAGE = "No data yet. PulseMarket will keep watching.";
+const IMPORTANT_MOVE = 5;
 
 if (tg) {
   tg.ready();
@@ -56,6 +57,10 @@ function movement(value) {
   return `${prefix}${rounded}%`;
 }
 
+function hasImportantMove(value) {
+  return value !== null && value !== undefined && Math.abs(Number(value)) >= IMPORTANT_MOVE;
+}
+
 function dataFrom(payload) {
   return Array.isArray(payload && payload.data) ? payload.data : [];
 }
@@ -97,24 +102,24 @@ function metric(label, value, accent = false) {
   `;
 }
 
-function scorePair(item) {
-  return `
-    <div class="score-pair">
-      <div class="score-tile">
-        <span>Pulse Score</span>
-        <strong>${escapeHtml(item.pulse_score ?? 0)}/100 · ${escapeHtml(item.pulse_label || "Worth watching")}</strong>
-      </div>
-      <div class="score-tile">
-        <span>Market Health</span>
-        <strong>${escapeHtml(item.market_health_score ?? 0)}/100 · ${escapeHtml(item.market_health_label || "Healthy")}</strong>
-      </div>
-    </div>
-  `;
+function shortReason(item) {
+  if (item.why_it_matters) return String(item.why_it_matters).split(".")[0].trim() + ".";
+  if (hasImportantMove(item.movement)) return "Market attention is rising.";
+  if (Number(item.pulse_score || 0) >= 70) return "Worth watching today.";
+  if (Number(item.volume || 0) >= 100000) return "This market is active today.";
+  return "Selected for today’s market scan.";
 }
 
-function marketActions(item, primaryLabel = "Open Market") {
+function marketActions(item, primaryLabel = "Explore Market", compact = false) {
   const title = item.title || "PulseMarket AI market";
   const url = safeUrl(item.url);
+  if (compact) {
+    return `
+      <div class="card-link-row">
+        <a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(primaryLabel)}</a>
+      </div>
+    `;
+  }
   return `
     <div class="market-actions">
       <a class="market-action market-action--primary" href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(primaryLabel)}</a>
@@ -126,22 +131,24 @@ function marketActions(item, primaryLabel = "Open Market") {
 }
 
 function marketSummaryCard(item, actionLabel = "Open") {
+  const importantMoveBadge = hasImportantMove(item.movement)
+    ? `<span class="badge">Move ${movement(item.movement)}</span>`
+    : "";
+  const healthBadge = item.market_health_score
+    ? `<span class="badge badge--muted">Health ${escapeHtml(item.market_health_score)}/100</span>`
+    : "";
   return `
     <article class="market-card">
       <h3 class="market-title">${escapeHtml(item.title || "Untitled market")}</h3>
       <div class="small-meta">
         <span class="badge badge--accent">${percent(item.probability)}</span>
-        <span class="badge">Move ${movement(item.movement)}</span>
-        <span class="badge">${compactUsd(item.volume)}</span>
-      </div>
-      <div class="small-meta">
         <span class="badge">Pulse ${escapeHtml(item.pulse_score ?? 0)}/100</span>
-        <span class="badge">Health ${escapeHtml(item.market_health_score ?? 0)}/100</span>
+        ${importantMoveBadge}
+        ${healthBadge}
       </div>
-      ${riskBadges(item.risk_flags)}
+      <p class="why-copy why-copy--short">${escapeHtml(shortReason(item))}</p>
       <div class="card-link-row">
         <a href="${escapeHtml(safeUrl(item.url))}" target="_blank" rel="noreferrer">${escapeHtml(actionLabel)}</a>
-        <button type="button" data-share="${encodeURIComponent(item.title || "PulseMarket AI")}">Share</button>
       </div>
     </article>
   `;
@@ -152,12 +159,10 @@ function searchResultCard(item) {
     <article class="search-card">
       <h3 class="market-title">${escapeHtml(item.title || "Untitled market")}</h3>
       <div class="small-meta">
-        <span class="badge badge--accent">Probability ${percent(item.probability)}</span>
+        <span class="badge badge--accent">${percent(item.probability)}</span>
         <span class="badge">Pulse ${escapeHtml(item.pulse_score ?? 0)}/100</span>
-        <span class="badge">Health ${escapeHtml(item.market_health_score ?? 0)}/100</span>
       </div>
-      <p class="why-copy">A clean starting point for reading the market before opening Polymarket.</p>
-      ${marketActions(item, "Open Market")}
+      ${marketActions(item, "Open", true)}
     </article>
   `;
 }
@@ -181,17 +186,16 @@ function renderToday(payload) {
       <p class="section-kicker">Main story today</p>
       <h3 class="market-title">${escapeHtml(top.title || "Untitled market")}</h3>
     </div>
-    <div class="metric-row">
+    <div class="metric-row metric-row--hero">
       ${metric("Probability", percent(top.probability), true)}
-      ${metric("Movement", movement(top.movement))}
-      ${metric("Volume", compactUsd(top.volume))}
+      ${metric("Pulse Score", `${escapeHtml(top.pulse_score ?? 0)}/100`)}
     </div>
-    ${scorePair(top)}
-    <p class="why-copy">
-      ${escapeHtml(top.why_it_matters || "High activity, meaningful score, and clean market data make this worth watching.")}
-    </p>
-    ${riskBadges(top.risk_flags)}
-    ${marketActions(top)}
+    <p class="why-copy why-copy--hero">${escapeHtml(shortReason(top))}</p>
+    <div class="small-meta small-meta--quiet">
+      ${top.market_health_score ? `<span class="badge badge--muted">Market Health ${escapeHtml(top.market_health_score)}/100</span>` : ""}
+      ${hasImportantMove(top.movement) ? `<span class="badge">Move ${movement(top.movement)}</span>` : ""}
+    </div>
+    ${marketActions(top, "Explore Market")}
   `;
 
   secondary.innerHTML = items
@@ -213,19 +217,17 @@ function renderSmart(payload) {
   const item = items[0];
   hero.innerHTML = `
     <div>
-      <p class="section-kicker">Unusual public activity detected</p>
+      <p class="section-kicker">Smart Money Radar</p>
       <h3 class="market-title">${escapeHtml(item.title || "Public market activity")}</h3>
     </div>
-    <div class="metric-row">
+    <div class="metric-row metric-row--single">
       ${metric("Public activity", compactUsd(item.public_activity), true)}
-      ${metric("Public trades", item.trades_count ?? "n/a")}
-      ${metric("View", item.top_side || "Market")}
     </div>
     <p class="why-copy">
-      Large public activity can reveal where attention is moving before it becomes obvious.
+      Public activity is above the visibility threshold.
     </p>
     <p class="micro-note">Research only · No trade execution</p>
-    ${marketActions({ title: item.title, url: item.url }, "Explore Market")}
+    ${marketActions({ title: item.title, url: item.url }, "Explore Market", true)}
   `;
 }
 
@@ -233,7 +235,7 @@ function renderHot(payload) {
   const target = document.getElementById("hot-strip");
   const items = dataFrom(payload);
   target.innerHTML = items.length
-    ? items.slice(0, 6).map((item) => marketSummaryCard(item, "Open")).join("")
+    ? items.slice(0, 5).map((item) => marketSummaryCard(item, "Open")).join("")
     : emptyState(payload.message || "No hot markets available yet.");
 }
 
@@ -241,7 +243,7 @@ function renderMoves(payload) {
   const target = document.getElementById("moves-list");
   const items = dataFrom(payload);
   if (!items.length) {
-    target.innerHTML = emptyState("No sharp movement story yet. PulseMarket will keep watching.");
+    target.innerHTML = '<div class="empty-state empty-state--compact">No sharp movement story yet. PulseMarket will keep watching.</div>';
     return;
   }
 
@@ -255,6 +257,9 @@ function renderMoves(payload) {
             <div class="small-meta">
               <span class="badge">Probability ${percent(item.probability)}</span>
               <span class="badge">Pulse ${escapeHtml(item.pulse_score ?? 0)}/100</span>
+            </div>
+            <div class="card-link-row">
+              <a href="${escapeHtml(safeUrl(item.url))}" target="_blank" rel="noreferrer">Open</a>
             </div>
           </div>
           <span class="movement-pill">${movement(item.movement)}</span>

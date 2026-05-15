@@ -7,13 +7,12 @@ TEXTS: dict[str, dict[str, str]] = {
     "ru": {
         "dashboard": (
             "🚀 PulseMarket AI\n\n"
-            "Я отслеживаю рынки Polymarket, нахожу резкие движения и объясняю их простым языком.\n\n"
-            "Режим:\n"
-            "Analytics only\n\n"
-            "Без кошельков.\n"
-            "Без пополнений.\n"
-            "Без торговли.\n\n"
-            "Выбери действие:"
+            "PulseMarket AI помогает быстро понять, что важно на Polymarket.\n\n"
+            "Начни с:\n"
+            "📰 Today’s Pulse — главные рынки дня\n"
+            "🧠 Радар активности — публичная активность\n"
+            "🔍 Поиск — найти рынок\n\n"
+            "Для анализа · Без сделок"
         ),
         "quick_start": (
             "Как пользоваться ботом:\n\n"
@@ -64,13 +63,12 @@ TEXTS: dict[str, dict[str, str]] = {
     "en": {
         "dashboard": (
             "🚀 PulseMarket AI\n\n"
-            "I monitor Polymarket markets, find sharp movements, and explain them in plain language.\n\n"
-            "Mode:\n"
-            "Analytics only\n\n"
-            "No wallets.\n"
-            "No deposits.\n"
-            "No trading.\n\n"
-            "Choose an action:"
+            "PulseMarket AI helps you find what matters on Polymarket.\n\n"
+            "Start with:\n"
+            "📰 Today’s Pulse — daily market highlights\n"
+            "🧠 Smart Money — public activity radar\n"
+            "🔍 Search — find any market\n\n"
+            "Research only · No trade execution"
         ),
         "quick_start": (
             "How to use the bot:\n\n"

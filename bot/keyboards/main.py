@@ -136,10 +136,7 @@ def main_menu_keyboard(
     mini_app_url: str | None = None,
 ) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text=label("hot", language), callback_data=HOT_MARKETS)
-    builder.button(text=label("new", language), callback_data=NEW_MARKETS)
     builder.button(text=label("today", language), callback_data=TODAY_PULSE)
-    builder.button(text=label("smart_money", language), callback_data=SMART_MONEY)
     if mini_app_url and mini_app_url.startswith("https://"):
         builder.add(
             InlineKeyboardButton(
@@ -149,15 +146,14 @@ def main_menu_keyboard(
         )
     else:
         builder.button(text=label("dashboard", language), callback_data=DASHBOARD)
-    builder.button(text=label("moves", language), callback_data=SHARP_MOVES)
+    builder.button(text=label("smart_money", language), callback_data=SMART_MONEY)
     builder.button(text=label("search", language), callback_data=MARKET_SEARCH)
+    builder.button(text=label("hot", language), callback_data=HOT_MARKETS)
+    builder.button(text=label("moves", language), callback_data=SHARP_MOVES)
     builder.button(text=label("watchlist", language), callback_data=WATCHLIST_VIEW)
-    builder.button(text=label("categories", language), callback_data=CATEGORIES)
-    builder.button(text=label("notifications", language), callback_data=MY_NOTIFICATIONS)
-    builder.button(text=label("quick_start", language), callback_data=QUICK_START)
     builder.button(text=label("settings", language), callback_data=SETTINGS_MENU)
-    builder.button(text=label("share", language), callback_data=SHARE_BOT)
     builder.button(text=label("about", language), callback_data=ABOUT_PROJECT)
+    builder.button(text=label("share", language), callback_data=SHARE_BOT)
     builder.adjust(2)
     return builder.as_markup()
 

@@ -57,11 +57,15 @@ def _mini_app_preview_text(settings: Settings, language: str) -> str:
     preview_url = _mini_app_preview_url(settings)
     if language == "ru":
         return (
-            "Mini App подготовлен, но Telegram требует HTTPS. Текущий preview:\n"
+            "Mini App preview готов.\n"
+            "Для полноценного запуска Telegram требует HTTPS.\n\n"
+            "Открыть preview:\n"
             f"{preview_url}"
         )
     return (
-        "Mini App is prepared, but Telegram requires HTTPS. Current preview:\n"
+        "Mini App preview is ready.\n"
+        "Telegram requires HTTPS for full Mini App launch.\n\n"
+        "Open preview:\n"
         f"{preview_url}"
     )
 
