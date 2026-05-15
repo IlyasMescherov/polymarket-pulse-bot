@@ -27,6 +27,7 @@ const state = {
   hot: [],
   moves: [],
   searchResults: [],
+  lastExplained: null,
 };
 
 const copy = {
@@ -62,7 +63,7 @@ const copy = {
     recentSearches: "Recent searches",
     returnLater: "Return later",
     savedTitle: "Saved markets",
-    savedSubtitle: "Keep markets you want to revisit.",
+    savedSubtitle: "Your personal feed to return to later.",
     recentlyOpened: "Recently opened",
     localOnly: "Stored on this device",
     controls: "Controls",
@@ -93,6 +94,11 @@ const copy = {
     secondaryStories: "Also worth a look",
     probability: "Probability",
     pulseScore: "Pulse Score",
+    pulseWorthWatching: "Worth watching",
+    pulseHighAttention: "High attention",
+    pulseQuiet: "Quiet",
+    pulseHeating: "Heating up",
+    pulseTrending: "Trending",
     whyItMatters: "Why people care",
     whyPeopleCare: "Why people care",
     watchNext: "Watch",
@@ -100,6 +106,7 @@ const copy = {
     marketMood: "Market Mood",
     exploreMarket: "Explore Market",
     open: "Open",
+    explain: "Explain",
     save: "Save",
     saved: "Saved",
     remove: "Remove",
@@ -117,7 +124,7 @@ const copy = {
     movesSubtitle: "Markets where probability changed.",
     movesEmpty: "No strong move yet.",
     savedEmptyTitle: "No saved markets yet.",
-    savedEmptyCopy: "Save markets from Today, Radar, Hot, or Search.",
+    savedEmptyCopy: "Save markets to build your daily feed.",
     recentEmpty: "No opened markets yet.",
     searchLoading: "Searching markets...",
     searchNoResults: "No markets found.",
@@ -126,6 +133,22 @@ const copy = {
     marketAttentionRising: "People are paying more attention to this market.",
     worthWatching: "Worth watching today.",
     activeToday: "People are watching this because activity increased.",
+    attentionMoved: "Attention moved to this market.",
+    quietNote: "No major shift yet.",
+    endingSoonOne: "market is ending soon.",
+    endingSoonMany: "markets are ending soon.",
+    movesOne: "market changed enough to review.",
+    movesMany: "markets changed enough to review.",
+    whatChangedTitle: "What changed",
+    moodTodayTitle: "Market mood today",
+    moodSummaryEmpty: "Markets are quiet right now.",
+    categoryGeopolitics: "Geopolitics",
+    categoryCrypto: "Crypto",
+    categorySports: "Sports",
+    categoryOther: "Market activity",
+    moodLineActive: "active",
+    moodLineHeating: "heating up",
+    moodLineQuiet: "quiet",
     selectedToday: "Selected for today’s market scan.",
     simpleReadTitle: "Simple Read",
     simpleReadCopy: "This market asks whether an event will happen. Watch the probability and rules before drawing conclusions.",
@@ -169,7 +192,7 @@ const copy = {
     recentSearches: "Недавние запросы",
     returnLater: "Вернуться позже",
     savedTitle: "Сохранённые рынки",
-    savedSubtitle: "Сохраняй рынки, к которым хочешь вернуться.",
+    savedSubtitle: "Твой личный feed, к которому можно вернуться.",
     recentlyOpened: "Недавно открытые",
     localOnly: "Сохранено на этом устройстве",
     controls: "Управление",
@@ -200,6 +223,11 @@ const copy = {
     secondaryStories: "Ещё стоит посмотреть",
     probability: "Вероятность",
     pulseScore: "Pulse Score",
+    pulseWorthWatching: "Стоит изучить",
+    pulseHighAttention: "Высокое внимание",
+    pulseQuiet: "Тихо",
+    pulseHeating: "Разогревается",
+    pulseTrending: "В тренде",
     whyItMatters: "Почему это важно",
     whyPeopleCare: "Почему людям это интересно",
     watchNext: "За чем следить",
@@ -207,6 +235,7 @@ const copy = {
     marketMood: "Настроение рынка",
     exploreMarket: "Открыть рынок",
     open: "Открыть",
+    explain: "Подробнее",
     save: "Сохранить",
     saved: "Сохранено",
     remove: "Удалить",
@@ -224,7 +253,7 @@ const copy = {
     movesSubtitle: "Рынки, где изменилась вероятность.",
     movesEmpty: "Сильных движений пока нет.",
     savedEmptyTitle: "Сохранённых рынков пока нет.",
-    savedEmptyCopy: "Сохраняй рынки из Сегодня, Радара, Горячих или Поиска.",
+    savedEmptyCopy: "Сохраняй рынки, чтобы собрать личный daily feed.",
     recentEmpty: "Открытых рынков пока нет.",
     searchLoading: "Ищу рынки...",
     searchNoResults: "Рынки не найдены.",
@@ -233,6 +262,22 @@ const copy = {
     marketAttentionRising: "К этому рынку растёт внимание.",
     worthWatching: "Сегодня стоит изучить.",
     activeToday: "За этим следят, потому что активность выросла.",
+    attentionMoved: "Внимание сместилось к этому рынку.",
+    quietNote: "Без больших изменений.",
+    endingSoonOne: "рынок скоро завершится.",
+    endingSoonMany: "рынка скоро завершатся.",
+    movesOne: "рынок заметно изменился.",
+    movesMany: "рынка заметно изменились.",
+    whatChangedTitle: "Что изменилось",
+    moodTodayTitle: "Настроение дня",
+    moodSummaryEmpty: "Рынки сейчас спокойны.",
+    categoryGeopolitics: "Геополитика",
+    categoryCrypto: "Крипта",
+    categorySports: "Спорт",
+    categoryOther: "Активность рынка",
+    moodLineActive: "активна",
+    moodLineHeating: "разогревается",
+    moodLineQuiet: "спокойна",
     selectedToday: "Отобран для короткого обзора.",
     simpleReadTitle: "Простой смысл",
     simpleReadCopy: "Этот рынок спрашивает, произойдёт ли событие. Смотри на вероятность и правила разрешения, прежде чем делать выводы.",
@@ -378,6 +423,19 @@ function probability(item) {
   return percent(null);
 }
 
+function pulseLabel(item) {
+  const score = Number((item && item.pulse_score) || 0);
+  if (score >= 85) return t("pulseTrending");
+  if (score >= 70) return t("pulseHighAttention");
+  if (score >= 50) return t("pulseWorthWatching");
+  if (score >= 35) return t("pulseHeating");
+  return t("pulseQuiet");
+}
+
+function pulseMeta(item) {
+  return `Pulse ${escapeHtml((item && item.pulse_score) ?? 0)}/100`;
+}
+
 function marketId(item) {
   return String((item && (item.market_id || item.id || item.url || item.title)) || "unknown");
 }
@@ -403,6 +461,11 @@ function clearNode(node) {
 
 function emptyState(message, compact = false) {
   return `<div class="empty-state${compact ? " empty-state--compact" : ""}">${escapeHtml(message || EMPTY_MESSAGE)}</div>`;
+}
+
+function compactTitle(title, limit = 72) {
+  const value = String(title || "Untitled market").trim();
+  return value.length > limit ? `${value.slice(0, limit - 1).trim()}…` : value;
 }
 
 function shortReason(item) {
@@ -528,7 +591,7 @@ function removeSaved(id) {
 
 function marketText(item) {
   const mood = marketMood(item);
-  return `${item.title || "Polymarket market"}\n${t("probability")}: ${probability(item)}\n${t("marketMood")}: ${mood.label}\n${t("pulseScore")}: ${item.pulse_score ?? 0}/100\n${t("whyPeopleCare")}: ${shortReason(item)}\n${safeUrl(item.url)}`;
+  return `${item.title || "Polymarket market"}\n${t("probability")}: ${probability(item)}\n${t("marketMood")}: ${mood.label}\n${pulseLabel(item)} · ${item.pulse_score ?? 0}/100\n${t("whyPeopleCare")}: ${shortReason(item)}\n${safeUrl(item.url)}`;
 }
 
 async function shareText(text) {
@@ -546,14 +609,26 @@ async function shareText(text) {
   }
 }
 
-function buttonRow(item) {
+function detailActionRow(item) {
   const encoded = encodeURIComponent(JSON.stringify(normalizeMarket(item)));
+  return `<div class="action-row">${detailActionButtons(item, encoded)}</div>`;
+}
+
+function detailActionButtons(item, encoded = encodeURIComponent(JSON.stringify(normalizeMarket(item)))) {
   const saved = isSaved(item);
   return `
-    <div class="action-row">
+    <a class="primary-action" href="${escapeHtml(safeUrl(item && item.url))}" target="_blank" rel="noreferrer" data-open-market="${encoded}">${escapeHtml(t("open"))}</a>
+    <button type="button" class="soft-action" data-save-market="${encoded}">${escapeHtml(saved ? t("saved") : t("save"))}</button>
+    <button type="button" class="soft-action" data-share-market="${encoded}">${escapeHtml(t("share"))}</button>
+  `;
+}
+
+function buttonRow(item) {
+  const encoded = encodeURIComponent(JSON.stringify(normalizeMarket(item)));
+  return `
+    <div class="action-row action-row--compact">
       <a class="primary-action" href="${escapeHtml(safeUrl(item && item.url))}" target="_blank" rel="noreferrer" data-open-market="${encoded}">${escapeHtml(t("open"))}</a>
-      <button type="button" class="soft-action" data-save-market="${encoded}">${escapeHtml(saved ? t("saved") : t("save"))}</button>
-      <button type="button" class="soft-action" data-share-market="${encoded}">${escapeHtml(t("share"))}</button>
+      <button type="button" class="soft-action" data-explain-market="${encoded}">${escapeHtml(t("explain"))}</button>
     </div>
   `;
 }
@@ -563,15 +638,16 @@ function marketCard(item, variant = "compact") {
   return `
     <article class="market-card market-card--${variant}">
       <div class="market-card__main">
-        <h3>${escapeHtml(item.title || "Untitled market")}</h3>
-        <p><strong>${escapeHtml(t("whyPeopleCare"))}:</strong> ${escapeHtml(shortReason(item))}</p>
+        <div class="market-card__titleline">
+          <h3>${escapeHtml(compactTitle(item.title))}</h3>
+          <span class="pill pill--mood">${escapeHtml(mood.label)}</span>
+        </div>
+        <p>${escapeHtml(shortReason(item))}</p>
       </div>
       <div class="pill-row">
         <span class="pill pill--prob">${escapeHtml(probability(item))}</span>
-        <span class="pill pill--mood">${escapeHtml(mood.label)}</span>
-        <span class="pill pill--pulse">Pulse ${escapeHtml(item.pulse_score ?? 0)}/100</span>
+        <span class="pill pill--pulse">${escapeHtml(pulseLabel(item))}<small>${pulseMeta(item)}</small></span>
       </div>
-      <p class="simple-read"><strong>${escapeHtml(t("simpleReadTitle"))}:</strong> ${escapeHtml(t("simpleReadCopy"))}</p>
       ${buttonRow(item)}
     </article>
   `;
@@ -583,23 +659,155 @@ function savedCard(item, removable = false) {
   return `
     <article class="market-card market-card--saved">
       <div class="market-card__main">
-        <h3>${escapeHtml(item.title || "Untitled market")}</h3>
+        <div class="market-card__titleline">
+          <h3>${escapeHtml(compactTitle(item.title))}</h3>
+          <span class="pill pill--mood">${escapeHtml(mood.label)}</span>
+        </div>
         <p>${escapeHtml(item.why || t("selectedToday"))}</p>
       </div>
       <div class="pill-row">
         <span class="pill pill--prob">${escapeHtml(percent(item.probability))}</span>
-        <span class="pill pill--mood">${escapeHtml(mood.label)}</span>
-        <span class="pill pill--pulse">Pulse ${escapeHtml(item.pulse_score ?? 0)}/100</span>
+        <span class="pill pill--pulse">${escapeHtml(pulseLabel(item))}<small>${pulseMeta(item)}</small></span>
       </div>
       <div class="action-row">
         <a class="primary-action" href="${escapeHtml(safeUrl(item.url))}" target="_blank" rel="noreferrer" data-open-market="${encoded}">${escapeHtml(t("open"))}</a>
         ${
           removable
             ? `<button type="button" class="soft-action" data-remove-market="${escapeHtml(item.id)}">${escapeHtml(t("remove"))}</button>`
-            : `<button type="button" class="soft-action" data-save-market="${encoded}">${escapeHtml(isSaved(item.id) ? t("saved") : t("save"))}</button>`
+            : `<button type="button" class="soft-action" data-explain-market="${encoded}">${escapeHtml(t("explain"))}</button>`
         }
       </div>
     </article>
+  `;
+}
+
+function openExplain(item) {
+  const normalized = normalizeMarket(item);
+  state.lastExplained = normalized;
+  const sheet = document.getElementById("explain-sheet");
+  const title = document.getElementById("explain-title");
+  const body = document.getElementById("explain-body");
+  const actions = document.getElementById("explain-actions");
+  const mood = marketMood(normalized);
+
+  title.textContent = normalized.title;
+  body.innerHTML = `
+    <div class="detail-list">
+      <div>
+        <span>${escapeHtml(t("whyPeopleCare"))}</span>
+        <strong>${escapeHtml(normalized.why || shortReason(normalized))}</strong>
+      </div>
+      <div>
+        <span>${escapeHtml(t("simpleReadTitle"))}</span>
+        <strong>${escapeHtml(t("simpleReadCopy"))}</strong>
+      </div>
+      <div>
+        <span>${escapeHtml(t("watchNext"))}</span>
+        <strong>${escapeHtml(t("watchNextCopy"))}</strong>
+      </div>
+      <div>
+        <span>${escapeHtml(t("marketMood"))}</span>
+        <strong>${escapeHtml(mood.label)} · ${escapeHtml(mood.reason)}</strong>
+      </div>
+    </div>
+  `;
+  actions.innerHTML = detailActionButtons(normalized);
+  sheet.hidden = false;
+  document.documentElement.classList.add("sheet-open");
+}
+
+function closeExplain() {
+  const sheet = document.getElementById("explain-sheet");
+  sheet.hidden = true;
+  document.documentElement.classList.remove("sheet-open");
+}
+
+function categoryFor(item) {
+  const title = String((item && item.title) || "").toLowerCase();
+  if (/(bitcoin|btc|ethereum|eth|solana|crypto|xrp)/.test(title)) return "crypto";
+  if (/(nba|nfl|ufc|soccer|football|tennis|sport|baseball|fifa)/.test(title)) return "sports";
+  if (/(iran|israel|trump|election|president|senate|war|china|russia|ukraine|brazil)/.test(title)) return "geopolitics";
+  return "other";
+}
+
+function categoryLabel(category) {
+  return {
+    geopolitics: t("categoryGeopolitics"),
+    crypto: t("categoryCrypto"),
+    sports: t("categorySports"),
+    other: t("categoryOther"),
+  }[category] || t("categoryOther");
+}
+
+function moodWeight(key) {
+  return {
+    ending_soon: 4,
+    volatile: 4,
+    heating_up: 3,
+    active: 2,
+    quiet: 1,
+  }[key] || 1;
+}
+
+function moodSummaryWord(key) {
+  if (key === "heating_up" || key === "volatile" || key === "ending_soon") return t("moodLineHeating");
+  if (key === "active") return t("moodLineActive");
+  return t("moodLineQuiet");
+}
+
+function renderDailySnapshot() {
+  const changed = document.getElementById("what-changed");
+  const moodTarget = document.getElementById("mood-summary");
+  if (!changed || !moodTarget) return;
+
+  clearNode(changed);
+  clearNode(moodTarget);
+
+  const allMarkets = [...state.today, ...state.hot, ...state.moves];
+  const notes = [];
+  if (state.radar[0]) {
+    notes.push(`👀 ${t("attentionMoved")} ${compactTitle(state.radar[0].title, 46)}`);
+  }
+  const endingSoon = allMarkets.filter((item) => marketMood(item).key === "ending_soon").length;
+  if (endingSoon) notes.push(`⚠️ ${endingSoon} ${t(endingSoon === 1 ? "endingSoonOne" : "endingSoonMany")}`);
+  if (state.moves.length) notes.push(`⚡ ${state.moves.length} ${t(state.moves.length === 1 ? "movesOne" : "movesMany")}`);
+  if (!notes.length) notes.push(`• ${t("quietNote")}`);
+
+  changed.innerHTML = `
+    <div class="mini-panel__header">
+      <h3>${escapeHtml(t("whatChangedTitle"))}</h3>
+    </div>
+    <div class="change-list">
+      ${notes.slice(0, 3).map((note) => `<p>${escapeHtml(note)}</p>`).join("")}
+    </div>
+  `;
+
+  const summary = new Map();
+  for (const item of allMarkets) {
+    const category = categoryFor(item);
+    const mood = marketMood(item);
+    const current = summary.get(category);
+    if (!current || moodWeight(mood.key) > moodWeight(current.key)) {
+      summary.set(category, mood);
+    }
+  }
+  const rows = Array.from(summary.entries())
+    .filter(([category]) => category !== "other")
+    .slice(0, 3);
+  const fallbackRows = rows.length ? rows : [["other", { key: "quiet" }]];
+
+  moodTarget.innerHTML = `
+    <div class="mini-panel__header">
+      <h3>${escapeHtml(t("moodTodayTitle"))}</h3>
+    </div>
+    <div class="mood-row">
+      ${fallbackRows
+        .map(
+          ([category, mood]) =>
+            `<span>${escapeHtml(categoryLabel(category))} <strong>${escapeHtml(moodSummaryWord(mood.key))}</strong></span>`,
+        )
+        .join("")}
+    </div>
   `;
 }
 
@@ -620,19 +828,15 @@ function renderToday(payload) {
   hero.innerHTML = `
     <div class="story-card__topline">
       <span>${escapeHtml(t("mainStory"))}</span>
-      <span>${escapeHtml(topMood.label)}</span>
+      <span>${escapeHtml(pulseLabel(top))}</span>
     </div>
-    <h3>${escapeHtml(top.title || "Untitled market")}</h3>
-    <div class="metric-line">
-      <span>${escapeHtml(t("probability"))}</span>
-      <strong>${escapeHtml(probability(top))}</strong>
-    </div>
+    <h3>${escapeHtml(compactTitle(top.title, 86))}</h3>
     <div class="pill-row">
-      <span class="pill pill--pulse">Pulse ${escapeHtml(top.pulse_score ?? 0)}/100</span>
+      <span class="pill pill--prob">${escapeHtml(probability(top))}</span>
       <span class="pill pill--mood">${escapeHtml(topMood.label)}</span>
+      <span class="pill pill--pulse">${escapeHtml(pulseLabel(top))}<small>${pulseMeta(top)}</small></span>
     </div>
-    <p><strong>${escapeHtml(t("whyPeopleCare"))}:</strong> ${escapeHtml(shortReason(top))}</p>
-    <p class="watch-copy"><strong>${escapeHtml(t("watchNext"))}:</strong> ${escapeHtml(t("watchNextCopy"))}</p>
+    <p>${escapeHtml(shortReason(top))}</p>
     ${buttonRow(top)}
   `;
 
@@ -655,14 +859,10 @@ function renderRadar(payload) {
   hero.innerHTML = `
     <div class="story-card__topline">
       <span>${escapeHtml(t("radarTitle"))}</span>
-      <span>${escapeHtml(t("activityLevel"))}</span>
+      <span>${escapeHtml(compactUsd(top.public_activity))}</span>
     </div>
-    <h3>${escapeHtml(top.title || "Public market activity")}</h3>
-    <div class="metric-line">
-      <span>${escapeHtml(t("publicActivity"))}</span>
-      <strong>${compactUsd(top.public_activity)}</strong>
-    </div>
-    <p><strong>${escapeHtml(t("whyPeopleCare"))}:</strong> ${escapeHtml(top.why_it_matters || t("radarReason"))}</p>
+    <h3>${escapeHtml(compactTitle(top.title || "Public market activity", 82))}</h3>
+    <p>${escapeHtml(top.why_it_matters || t("radarReason"))}</p>
     ${buttonRow({ ...top, pulse_score: top.pulse_score || 0, probability: top.probability })}
   `;
 
@@ -795,6 +995,7 @@ async function refreshDashboard() {
   renderHot(hot);
   renderMoves(moves);
   renderTodayExtras();
+  renderDailySnapshot();
   renderSaved();
 }
 
@@ -874,6 +1075,12 @@ function setupEvents() {
       return;
     }
 
+    const explainPayload = target.getAttribute("data-explain-market");
+    if (explainPayload) {
+      openExplain(JSON.parse(decodeURIComponent(explainPayload)));
+      return;
+    }
+
     const sharePayload = target.getAttribute("data-share-market");
     if (sharePayload) {
       await shareText(marketText(JSON.parse(decodeURIComponent(sharePayload))));
@@ -928,6 +1135,14 @@ function setupEvents() {
         window.open(BOT_URL, "_blank", "noreferrer");
       }
     }
+    if (action === "close-explain") {
+      closeExplain();
+      return;
+    }
+  });
+
+  document.getElementById("explain-sheet").addEventListener("click", (event) => {
+    if (event.target === event.currentTarget) closeExplain();
   });
 
   document.getElementById("search-form").addEventListener("submit", async (event) => {
@@ -950,6 +1165,7 @@ function rerenderCurrentData() {
   renderToday({ data: state.today });
   renderRadar({ data: state.radar });
   renderTodayExtras();
+  renderDailySnapshot();
   renderSearch({ data: state.searchResults, message: t("searchNoResults") });
   renderSearchSuggestions();
   renderSaved();

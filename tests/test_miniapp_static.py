@@ -27,6 +27,8 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
 
     for text in (
         "Morning Briefing",
+        "What changed",
+        "Market mood today",
         "Market Mood",
         "Activity Radar",
         "Search",
@@ -54,6 +56,8 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
     for target_id in (
         "today-hero",
         "today-secondary",
+        "what-changed",
+        "mood-summary",
         "smart-hero",
         "search-results",
         "saved-list",
@@ -70,6 +74,10 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "story-card--hero",
         "insight-card",
         "horizontal-strip",
+        "daily-snapshot",
+        "mini-panel",
+        "sheet-backdrop",
+        "explain-sheet",
         "settings-card",
         "segmented",
         "switch",
@@ -128,6 +136,9 @@ def test_miniapp_settings_language_theme_and_saved_features_exist() -> None:
     assert "SEARCH_SUGGESTIONS" in script_text
     assert "marketMood" in script_text
     assert "simpleReadCopy" in script_text
+    assert "data-explain-market" in script_text
+    assert "renderDailySnapshot" in script_text
+    assert "pulseLabel" in script_text
 
 
 def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
@@ -145,6 +156,8 @@ def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
     assert "where public attention is rising" in text
     assert "market mood" in text
     assert "morning briefing" in text
+    assert "what changed" in text
+    assert "explain" in text
     assert "wallet list" not in text
     assert "wallet hash" not in text
 
@@ -173,6 +186,25 @@ def test_landing_and_screenshot_docs_reference_miniapp_polish() -> None:
     assert "Morning Briefing" in landing
     assert "Activity Radar" in landing
     assert "Home dashboard" in guide.read_text()
+
+
+def test_miniapp_cards_are_compressed_and_have_habit_layer() -> None:
+    root = Path(__file__).resolve().parents[1]
+    index_text = (root / "miniapp" / "index.html").read_text()
+    script_text = (root / "miniapp" / "app.js").read_text()
+    styles_text = (root / "miniapp" / "styles.css").read_text()
+
+    assert 'id="what-changed"' in index_text
+    assert 'id="mood-summary"' in index_text
+    assert 'id="explain-sheet"' in index_text
+    assert "detailActionRow" in script_text
+    assert "buttonRow(item)" in script_text
+    assert "data-explain-market" in script_text
+    assert "simple-read" not in script_text
+    assert "Worth watching" in script_text
+    assert "High attention" in script_text
+    assert "grid-auto-columns: minmax(178px, 58%)" in styles_text
+    assert ".daily-snapshot" in styles_text
 
 
 def test_health_server_can_resolve_miniapp_assets() -> None:
