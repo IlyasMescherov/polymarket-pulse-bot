@@ -47,8 +47,9 @@ The current version focuses on becoming a daily market intelligence companion fo
 - Docker Compose PostgreSQL service
 - Optional OpenAI explanations when `OPENAI_API_KEY` is configured
 - AI Context Engine for safe market reasoning, daily narratives, and category summaries
+- AI Interpretation Layer for what-this-means, attention vs conviction, attention signal labels, and related topics
 - Event categories for Politics, Crypto, AI, Sports, Esports, Global, and Culture
-- Human probability interpretation for very low probability, possible, likely, and highly likely states
+- Human probability interpretation for unlikely, possible, likely, and highly likely states
 - Local Mini App interests for category prioritization
 - Full no-AI fallback when `OPENAI_API_KEY` is missing
 - Public Polymarket market links
@@ -176,9 +177,11 @@ The next product direction is now documented and partially implemented:
 PulseMarket AI now has an optional reasoning layer on top of ranking and filtering:
 
 - AI Context Engine: [docs/AI_REASONING_LAYER.md](docs/AI_REASONING_LAYER.md)
+- AI Market Interpretation Layer: [docs/AI_INTERPRETATION_LAYER.md](docs/AI_INTERPRETATION_LAYER.md)
 - AI Market Briefing: [docs/AI_MARKET_BRIEFING.md](docs/AI_MARKET_BRIEFING.md)
 - Event Category System: [docs/EVENT_CATEGORY_SYSTEM.md](docs/EVENT_CATEGORY_SYSTEM.md)
 - Mini App Today tab includes Today’s Narrative and category-aware briefing copy.
+- Mini App Explain sheet includes What this means, Attention vs conviction, attention signal, related topics, and what to watch.
 - Mini App category selector filters Today, Radar, and search suggestions.
 - Search API returns a short context summary.
 - All AI behavior has deterministic fallback when `OPENAI_API_KEY` is missing.

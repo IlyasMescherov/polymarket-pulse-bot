@@ -817,13 +817,27 @@ async def explain_market(
         mood,
         language=language,
     )
-    ai_brief = "\n".join(
-        [
-            context.why_people_care,
-            context.simple_read,
-            context.what_to_watch,
-        ]
-    ) or await ai_explainer.explain_market(market)
+    if language == "en":
+        ai_brief = "\n".join(
+            [
+                f"What this means: {context.what_this_means}",
+                f"Attention vs conviction: {context.attention_vs_conviction}",
+                f"How serious: {context.attention_signal}",
+                f"What to watch: {context.what_to_watch}",
+                f"Related topics: {', '.join(context.related_topics)}",
+            ]
+        )
+    else:
+        ai_brief = "\n".join(
+            [
+                f"Что это значит: {context.what_this_means}",
+                f"Внимание vs убеждённость: {context.attention_vs_conviction}",
+                f"Насколько серьёзно: {context.attention_signal}",
+                f"За чем следить: {context.what_to_watch}",
+                f"Связанные темы: {', '.join(context.related_topics)}",
+            ]
+        )
+    ai_brief = ai_brief or await ai_explainer.explain_market(market)
     await callback.message.answer(
         format_beginner_explanation(market, ai_brief=ai_brief, language=language),
         disable_web_page_preview=True,

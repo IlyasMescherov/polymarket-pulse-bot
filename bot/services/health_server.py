@@ -57,11 +57,11 @@ def _probability_interpretation(value: float | None) -> str:
     if value is None:
         return "Unknown"
     percent = value * 100
-    if percent < 1:
-        return "Very low probability"
-    if percent < 35:
+    if percent < 15:
+        return "Unlikely"
+    if percent < 45:
         return "Possible"
-    if percent < 70:
+    if percent < 75:
         return "Likely"
     return "Highly likely"
 
@@ -125,6 +125,20 @@ def _market_to_api_object(
             if context is not None
             else f"{category_label(category, 'en')} markets are part of today’s attention map."
         ),
+        "what_this_means": (
+            context.what_this_means
+            if context is not None
+            else "This market is one clue in today’s attention picture."
+        ),
+        "attention_signal": (
+            context.attention_signal if context is not None else "Moderate attention"
+        ),
+        "attention_vs_conviction": (
+            context.attention_vs_conviction
+            if context is not None
+            else "Attention is present, but expectations have not clearly shifted."
+        ),
+        "related_topics": list(context.related_topics) if context is not None else [],
         "risk_flags": market_risk_flags(market, delta=delta),
         "url": market.url,
     }
@@ -176,6 +190,10 @@ def _smart_market_to_api_object(activity: MarketActivity) -> dict[str, Any]:
         "url": "https://polymarket.com",
         "why_it_matters": _attention_reason_for_title(activity.market_title),
         "attention_summary": _attention_reason_for_title(activity.market_title),
+        "what_this_means": "Public activity is pointing attention toward this market.",
+        "attention_signal": "Strong interest",
+        "attention_vs_conviction": "This is attention data; probability movement is needed to read conviction.",
+        "related_topics": [category_label(category, "en")],
         "category": category,
         "category_label": category_label(category, "en"),
     }
@@ -348,6 +366,7 @@ class HealthServer:
             "data": data,
             "message": "ok",
             "narrative": narrative.headline,
+            "interpretation": narrative.interpretation,
             "what_changed": list(narrative.what_changed),
             "category_summaries": narrative.category_summaries,
         }

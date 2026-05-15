@@ -19,9 +19,9 @@ def test_format_probability_handles_missing_data() -> None:
 
 
 def test_format_probability_explains_very_low_values() -> None:
-    assert format_probability(0, "en") == "Very low probability"
+    assert format_probability(0, "en") == "Unlikely"
     assert format_probability(0.004, "en") == "<1%"
-    assert format_probability(0, "ru") == "Очень низкая вероятность"
+    assert format_probability(0, "ru") == "Маловероятно"
 
 
 def test_format_usd_compacts_large_values() -> None:

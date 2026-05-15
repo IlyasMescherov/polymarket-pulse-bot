@@ -25,7 +25,7 @@ def format_probability(value: float | None, language: str | None = None) -> str:
         return _missing_data(language)
     percent = value * 100
     if percent <= 0:
-        return _label("Очень низкая вероятность", "Very low probability", language)
+        return _label("Маловероятно", "Unlikely", language)
     if percent < 1:
         return "<1%"
     return f"{percent:.0f}%"
@@ -406,7 +406,7 @@ def format_beginner_explanation(
             f"Current probability: {format_probability(market.yes_probability, language)}",
         ]
         if ai_brief:
-            lines.extend(["", "AI brief:", ai_brief])
+            lines.extend(["", "AI market read:", ai_brief])
         return "\n".join(lines)
 
     lines = [
@@ -420,7 +420,7 @@ def format_beginner_explanation(
         f"Текущая вероятность: {format_probability(market.yes_probability)}",
     ]
     if ai_brief:
-        lines.extend(["", "AI brief:", ai_brief])
+        lines.extend(["", "AI анализ:", ai_brief])
     return "\n".join(lines)
 
 

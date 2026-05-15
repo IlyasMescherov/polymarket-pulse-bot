@@ -37,7 +37,7 @@ Each market card should answer:
 Prefer:
 
 - Attention is rising around this market.
-- People are watching this because activity increased.
+- People are watching this because the topic became more visible.
 - Probability moved today.
 - The market is close to resolution.
 

@@ -24,6 +24,7 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
     index_text = (root / "miniapp" / "index.html").read_text()
     script_text = (root / "miniapp" / "app.js").read_text()
     styles_text = (root / "miniapp" / "styles.css").read_text()
+    visible_text = index_text + script_text
 
     for text in (
         "Morning Briefing",
@@ -31,6 +32,9 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "Market mood today",
         "Market Mood",
         "Today’s Narrative",
+        "What this means",
+        "Attention vs conviction",
+        "How serious is this movement",
         "Activity Radar",
         "Search",
         "Saved markets",
@@ -40,7 +44,7 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "About PulseMarket AI",
         "Research only · No trading · No wallets · No deposits · No private keys · No financial advice",
     ):
-        assert text in index_text
+        assert text in visible_text
 
     assert index_text.find("Morning Briefing") < index_text.find("Activity Radar")
     assert "Safety scope" not in index_text
@@ -154,6 +158,10 @@ def test_miniapp_settings_language_theme_and_saved_features_exist() -> None:
     assert "renderCategoryChips" in script_text
     assert "renderInterestChips" in script_text
     assert "pulseLabel" in script_text
+    assert "attentionSignal" in script_text
+    assert "what_this_means" in script_text
+    assert "attention_vs_conviction" in script_text
+    assert "related_topics" in script_text
 
 
 def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
@@ -173,6 +181,8 @@ def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
     assert "morning briefing" in text
     assert "what changed" in text
     assert "today’s narrative" in text
+    assert "what this means" in text
+    assert "attention vs conviction" in text
     assert "interests" in text
     assert "explain" in text
     assert "wallet list" not in text
@@ -231,6 +241,8 @@ def test_miniapp_cards_are_compressed_and_have_habit_layer() -> None:
     assert "pill--pulse" not in styles_text
     assert "People are watching this because activity increased" not in script_text
     assert "Public activity is above the visibility threshold" not in script_text
+    assert "People are watching because activity increased" not in script_text
+    assert "activity increased" not in script_text.lower()
 
 
 def test_health_server_can_resolve_miniapp_assets() -> None:

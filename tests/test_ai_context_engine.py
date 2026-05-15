@@ -40,11 +40,21 @@ async def test_ai_context_engine_fallback_works_without_api_key() -> None:
     assert context.why_people_care
     assert context.simple_read
     assert context.what_to_watch
+    assert context.what_this_means
+    assert context.attention_signal in {
+        "Noise",
+        "Moderate attention",
+        "Strong interest",
+        "Meaningful attention shift",
+    }
+    assert context.attention_vs_conviction
+    assert context.related_topics
     assert context.category == "crypto"
     assert context.probability_interpretation == "Likely"
     assert len(context.why_people_care) <= 140
     assert context.why_people_care == "Crypto volatility brought more attention to this market."
     assert "People are watching because activity increased" not in context.why_people_care
+    assert "Attention" in context.attention_vs_conviction or "expectations" in context.attention_vs_conviction
 
 
 @pytest.mark.asyncio
@@ -59,9 +69,11 @@ async def test_ai_daily_narrative_fallback_is_short_and_safe() -> None:
     combined = " ".join([narrative.headline, *narrative.what_changed, *narrative.category_summaries.values()]).lower()
 
     assert narrative.headline
+    assert narrative.interpretation
     assert narrative.what_changed
     assert any("Crypto" in item or "activity" in item for item in narrative.what_changed)
     assert all(len(item) <= 160 for item in narrative.what_changed)
+    assert "expectations" in narrative.interpretation or "attention" in narrative.interpretation
     for fragment in ("buy " + "now", "sell " + "now", "trade " + "signal", "guaran" + "teed"):
         assert fragment not in combined
 
@@ -69,12 +81,32 @@ async def test_ai_daily_narrative_fallback_is_short_and_safe() -> None:
 def test_probability_humanization_en_and_ru() -> None:
     engine = AIContextEngine(None)
 
-    assert engine.probability_interpretation(0.004, "en") == "Very low probability"
+    assert engine.probability_interpretation(0.004, "en") == "Unlikely"
     assert engine.probability_interpretation(0.2, "en") == "Possible"
     assert engine.probability_interpretation(0.55, "en") == "Likely"
     assert engine.probability_interpretation(0.82, "en") == "Highly likely"
-    assert engine.probability_interpretation(0.004, "ru") == "Очень низкая вероятность"
+    assert engine.probability_interpretation(0.004, "ru") == "Маловероятно"
     assert engine.probability_interpretation(0.82, "ru") == "Очень вероятно"
+
+
+@pytest.mark.asyncio
+async def test_attention_vs_conviction_distinguishes_attention_from_expectations() -> None:
+    market = _market(probability=0.1)
+    pulse = calculate_pulse_score(market, delta=0.0)
+    mood = calculate_market_mood(market, delta=0.0, language="en")
+
+    context = await AIContextEngine(None).market_context(
+        market,
+        pulse,
+        mood,
+        delta=0.0,
+        language="en",
+    )
+
+    assert context.what_this_means
+    assert context.attention_signal in {"Moderate attention", "Strong interest"}
+    assert "expectations" in context.attention_vs_conviction
+    assert "buy" not in context.what_this_means.lower()
 
 
 @pytest.mark.asyncio

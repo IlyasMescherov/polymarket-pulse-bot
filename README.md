@@ -45,6 +45,7 @@ Builder submission package:
 - Morning Briefing: [docs/MORNING_BRIEFING.md](docs/MORNING_BRIEFING.md)
 - Market Mood: [docs/MARKET_MOOD.md](docs/MARKET_MOOD.md)
 - AI reasoning layer: [docs/AI_REASONING_LAYER.md](docs/AI_REASONING_LAYER.md)
+- AI interpretation layer: [docs/AI_INTERPRETATION_LAYER.md](docs/AI_INTERPRETATION_LAYER.md)
 - AI market briefing: [docs/AI_MARKET_BRIEFING.md](docs/AI_MARKET_BRIEFING.md)
 - Event category system: [docs/EVENT_CATEGORY_SYSTEM.md](docs/EVENT_CATEGORY_SYSTEM.md)
 - Static landing page: [landing/](landing/)
@@ -73,9 +74,10 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - New markets: shows 5 newly created active markets.
 - Morning Briefing / Today's Pulse: shows a short daily selection of high-signal markets with why people care and what to watch.
 - AI Context Engine: optionally adds short market context, topic narratives, and what-changed summaries when `OPENAI_API_KEY` is configured.
+- AI Market Interpretation Layer: explains what activity means, separates attention from conviction, and labels public attention as noise, moderate, strong, or meaningful.
 - Today’s Narrative: explains what public markets are reacting to today without making predictions.
 - Event categories: All, Politics, Crypto, AI, Sports, Esports, Global, and Culture help users filter the daily briefing and Activity Radar.
-- Human probability language: very low probability, possible, likely, and highly likely labels make raw percentages easier to read.
+- Human probability language: unlikely, possible, likely, and highly likely labels make raw percentages easier to read.
 - Personal interests in the Mini App: users can prioritize categories locally for a more relevant daily read.
 - Market Mood: adds a human-readable label such as Quiet, Active, Heating up, Volatile, or Ending soon.
 - Activity Radar: read-only view of unusual public activity, public leaderboard data, active market attention, and user-tracked public wallet addresses.
@@ -150,6 +152,10 @@ When `OPENAI_API_KEY` is configured, the web API enriches market objects with sa
 - `what_to_watch`
 - `attention_summary`
 - `topic_narrative`
+- `what_this_means`
+- `attention_signal`
+- `attention_vs_conviction`
+- `related_topics`
 - `probability_interpretation`
 - `category`
 - `category_label`

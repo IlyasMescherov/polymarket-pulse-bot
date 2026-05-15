@@ -94,6 +94,10 @@ async def test_miniapp_hot_api_shape() -> None:
     assert payload["data"][0]["what_to_watch"]
     assert payload["data"][0]["attention_summary"]
     assert payload["data"][0]["topic_narrative"]
+    assert payload["data"][0]["what_this_means"]
+    assert payload["data"][0]["attention_signal"]
+    assert payload["data"][0]["attention_vs_conviction"]
+    assert isinstance(payload["data"][0]["related_topics"], list)
     assert payload["data"][0]["url"].startswith("https://polymarket.com")
 
 
@@ -115,6 +119,7 @@ async def test_miniapp_today_api_shape() -> None:
     assert "why_people_care" in payload["data"][0]
     assert "risk_flags" in payload["data"][0]
     assert payload["narrative"]
+    assert payload["interpretation"]
     assert payload["what_changed"]
     assert isinstance(payload["category_summaries"], dict)
 
@@ -141,6 +146,8 @@ async def test_miniapp_smart_money_api_shape() -> None:
     assert active_payload["data"][0]["public_activity"] == 42000
     assert active_payload["data"][0]["trades_count"] == 3
     assert active_payload["data"][0]["why_it_matters"]
+    assert active_payload["data"][0]["what_this_means"]
+    assert active_payload["data"][0]["attention_vs_conviction"]
     assert traders_payload["data"][0]["wallet"] == "0x1111...1111"
     assert traders_payload["data"][0]["why_it_matters"]
     assert traders_payload["data"][0]["trader_score"] == 74

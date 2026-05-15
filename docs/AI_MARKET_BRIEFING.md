@@ -47,14 +47,14 @@ Only one or two short lines should appear in the main UI. Longer context belongs
 
 PulseMarket AI shows human probability interpretation before raw numbers when useful:
 
-- Very low probability
+- Unlikely
 - Possible
 - Likely
 - Highly likely
 
 Russian:
 
-- Очень низкая вероятность
+- Маловероятно
 - Возможно
 - Вероятно
 - Очень вероятно

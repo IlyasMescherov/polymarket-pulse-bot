@@ -36,7 +36,7 @@ The UI now leads with meaning before data:
 - Track Public Wallet became Follow public activity.
 - Today’s Pulse cards now answer why the market matters and what to watch.
 - Pulse Score and Market Health include short explanations where shown.
-- Probability below 1% is shown as `<1%` or as very low probability instead of a confusing `0%`.
+- Probability below 1% is shown as `<1%` or as unlikely instead of a confusing `0%`.
 - Mini App first screen is anchored around Today’s Pulse.
 - Mini App cards show title, probability, Pulse Score, and a short reason before secondary details.
 - Landing page now uses the same message: understand what matters on Polymarket.
