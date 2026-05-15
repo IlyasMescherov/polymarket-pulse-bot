@@ -46,6 +46,10 @@ The current version focuses on becoming a daily market intelligence companion fo
 - Alembic migrations
 - Docker Compose PostgreSQL service
 - Optional OpenAI explanations when `OPENAI_API_KEY` is configured
+- AI Context Engine for safe market reasoning, daily narratives, and category summaries
+- Event categories for Politics, Crypto, AI, Sports, Esports, Global, and Culture
+- Human probability interpretation for very low probability, possible, likely, and highly likely states
+- Local Mini App interests for category prioritization
 - Full no-AI fallback when `OPENAI_API_KEY` is missing
 - Public Polymarket market links
 - Callback action logging with user id, username, action, and timestamp
@@ -166,6 +170,18 @@ The next product direction is now documented and partially implemented:
 - Mini App Today tab starts with Morning Briefing instead of a raw dashboard.
 - Market cards now include Market Mood and a short why people care line.
 - Activity Radar remains focused on public attention, not trade execution.
+
+## AI Reasoning Layer Added
+
+PulseMarket AI now has an optional reasoning layer on top of ranking and filtering:
+
+- AI Context Engine: [docs/AI_REASONING_LAYER.md](docs/AI_REASONING_LAYER.md)
+- AI Market Briefing: [docs/AI_MARKET_BRIEFING.md](docs/AI_MARKET_BRIEFING.md)
+- Event Category System: [docs/EVENT_CATEGORY_SYSTEM.md](docs/EVENT_CATEGORY_SYSTEM.md)
+- Mini App Today tab includes Today’s Narrative and category-aware briefing copy.
+- Mini App category selector filters Today, Radar, and search suggestions.
+- Search API returns a short context summary.
+- All AI behavior has deterministic fallback when `OPENAI_API_KEY` is missing.
 
 Telegram requires HTTPS for a real Mini App URL in BotFather. The current HTTP route is a browser preview until a domain and HTTPS are configured.
 

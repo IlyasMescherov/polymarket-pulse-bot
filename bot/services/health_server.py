@@ -11,6 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from bot.database.db import ping_database
 from bot.database.repositories import get_latest_snapshots
+from bot.services.ai_context_engine import AIContextEngine, MarketContext
+from bot.services.event_categories import category_label, classify_market_category
 from bot.services.market_analyzer import MarketAnalyzer, MarketMovement
 from bot.services.market_health import calculate_market_health
 from bot.services.market_mood import calculate_market_mood
@@ -51,15 +53,38 @@ def _iso_datetime(value: datetime | None) -> str | None:
     return value.isoformat()
 
 
-def _market_to_api_object(market: Market, delta: float | None = None) -> dict[str, Any]:
+def _probability_interpretation(value: float | None) -> str:
+    if value is None:
+        return "Unknown"
+    percent = value * 100
+    if percent < 1:
+        return "Very low probability"
+    if percent < 35:
+        return "Possible"
+    if percent < 70:
+        return "Likely"
+    return "Highly likely"
+
+
+def _market_to_api_object(
+    market: Market,
+    delta: float | None = None,
+    context: MarketContext | None = None,
+) -> dict[str, Any]:
     pulse = calculate_pulse_score(market, delta=delta)
     health = calculate_market_health(market)
     mood = calculate_market_mood(market, delta=delta, language="en")
+    category = context.category if context is not None else classify_market_category(market)
     return {
         "market_id": market.id,
         "title": market.question,
         "probability": _percent(market.yes_probability),
         "probability_label": format_probability(market.yes_probability, "en"),
+        "probability_interpretation": (
+            context.probability_interpretation
+            if context is not None
+            else _probability_interpretation(market.yes_probability)
+        ),
         "volume": market.volume,
         "end_date": _iso_datetime(market.end_date),
         "movement": _percent(delta),
@@ -72,6 +97,34 @@ def _market_to_api_object(market: Market, delta: float | None = None) -> dict[st
         "market_mood": mood.key,
         "market_mood_label": mood.label,
         "market_mood_reason": mood.reason,
+        "market_mood_reasoning": (
+            context.market_mood_reasoning if context is not None else mood.reason
+        ),
+        "category": category,
+        "category_label": context.category_label if context is not None else category_label(category, "en"),
+        "why_people_care": (
+            context.why_people_care
+            if context is not None
+            else "People are paying attention, but the story is still early."
+        ),
+        "simple_read": (
+            context.simple_read
+            if context is not None
+            else "This market asks whether the event in the title will happen."
+        ),
+        "what_to_watch": (
+            context.what_to_watch
+            if context is not None
+            else "Watch probability changes, public activity, time left, and resolution rules."
+        ),
+        "attention_summary": (
+            context.attention_summary if context is not None else "No major shift yet."
+        ),
+        "topic_narrative": (
+            context.topic_narrative
+            if context is not None
+            else f"{category_label(category, 'en')} markets are part of today’s attention map."
+        ),
         "risk_flags": market_risk_flags(market, delta=delta),
         "url": market.url,
     }
@@ -97,6 +150,9 @@ def _smart_market_to_api_object(activity: MarketActivity) -> dict[str, Any]:
         "top_side": None,
         "url": "https://polymarket.com",
         "why_it_matters": "People are paying more attention to this market.",
+        "attention_summary": "Public attention is rising around this market.",
+        "category": "global",
+        "category_label": "Global",
     }
 
 
@@ -122,6 +178,7 @@ class HealthServer:
         engine: AsyncEngine,
         market_analyzer: MarketAnalyzer | None = None,
         smart_money_analyzer: SmartMoneyAnalyzer | None = None,
+        ai_context_engine: AIContextEngine | None = None,
         session_factory: async_sessionmaker[AsyncSession] | None = None,
     ) -> None:
         self._host = host
@@ -129,6 +186,7 @@ class HealthServer:
         self._engine = engine
         self._market_analyzer = market_analyzer
         self._smart_money_analyzer = smart_money_analyzer
+        self._ai_context_engine = ai_context_engine or AIContextEngine(None)
         self._session_factory = session_factory
         self._runner: web.AppRunner | None = None
 
@@ -220,6 +278,55 @@ class HealthServer:
     def _api_empty(self, message: str) -> web.Response:
         return web.json_response({"data": [], "message": message})
 
+    async def _market_api_object(
+        self,
+        market: Market,
+        delta: float | None = None,
+    ) -> dict[str, Any]:
+        pulse = calculate_pulse_score(market, delta=delta)
+        mood = calculate_market_mood(market, delta=delta, language="en")
+        context = await self._ai_context_engine.market_context(
+            market,
+            pulse,
+            mood,
+            delta=delta,
+            language="en",
+        )
+        result = _market_to_api_object(market, delta, context=context)
+        result["why_it_matters"] = context.why_people_care
+        return result
+
+    async def _today_api_payload(self, items: list[TodayPulseItem]) -> dict[str, Any]:
+        data: list[dict[str, Any]] = []
+        contexts: list[MarketContext] = []
+        for item in items:
+            pulse = item.pulse_score
+            mood = calculate_market_mood(item.market, delta=item.delta, language="en")
+            context = await self._ai_context_engine.market_context(
+                item.market,
+                pulse,
+                mood,
+                delta=item.delta,
+                language="en",
+            )
+            contexts.append(context)
+            result = _market_to_api_object(item.market, item.delta, context=context)
+            result["why_it_matters"] = context.why_people_care
+            data.append(result)
+
+        narrative = await self._ai_context_engine.daily_narrative(
+            [item.market for item in items],
+            contexts,
+            language="en",
+        )
+        return {
+            "data": data,
+            "message": "ok",
+            "narrative": narrative.headline,
+            "what_changed": list(narrative.what_changed),
+            "category_summaries": narrative.category_summaries,
+        }
+
     async def _api_today(self, request: web.Request) -> web.Response:
         if self._market_analyzer is None:
             return self._api_empty("market analyzer unavailable")
@@ -237,9 +344,7 @@ class HealthServer:
                 limit=5,
                 language="en",
             )
-            return web.json_response(
-                {"data": [_today_item_to_api_object(item) for item in items], "message": "ok"}
-            )
+            return web.json_response(await self._today_api_payload(items))
         except Exception as exc:
             logger.warning("Mini App Today API failed: %s", exc)
             return self._api_empty("today pulse unavailable")
@@ -249,8 +354,9 @@ class HealthServer:
             return self._api_empty("market analyzer unavailable")
         try:
             markets = await self._market_analyzer.get_hot_markets(limit=5)
+            data = [await self._market_api_object(market) for market in markets]
             return web.json_response(
-                {"data": [_market_to_api_object(market) for market in markets], "message": "ok"}
+                {"data": data, "message": "ok"}
             )
         except Exception as exc:
             logger.warning("Mini App hot markets API failed: %s", exc)
@@ -261,8 +367,9 @@ class HealthServer:
             return self._api_empty("market analyzer unavailable")
         try:
             markets = await self._market_analyzer.get_new_markets(limit=5)
+            data = [await self._market_api_object(market) for market in markets]
             return web.json_response(
-                {"data": [_market_to_api_object(market) for market in markets], "message": "ok"}
+                {"data": data, "message": "ok"}
             )
         except Exception as exc:
             logger.warning("Mini App new markets API failed: %s", exc)
@@ -280,7 +387,10 @@ class HealthServer:
                 )
             return web.json_response(
                 {
-                    "data": [_market_movement_to_api_object(item) for item in movements[:5]],
+                    "data": [
+                        await self._market_api_object(item.market, delta=item.delta)
+                        for item in movements[:5]
+                    ],
                     "message": "ok",
                 }
             )
@@ -323,10 +433,16 @@ class HealthServer:
             return self._api_empty("search query is empty")
         try:
             markets = await self._market_analyzer.search_markets(query, limit=5)
+            data = [await self._market_api_object(market) for market in markets]
             return web.json_response(
                 {
-                    "data": [_market_to_api_object(market) for market in markets],
+                    "data": data,
                     "message": "ok" if markets else "no markets found",
+                    "summary": self._ai_context_engine.search_summary(
+                        query,
+                        markets,
+                        language="en",
+                    ),
                 }
             )
         except Exception as exc:

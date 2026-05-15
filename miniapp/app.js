@@ -5,6 +5,16 @@ const POLYMARKET_URL = "https://polymarket.com";
 const EMPTY_MESSAGE = "No data yet. PulseMarket will keep watching.";
 const STORAGE_PREFIX = "pulsemarket-miniapp:";
 const SEARCH_SUGGESTIONS = ["bitcoin", "election", "fed", "ai", "sports"];
+const EVENT_CATEGORIES = [
+  { key: "all", en: "All", ru: "Все" },
+  { key: "politics", en: "Politics", ru: "Политика" },
+  { key: "crypto", en: "Crypto", ru: "Крипто" },
+  { key: "ai", en: "AI", ru: "AI" },
+  { key: "sports", en: "Sports", ru: "Спорт" },
+  { key: "esports", en: "Esports", ru: "Киберспорт" },
+  { key: "global", en: "Global", ru: "Мировые" },
+  { key: "culture", en: "Culture", ru: "Культура" },
+];
 
 const browserLanguage =
   (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code) ||
@@ -22,6 +32,10 @@ const state = {
     compactMode: false,
     reducedAnimations: false,
   }),
+  selectedCategory: readStorage("selectedCategory", "all"),
+  userInterests: readJsonStorage("userInterests", []),
+  todayMeta: {},
+  searchMeta: {},
   today: [],
   radar: [],
   hot: [],
@@ -49,6 +63,11 @@ const copy = {
     mainReason: "Daily briefing",
     todayTitle: "Morning Briefing",
     todaySubtitle: "Your quick read of what matters today.",
+    narrativeKicker: "Today’s Narrative",
+    narrativeTitle: "What markets are reacting to today.",
+    aiBriefingLabel: "AI briefing",
+    interests: "Interests",
+    interestsHint: "Prioritize categories you care about.",
     shareSnapshot: "Share briefing",
     attentionLayer: "Attention layer",
     radarTitle: "Activity Radar",
@@ -59,6 +78,7 @@ const copy = {
     searchPlaceholder: "Search markets, topics, names...",
     searchButton: "Search",
     searchEmpty: "Search like Spotlight. Try bitcoin, election, fed, AI.",
+    searchContextSummary: "Related market context",
     trendingSearches: "Trending searches",
     recentSearches: "Recent searches",
     returnLater: "Return later",
@@ -150,6 +170,7 @@ const copy = {
     moodLineHeating: "heating up",
     moodLineQuiet: "quiet",
     selectedToday: "Selected for today’s market scan.",
+    categoryAll: "All",
     simpleReadTitle: "Simple Read",
     simpleReadCopy: "This market asks whether an event will happen. Watch the probability and rules before drawing conclusions.",
     moodQuiet: "Quiet",
@@ -178,6 +199,11 @@ const copy = {
     mainReason: "Утренний обзор",
     todayTitle: "Пульс дня",
     todaySubtitle: "Короткая картина дня.",
+    narrativeKicker: "Нарратив дня",
+    narrativeTitle: "На что сегодня реагируют рынки.",
+    aiBriefingLabel: "AI обзор",
+    interests: "Интересы",
+    interestsHint: "Выбери категории, которые важнее для тебя.",
     shareSnapshot: "Поделиться обзором",
     attentionLayer: "Слой внимания",
     radarTitle: "Радар активности",
@@ -188,6 +214,7 @@ const copy = {
     searchPlaceholder: "Ищи рынки, темы, имена...",
     searchButton: "Найти",
     searchEmpty: "Поиск как Spotlight. Попробуй bitcoin, election, fed, AI.",
+    searchContextSummary: "Контекст по запросу",
     trendingSearches: "Популярные запросы",
     recentSearches: "Недавние запросы",
     returnLater: "Вернуться позже",
@@ -279,6 +306,7 @@ const copy = {
     moodLineHeating: "разогревается",
     moodLineQuiet: "спокойна",
     selectedToday: "Отобран для короткого обзора.",
+    categoryAll: "Все",
     simpleReadTitle: "Простой смысл",
     simpleReadCopy: "Этот рынок спрашивает, произойдёт ли событие. Смотри на вероятность и правила разрешения, прежде чем делать выводы.",
     moodQuiet: "Тихо",
@@ -334,6 +362,46 @@ function isRu() {
   return currentLanguage() === "ru";
 }
 
+function categoryLabel(key) {
+  if (key === "other") return t("categoryOther");
+  const category = EVENT_CATEGORIES.find((item) => item.key === key) || EVENT_CATEGORIES[0];
+  return isRu() ? category.ru : category.en;
+}
+
+function categoryForItem(item) {
+  if (item && item.category) return String(item.category);
+  const title = String((item && item.title) || "").toLowerCase();
+  if (/(trump|election|president|senate|iran|israel|china|russia|ukraine|war|diplomacy)/.test(title)) return "politics";
+  if (/(bitcoin|btc|ethereum|eth|solana|xrp|crypto|binance|coinbase)/.test(title)) return "crypto";
+  if (/(openai|nvidia|tesla|apple|google|microsoft|anthropic|robot| ai )/.test(` ${title} `)) return "ai";
+  if (/(nba|nfl|ufc|soccer|football|tennis|baseball|fifa|playoff)/.test(title)) return "sports";
+  if (/(cs2|dota|valorant|league of legends|esports)/.test(title)) return "esports";
+  if (/(oscars|grammy|movie|film|music|celebrity|youtube|twitter)/.test(title)) return "culture";
+  return "global";
+}
+
+function selectedCategory() {
+  return EVENT_CATEGORIES.some((item) => item.key === state.selectedCategory)
+    ? state.selectedCategory
+    : "all";
+}
+
+function filterBySelectedCategory(items) {
+  const selected = selectedCategory();
+  const base = Array.isArray(items) ? items : [];
+  if (selected === "all") return prioritizeInterests(base);
+  return base.filter((item) => categoryForItem(item) === selected);
+}
+
+function prioritizeInterests(items) {
+  if (!state.userInterests.length) return items;
+  return [...items].sort((left, right) => {
+    const leftScore = state.userInterests.includes(categoryForItem(left)) ? 1 : 0;
+    const rightScore = state.userInterests.includes(categoryForItem(right)) ? 1 : 0;
+    return rightScore - leftScore;
+  });
+}
+
 if (tg) {
   tg.ready();
   tg.expand();
@@ -366,6 +434,8 @@ function applyCopy() {
   }
   updateContext();
   updateSettingsControls();
+  renderCategoryChips();
+  renderInterestChips();
 }
 
 function updateSettingsControls() {
@@ -423,6 +493,13 @@ function probability(item) {
   return percent(null);
 }
 
+function probabilityDisplay(item) {
+  const label = item && item.probability_interpretation ? String(item.probability_interpretation) : probability(item);
+  const number = probability(item);
+  if (label === number) return label;
+  return `${label} · ${number}`;
+}
+
 function pulseLabel(item) {
   const score = Number((item && item.pulse_score) || 0);
   if (score >= 85) return t("pulseTrending");
@@ -469,6 +546,10 @@ function compactTitle(title, limit = 72) {
 }
 
 function shortReason(item) {
+  if (item && item.why_people_care) {
+    const sentence = String(item.why_people_care).split(".")[0].trim();
+    return sentence ? `${sentence}.` : t("selectedToday");
+  }
   if (!isRu() && item && item.why_it_matters) {
     const sentence = String(item.why_it_matters).split(".")[0].trim();
     return sentence ? `${sentence}.` : t("selectedToday");
@@ -561,8 +642,15 @@ function normalizeMarket(item) {
     title: item && item.title ? item.title : "Untitled market",
     url: safeUrl(item && item.url),
     probability: item && item.probability,
+    probability_interpretation: item && item.probability_interpretation,
     pulse_score: item && item.pulse_score,
     why: shortReason(item || {}),
+    simple_read: item && item.simple_read,
+    what_to_watch: item && item.what_to_watch,
+    attention_summary: item && item.attention_summary,
+    topic_narrative: item && item.topic_narrative,
+    category: categoryForItem(item || {}),
+    category_label: item && item.category_label,
     market_mood: mood.key,
     market_mood_label: mood.label,
     market_mood_reason: mood.reason,
@@ -645,7 +733,7 @@ function marketCard(item, variant = "compact") {
         <p>${escapeHtml(shortReason(item))}</p>
       </div>
       <div class="pill-row">
-        <span class="pill pill--prob">${escapeHtml(probability(item))}</span>
+        <span class="pill pill--prob">${escapeHtml(probabilityDisplay(item))}</span>
         <span class="pill pill--pulse">${escapeHtml(pulseLabel(item))}<small>${pulseMeta(item)}</small></span>
       </div>
       ${buttonRow(item)}
@@ -666,7 +754,7 @@ function savedCard(item, removable = false) {
         <p>${escapeHtml(item.why || t("selectedToday"))}</p>
       </div>
       <div class="pill-row">
-        <span class="pill pill--prob">${escapeHtml(percent(item.probability))}</span>
+        <span class="pill pill--prob">${escapeHtml(probabilityDisplay(item))}</span>
         <span class="pill pill--pulse">${escapeHtml(pulseLabel(item))}<small>${pulseMeta(item)}</small></span>
       </div>
       <div class="action-row">
@@ -699,11 +787,15 @@ function openExplain(item) {
       </div>
       <div>
         <span>${escapeHtml(t("simpleReadTitle"))}</span>
-        <strong>${escapeHtml(t("simpleReadCopy"))}</strong>
+        <strong>${escapeHtml(normalized.simple_read || t("simpleReadCopy"))}</strong>
       </div>
       <div>
         <span>${escapeHtml(t("watchNext"))}</span>
-        <strong>${escapeHtml(t("watchNextCopy"))}</strong>
+        <strong>${escapeHtml(normalized.what_to_watch || t("watchNextCopy"))}</strong>
+      </div>
+      <div>
+        <span>${escapeHtml(t("narrativeKicker"))}</span>
+        <strong>${escapeHtml(normalized.topic_narrative || normalized.attention_summary || t("selectedToday"))}</strong>
       </div>
       <div>
         <span>${escapeHtml(t("marketMood"))}</span>
@@ -720,23 +812,6 @@ function closeExplain() {
   const sheet = document.getElementById("explain-sheet");
   sheet.hidden = true;
   document.documentElement.classList.remove("sheet-open");
-}
-
-function categoryFor(item) {
-  const title = String((item && item.title) || "").toLowerCase();
-  if (/(bitcoin|btc|ethereum|eth|solana|crypto|xrp)/.test(title)) return "crypto";
-  if (/(nba|nfl|ufc|soccer|football|tennis|sport|baseball|fifa)/.test(title)) return "sports";
-  if (/(iran|israel|trump|election|president|senate|war|china|russia|ukraine|brazil)/.test(title)) return "geopolitics";
-  return "other";
-}
-
-function categoryLabel(category) {
-  return {
-    geopolitics: t("categoryGeopolitics"),
-    crypto: t("categoryCrypto"),
-    sports: t("categorySports"),
-    other: t("categoryOther"),
-  }[category] || t("categoryOther");
 }
 
 function moodWeight(key) {
@@ -765,6 +840,9 @@ function renderDailySnapshot() {
 
   const allMarkets = [...state.today, ...state.hot, ...state.moves];
   const notes = [];
+  if (Array.isArray(state.todayMeta.what_changed)) {
+    notes.push(...state.todayMeta.what_changed.slice(0, 2));
+  }
   if (state.radar[0]) {
     notes.push(`👀 ${t("attentionMoved")} ${compactTitle(state.radar[0].title, 46)}`);
   }
@@ -784,7 +862,7 @@ function renderDailySnapshot() {
 
   const summary = new Map();
   for (const item of allMarkets) {
-    const category = categoryFor(item);
+    const category = categoryForItem(item);
     const mood = marketMood(item);
     const current = summary.get(category);
     if (!current || moodWeight(mood.key) > moodWeight(current.key)) {
@@ -811,19 +889,48 @@ function renderDailySnapshot() {
   `;
 }
 
+function renderNarrative() {
+  const target = document.getElementById("today-narrative");
+  if (!target) return;
+  clearNode(target);
+
+  const category = selectedCategory();
+  const summaries = state.todayMeta.category_summaries || {};
+  const categorySummary = category !== "all" ? summaries[category] : null;
+  const headline = categorySummary || state.todayMeta.narrative || t("narrativeTitle");
+  const changes = Array.isArray(state.todayMeta.what_changed) ? state.todayMeta.what_changed.slice(0, 3) : [];
+
+  target.innerHTML = `
+    <p class="section-kicker">${escapeHtml(t("aiBriefingLabel"))}</p>
+    <h3>${escapeHtml(headline)}</h3>
+    ${
+      changes.length
+        ? `<div class="narrative-points">${changes.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>`
+        : ""
+    }
+  `;
+}
+
 function renderToday(payload) {
   state.today = dataFrom(payload);
+  state.todayMeta = {
+    narrative: payload && payload.narrative,
+    what_changed: Array.isArray(payload && payload.what_changed) ? payload.what_changed : [],
+    category_summaries: (payload && payload.category_summaries) || {},
+  };
   const hero = document.getElementById("today-hero");
   const secondary = document.getElementById("today-secondary");
   clearNode(hero);
   secondary.innerHTML = "";
 
-  if (!state.today.length) {
+  const visibleToday = filterBySelectedCategory(state.today);
+  renderNarrative();
+  if (!visibleToday.length) {
     hero.innerHTML = emptyState(t("todayEmpty"));
     return;
   }
 
-  const top = state.today[0];
+  const top = visibleToday[0];
   const topMood = marketMood(top);
   hero.innerHTML = `
     <div class="story-card__topline">
@@ -832,7 +939,7 @@ function renderToday(payload) {
     </div>
     <h3>${escapeHtml(compactTitle(top.title, 86))}</h3>
     <div class="pill-row">
-      <span class="pill pill--prob">${escapeHtml(probability(top))}</span>
+      <span class="pill pill--prob">${escapeHtml(probabilityDisplay(top))}</span>
       <span class="pill pill--mood">${escapeHtml(topMood.label)}</span>
       <span class="pill pill--pulse">${escapeHtml(pulseLabel(top))}<small>${pulseMeta(top)}</small></span>
     </div>
@@ -840,7 +947,7 @@ function renderToday(payload) {
     ${buttonRow(top)}
   `;
 
-  secondary.innerHTML = state.today.slice(1, 4).map((item) => marketCard(item, "secondary")).join("");
+  secondary.innerHTML = visibleToday.slice(1, 4).map((item) => marketCard(item, "secondary")).join("");
 }
 
 function renderRadar(payload) {
@@ -850,12 +957,13 @@ function renderRadar(payload) {
   clearNode(hero);
   list.innerHTML = "";
 
-  if (!state.radar.length) {
+  const visibleRadar = filterBySelectedCategory(state.radar);
+  if (!visibleRadar.length) {
     hero.innerHTML = emptyState(t("radarEmpty"), true);
     return;
   }
 
-  const top = state.radar[0];
+  const top = visibleRadar[0];
   hero.innerHTML = `
     <div class="story-card__topline">
       <span>${escapeHtml(t("radarTitle"))}</span>
@@ -866,7 +974,7 @@ function renderRadar(payload) {
     ${buttonRow({ ...top, pulse_score: top.pulse_score || 0, probability: top.probability })}
   `;
 
-  const rest = state.radar.slice(1, 5);
+  const rest = visibleRadar.slice(1, 5);
   if (rest.length) {
     list.innerHTML = `
       <h3 class="list-title">${escapeHtml(t("radarListTitle"))}</h3>
@@ -902,9 +1010,13 @@ function renderMoves(payload) {
 
 function renderSearch(payload) {
   state.searchResults = dataFrom(payload);
+  state.searchMeta = { summary: payload && payload.summary };
   const target = document.getElementById("search-results");
+  const summary = state.searchMeta.summary
+    ? `<div class="search-summary"><span>${escapeHtml(t("searchContextSummary"))}</span><strong>${escapeHtml(state.searchMeta.summary)}</strong></div>`
+    : "";
   target.innerHTML = state.searchResults.length
-    ? state.searchResults.slice(0, 5).map((item) => marketCard(item, "search")).join("")
+    ? summary + state.searchResults.slice(0, 5).map((item) => marketCard(item, "search")).join("")
     : emptyState(payload.message || t("searchNoResults"), true);
 }
 
@@ -918,8 +1030,8 @@ function renderTodayExtras() {
     todayScreen.appendChild(existing);
   }
 
-  const hotCards = state.hot.slice(0, 5).map((item) => marketCard(item, "compact")).join("");
-  const movesCards = state.moves.slice(0, 3).map((item) => marketCard(item, "compact")).join("");
+  const hotCards = filterBySelectedCategory(state.hot).slice(0, 5).map((item) => marketCard(item, "compact")).join("");
+  const movesCards = filterBySelectedCategory(state.moves).slice(0, 3).map((item) => marketCard(item, "compact")).join("");
 
   existing.innerHTML = `
     <div class="subsection-heading">
@@ -940,7 +1052,10 @@ function renderSearchSuggestions() {
   const recentBlock = document.getElementById("recent-searches-block");
   const recent = document.getElementById("recent-searches");
 
-  trending.innerHTML = SEARCH_SUGGESTIONS.map(
+  const categorySuggestions = selectedCategory() === "all"
+    ? SEARCH_SUGGESTIONS
+    : [categoryLabel(selectedCategory()).toLowerCase(), ...SEARCH_SUGGESTIONS].slice(0, 5);
+  trending.innerHTML = categorySuggestions.map(
     (item) => `<button type="button" class="chip" data-search-chip="${escapeHtml(item)}">${escapeHtml(item)}</button>`,
   ).join("");
 
@@ -949,6 +1064,24 @@ function renderSearchSuggestions() {
   recent.innerHTML = searches
     .map((item) => `<button type="button" class="chip" data-search-chip="${escapeHtml(item)}">${escapeHtml(item)}</button>`)
     .join("");
+}
+
+function renderCategoryChips() {
+  const target = document.getElementById("category-chips");
+  if (!target) return;
+  target.innerHTML = EVENT_CATEGORIES.map((category) => {
+    const active = selectedCategory() === category.key;
+    return `<button type="button" class="category-chip${active ? " is-active" : ""}" data-category="${category.key}">${escapeHtml(categoryLabel(category.key))}</button>`;
+  }).join("");
+}
+
+function renderInterestChips() {
+  const target = document.getElementById("interest-chips");
+  if (!target) return;
+  target.innerHTML = EVENT_CATEGORIES.filter((category) => category.key !== "all").map((category) => {
+    const active = state.userInterests.includes(category.key);
+    return `<button type="button" class="chip chip--interest${active ? " is-active" : ""}" data-interest="${category.key}">${escapeHtml(categoryLabel(category.key))}</button>`;
+  }).join("");
 }
 
 function renderSaved() {
@@ -1054,6 +1187,27 @@ function setupEvents() {
     if (searchChip) {
       document.getElementById("search-input").value = searchChip;
       await runSearch(searchChip);
+      return;
+    }
+
+    const category = target.getAttribute("data-category");
+    if (category) {
+      state.selectedCategory = category;
+      writeStorage("selectedCategory", category);
+      renderCategoryChips();
+      renderSearchSuggestions();
+      rerenderCurrentData();
+      return;
+    }
+
+    const interest = target.getAttribute("data-interest");
+    if (interest) {
+      state.userInterests = state.userInterests.includes(interest)
+        ? state.userInterests.filter((item) => item !== interest)
+        : [...state.userInterests, interest];
+      writeJsonStorage("userInterests", state.userInterests);
+      renderInterestChips();
+      rerenderCurrentData();
       return;
     }
 
@@ -1173,6 +1327,8 @@ function rerenderCurrentData() {
 
 applyTheme();
 applyCopy();
+renderCategoryChips();
+renderInterestChips();
 renderSearchSuggestions();
 setupEvents();
 refreshDashboard();

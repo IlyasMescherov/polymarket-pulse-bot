@@ -111,7 +111,7 @@ https://x.com/PulseMarketBot
 ## Posting Notes
 
 - Do not use buy/sell language.
-- Do not promise profit.
+- Do not promise outcomes.
 - Do not call any market a good trade.
 - Keep the safety scope visible.
 - After publishing, pin post `1/6`.

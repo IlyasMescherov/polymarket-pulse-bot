@@ -119,7 +119,7 @@ Make the daily briefing and market cards easy to forward without hype language.
 - Balances
 - Order placement
 - Buy/sell advice
-- Profit promises
+- Outcome promises
 - Raw wallet feeds as the main product
 - Dense exchange-like dashboards
 

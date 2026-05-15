@@ -20,6 +20,7 @@ from bot.handlers import (
     watchlist,
 )
 from bot.services.ai_explainer import AIExplainer
+from bot.services.ai_context_engine import AIContextEngine
 from bot.services.auto_publisher import DailyPublishingJob
 from bot.services.channel_publisher import ChannelPublisher
 from bot.services.content_publisher import ContentPublisher
@@ -85,6 +86,10 @@ async def main() -> None:
         settings.openai_api_key,
         model=settings.openai_model,
     )
+    ai_context_engine = AIContextEngine(
+        settings.openai_api_key,
+        model=settings.openai_model,
+    )
     notifier = Notifier(bot, session_factory, market_analyzer, ai_explainer)
     content_publisher = ContentPublisher(
         market_analyzer,
@@ -112,6 +117,7 @@ async def main() -> None:
         engine,
         market_analyzer=market_analyzer,
         smart_money_analyzer=smart_money_analyzer,
+        ai_context_engine=ai_context_engine,
         session_factory=session_factory,
     )
 
@@ -131,6 +137,7 @@ async def main() -> None:
     dp["market_analyzer"] = market_analyzer
     dp["smart_money_analyzer"] = smart_money_analyzer
     dp["ai_explainer"] = ai_explainer
+    dp["ai_context_engine"] = ai_context_engine
     dp["content_publisher"] = content_publisher
     dp["channel_publisher"] = channel_publisher
     dp["x_publisher"] = x_publisher

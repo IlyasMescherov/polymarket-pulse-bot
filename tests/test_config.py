@@ -37,6 +37,18 @@ def test_auto_publishing_config_defaults(monkeypatch) -> None:
     assert settings.auto_channel_posting_enabled is False
     assert settings.x_drafts_enabled is True
     assert settings.x_posting_mode == "draft"
+    assert settings.openai_model == "gpt-4o-mini"
+
+
+def test_openai_model_env(monkeypatch) -> None:
+    monkeypatch.setenv("OPENAI_MODEL", "gpt-test")
+    load_settings.cache_clear()
+    try:
+        settings = load_settings()
+    finally:
+        load_settings.cache_clear()
+
+    assert settings.openai_model == "gpt-test"
 
 
 def test_project_channel_id_falls_back_to_channel_url(monkeypatch) -> None:

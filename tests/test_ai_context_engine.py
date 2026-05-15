@@ -1,0 +1,92 @@
+from __future__ import annotations
+
+from datetime import datetime, timezone
+
+import pytest
+
+from bot.services.ai_context_engine import AIContextEngine
+from bot.services.market_mood import calculate_market_mood
+from bot.services.polymarket_client import Market
+from bot.services.pulse_score import calculate_pulse_score
+
+
+def _market(probability: float | None = 0.63) -> Market:
+    return Market(
+        id="m1",
+        question="Will Bitcoin hit $150k by December 31, 2026?",
+        slug="will-bitcoin-hit-150k-by-december-31-2026",
+        yes_probability=probability,
+        volume=125_000,
+        end_date=datetime(2026, 12, 31, tzinfo=timezone.utc),
+        url="https://polymarket.com/market/will-bitcoin-hit-150k-by-december-31-2026",
+        raw={"description": "Bitcoin price market", "tags": ["crypto", "bitcoin"]},
+    )
+
+
+@pytest.mark.asyncio
+async def test_ai_context_engine_fallback_works_without_api_key() -> None:
+    market = _market()
+    pulse = calculate_pulse_score(market, delta=0.04)
+    mood = calculate_market_mood(market, delta=0.04, language="en")
+
+    context = await AIContextEngine(None).market_context(
+        market,
+        pulse,
+        mood,
+        delta=0.04,
+        language="en",
+    )
+
+    assert context.why_people_care
+    assert context.simple_read
+    assert context.what_to_watch
+    assert context.category == "crypto"
+    assert context.probability_interpretation == "Likely"
+    assert len(context.why_people_care) <= 140
+
+
+@pytest.mark.asyncio
+async def test_ai_daily_narrative_fallback_is_short_and_safe() -> None:
+    market = _market()
+    pulse = calculate_pulse_score(market)
+    mood = calculate_market_mood(market, language="en")
+    engine = AIContextEngine(None)
+    context = await engine.market_context(market, pulse, mood, language="en")
+
+    narrative = await engine.daily_narrative([market], [context], language="en")
+    combined = " ".join([narrative.headline, *narrative.what_changed, *narrative.category_summaries.values()]).lower()
+
+    assert narrative.headline
+    assert narrative.what_changed
+    assert all(len(item) <= 160 for item in narrative.what_changed)
+    for fragment in ("buy " + "now", "sell " + "now", "trade " + "signal", "guaran" + "teed"):
+        assert fragment not in combined
+
+
+def test_probability_humanization_en_and_ru() -> None:
+    engine = AIContextEngine(None)
+
+    assert engine.probability_interpretation(0.004, "en") == "Very low probability"
+    assert engine.probability_interpretation(0.2, "en") == "Possible"
+    assert engine.probability_interpretation(0.55, "en") == "Likely"
+    assert engine.probability_interpretation(0.82, "en") == "Highly likely"
+    assert engine.probability_interpretation(0.004, "ru") == "Очень низкая вероятность"
+    assert engine.probability_interpretation(0.82, "ru") == "Очень вероятно"
+
+
+@pytest.mark.asyncio
+async def test_share_snapshot_is_safe_and_points_to_app() -> None:
+    market = _market()
+    engine = AIContextEngine(None)
+    context = await engine.market_context(
+        market,
+        calculate_pulse_score(market),
+        calculate_market_mood(market, language="en"),
+        language="en",
+    )
+    text = engine.share_snapshot([market], [context], language="en")
+
+    assert "Today’s Pulse" in text
+    assert "Open PulseMarket AI" in text
+    assert "https://app.pulsemarketai.com/app" in text
+    assert "financial advice" not in text.lower()

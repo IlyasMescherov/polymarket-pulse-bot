@@ -44,6 +44,9 @@ Builder submission package:
 - Next product strategy: [docs/PRODUCT_STRATEGY_NEXT.md](docs/PRODUCT_STRATEGY_NEXT.md)
 - Morning Briefing: [docs/MORNING_BRIEFING.md](docs/MORNING_BRIEFING.md)
 - Market Mood: [docs/MARKET_MOOD.md](docs/MARKET_MOOD.md)
+- AI reasoning layer: [docs/AI_REASONING_LAYER.md](docs/AI_REASONING_LAYER.md)
+- AI market briefing: [docs/AI_MARKET_BRIEFING.md](docs/AI_MARKET_BRIEFING.md)
+- Event category system: [docs/EVENT_CATEGORY_SYSTEM.md](docs/EVENT_CATEGORY_SYSTEM.md)
 - Static landing page: [landing/](landing/)
 - Telegram Mini App preview: [miniapp/](miniapp/)
 - Avatar guide: [docs/brand/AVATAR_GUIDE.md](docs/brand/AVATAR_GUIDE.md)
@@ -69,6 +72,11 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - Hot markets: shows 5 active Polymarket markets ranked by recent volume.
 - New markets: shows 5 newly created active markets.
 - Morning Briefing / Today's Pulse: shows a short daily selection of high-signal markets with why people care and what to watch.
+- AI Context Engine: optionally adds short market context, topic narratives, and what-changed summaries when `OPENAI_API_KEY` is configured.
+- Today’s Narrative: explains what public markets are reacting to today without making predictions.
+- Event categories: All, Politics, Crypto, AI, Sports, Esports, Global, and Culture help users filter the daily briefing and Activity Radar.
+- Human probability language: very low probability, possible, likely, and highly likely labels make raw percentages easier to read.
+- Personal interests in the Mini App: users can prioritize categories locally for a more relevant daily read.
 - Market Mood: adds a human-readable label such as Quiet, Active, Heating up, Volatile, or Ending soon.
 - Activity Radar: read-only view of unusual public activity, public leaderboard data, active market attention, and user-tracked public wallet addresses.
 - Sharp movements: compares stored market snapshots and surfaces probability changes above each user's selected threshold.
@@ -134,6 +142,19 @@ The same lightweight web server exposes read-only JSON endpoints for the Mini Ap
 - `/api/smart-money/active`
 - `/api/smart-money/traders`
 - `/api/search?q=bitcoin`
+
+When `OPENAI_API_KEY` is configured, the web API enriches market objects with safe context fields:
+
+- `why_people_care`
+- `simple_read`
+- `what_to_watch`
+- `attention_summary`
+- `topic_narrative`
+- `probability_interpretation`
+- `category`
+- `category_label`
+
+If the key is not configured, deterministic fallback copy is used.
 
 For Yes/No markets, the Yes outcome price is displayed as the implied event probability. If the data is incomplete, the bot does not fail; it shows a friendly "data is not available yet" message.
 

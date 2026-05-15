@@ -36,6 +36,8 @@ from bot.keyboards.main import (
     market_actions_keyboard,
 )
 from bot.services.ai_explainer import AIExplainer
+from bot.services.ai_context_engine import AIContextEngine
+from bot.services.market_mood import calculate_market_mood
 from bot.services.market_analyzer import CATEGORY_LABELS, MarketAnalyzer, MarketMovement
 from bot.services.market_health import calculate_market_health
 from bot.services.movement_explainer import explain_movement
@@ -118,6 +120,7 @@ async def _send_market_cards(
     message: Message,
     markets: list[Market],
     ai_explainer: AIExplainer,
+    ai_context_engine: AIContextEngine,
     language: str,
     session_factory: async_sessionmaker[AsyncSession],
     threshold: float = 0.10,
@@ -150,7 +153,15 @@ async def _send_market_cards(
             strong_moves_count=strong_moves,
         )
         market_health = calculate_market_health(market)
-        explanation = await ai_explainer.explain_market(market)
+        mood = calculate_market_mood(market, delta=delta, language=language)
+        context = await ai_context_engine.market_context(
+            market,
+            pulse_score,
+            mood,
+            delta=delta,
+            language=language,
+        )
+        explanation = context.simple_read or await ai_explainer.explain_market(market)
         await message.answer(
             format_market_card(
                 market,
@@ -176,6 +187,7 @@ async def _send_movement_cards(
     message: Message,
     movements: list[MarketMovement],
     ai_explainer: AIExplainer,
+    ai_context_engine: AIContextEngine,
     language: str,
     session_factory: async_sessionmaker[AsyncSession],
     threshold: float = 0.10,
@@ -202,7 +214,15 @@ async def _send_movement_cards(
             strong_moves_count=strong_moves,
         )
         market_health = calculate_market_health(movement.market)
-        explanation = await ai_explainer.explain_market(movement.market)
+        mood = calculate_market_mood(movement.market, delta=movement.delta, language=language)
+        context = await ai_context_engine.market_context(
+            movement.market,
+            pulse_score,
+            mood,
+            delta=movement.delta,
+            language=language,
+        )
+        explanation = context.attention_summary or await ai_explainer.explain_market(movement.market)
         await message.answer(
             format_movement_card(
                 movement,
@@ -247,6 +267,7 @@ async def _send_today_pulse_cards(
     message: Message,
     items: list[TodayPulseItem],
     ai_explainer: AIExplainer,
+    ai_context_engine: AIContextEngine,
     language: str,
 ) -> None:
     if not items:
@@ -258,7 +279,15 @@ async def _send_today_pulse_cards(
         return
 
     for index, item in enumerate(items[:5], start=1):
-        ai_why = await ai_explainer.explain_market(item.market)
+        mood = calculate_market_mood(item.market, delta=item.delta, language=language)
+        context = await ai_context_engine.market_context(
+            item.market,
+            item.pulse_score,
+            mood,
+            delta=item.delta,
+            language=language,
+        )
+        ai_why = context.why_people_care or await ai_explainer.explain_market(item.market)
         await message.answer(
             format_today_pulse_card(
                 item,
@@ -281,6 +310,7 @@ async def hot_markets(
     callback: CallbackQuery,
     market_analyzer: MarketAnalyzer,
     ai_explainer: AIExplainer,
+    ai_context_engine: AIContextEngine,
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     log_callback_action(logger, callback, "hot_markets")
@@ -298,6 +328,7 @@ async def hot_markets(
         callback.message,
         markets,
         ai_explainer,
+        ai_context_engine,
         language,
         session_factory,
         heading="🔥 Hot market" if language == "en" else "🔥 Горячий рынок",
@@ -310,6 +341,7 @@ async def hot_markets_command(
     message: Message,
     market_analyzer: MarketAnalyzer,
     ai_explainer: AIExplainer,
+    ai_context_engine: AIContextEngine,
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     log_user_action(logger, message.from_user, "hot_markets")
@@ -324,6 +356,7 @@ async def hot_markets_command(
         message,
         markets,
         ai_explainer,
+        ai_context_engine,
         language,
         session_factory,
         heading="🔥 Hot market" if language == "en" else "🔥 Горячий рынок",
@@ -336,6 +369,7 @@ async def today_pulse(
     callback: CallbackQuery,
     market_analyzer: MarketAnalyzer,
     ai_explainer: AIExplainer,
+    ai_context_engine: AIContextEngine,
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     log_callback_action(logger, callback, "today_pulse")
@@ -367,7 +401,7 @@ async def today_pulse(
             else "Не смог собрать Пульс дня. Попробуйте позже."
         )
         return
-    await _send_today_pulse_cards(callback.message, items, ai_explainer, language)
+    await _send_today_pulse_cards(callback.message, items, ai_explainer, ai_context_engine, language)
 
 
 @router.message(Command("today"))
@@ -375,6 +409,7 @@ async def today_pulse_command(
     message: Message,
     market_analyzer: MarketAnalyzer,
     ai_explainer: AIExplainer,
+    ai_context_engine: AIContextEngine,
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     log_user_action(logger, message.from_user, "today_pulse")
@@ -403,7 +438,7 @@ async def today_pulse_command(
             else "Не смог собрать Пульс дня. Попробуйте позже."
         )
         return
-    await _send_today_pulse_cards(message, items, ai_explainer, language)
+    await _send_today_pulse_cards(message, items, ai_explainer, ai_context_engine, language)
 
 
 @router.callback_query(F.data == NEW_MARKETS)
@@ -411,6 +446,7 @@ async def new_markets(
     callback: CallbackQuery,
     market_analyzer: MarketAnalyzer,
     ai_explainer: AIExplainer,
+    ai_context_engine: AIContextEngine,
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     log_callback_action(logger, callback, "new_markets")
@@ -428,6 +464,7 @@ async def new_markets(
         callback.message,
         markets,
         ai_explainer,
+        ai_context_engine,
         language,
         session_factory,
         heading="🆕 New market" if language == "en" else "🆕 Новый рынок",
@@ -440,6 +477,7 @@ async def new_markets_command(
     message: Message,
     market_analyzer: MarketAnalyzer,
     ai_explainer: AIExplainer,
+    ai_context_engine: AIContextEngine,
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     log_user_action(logger, message.from_user, "new_markets")
@@ -454,6 +492,7 @@ async def new_markets_command(
         message,
         markets,
         ai_explainer,
+        ai_context_engine,
         language,
         session_factory,
         heading="🆕 New market" if language == "en" else "🆕 Новый рынок",
@@ -467,6 +506,7 @@ async def sharp_moves(
     session_factory: async_sessionmaker[AsyncSession],
     market_analyzer: MarketAnalyzer,
     ai_explainer: AIExplainer,
+    ai_context_engine: AIContextEngine,
 ) -> None:
     log_callback_action(logger, callback, "sharp_moves")
     language = await _language(session_factory, callback.from_user)
@@ -499,6 +539,7 @@ async def sharp_moves(
         callback.message,
         movements,
         ai_explainer,
+        ai_context_engine,
         language,
         session_factory,
         threshold=user.movement_threshold,
@@ -511,6 +552,7 @@ async def sharp_moves_command(
     session_factory: async_sessionmaker[AsyncSession],
     market_analyzer: MarketAnalyzer,
     ai_explainer: AIExplainer,
+    ai_context_engine: AIContextEngine,
 ) -> None:
     log_user_action(logger, message.from_user, "sharp_moves")
     language = await _language(session_factory, message.from_user)
@@ -537,6 +579,7 @@ async def sharp_moves_command(
         message,
         movements,
         ai_explainer,
+        ai_context_engine,
         language,
         session_factory,
         threshold=user.movement_threshold,
@@ -575,6 +618,7 @@ async def market_search_query(
     state: FSMContext,
     market_analyzer: MarketAnalyzer,
     ai_explainer: AIExplainer,
+    ai_context_engine: AIContextEngine,
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     query = (message.text or "").strip()
@@ -620,6 +664,7 @@ async def market_search_query(
         message,
         markets,
         ai_explainer,
+        ai_context_engine,
         language,
         session_factory,
         heading="🔍 Found market" if language == "en" else "🔍 Найден рынок",
@@ -647,6 +692,7 @@ async def category_selected(
     callback: CallbackQuery,
     market_analyzer: MarketAnalyzer,
     ai_explainer: AIExplainer,
+    ai_context_engine: AIContextEngine,
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     category = (callback.data or "").removeprefix(CATEGORY_PREFIX)
@@ -670,6 +716,7 @@ async def category_selected(
         callback.message,
         markets,
         ai_explainer,
+        ai_context_engine,
         language,
         session_factory,
         heading=heading,
@@ -740,6 +787,7 @@ async def explain_market(
     callback: CallbackQuery,
     market_analyzer: MarketAnalyzer,
     ai_explainer: AIExplainer,
+    ai_context_engine: AIContextEngine,
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     market_id = (callback.data or "").removeprefix(EXPLAIN_PREFIX)
@@ -761,7 +809,21 @@ async def explain_market(
         )
         return
 
-    ai_brief = await ai_explainer.explain_market(market)
+    pulse_score = calculate_pulse_score(market)
+    mood = calculate_market_mood(market, language=language)
+    context = await ai_context_engine.market_context(
+        market,
+        pulse_score,
+        mood,
+        language=language,
+    )
+    ai_brief = "\n".join(
+        [
+            context.why_people_care,
+            context.simple_read,
+            context.what_to_watch,
+        ]
+    ) or await ai_explainer.explain_market(market)
     await callback.message.answer(
         format_beginner_explanation(market, ai_brief=ai_brief, language=language),
         disable_web_page_preview=True,

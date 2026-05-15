@@ -82,7 +82,7 @@ Start simple:
 - 1 demo clip or screenshot thread.
 - 1 market-discovery post when there is a genuinely interesting public market.
 - No buy/sell language.
-- No promises of profit.
+- No promises about outcomes.
 - No financial advice.
 
 ## Builder Program Use

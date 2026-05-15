@@ -34,13 +34,18 @@ New users often struggle to find relevant Polymarket markets and understand prob
 
 PulseMarket AI gives users a simple Telegram and Mini App interface for Morning Briefing, Activity Radar, search, saved markets, smart alerts, plain-language explanations, resolution guidance, and direct links to Polymarket.
 
-It also includes a Telegram Mini App dashboard preview for Today's Pulse, Activity Radar, hot markets, sharp moves, and search. A full Telegram Mini App launch requires an HTTPS domain.
+It also includes a Telegram Mini App dashboard for Today's Pulse, Activity Radar, hot markets, sharp moves, and search. The newest layer adds optional AI context that explains why people may care about a market, what public markets are reacting to today, and what to inspect next.
 
 ## Current MVP
 
 - Hot markets
 - New markets
 - Morning Briefing / Today's Pulse
+- AI Context Engine
+- Today’s Narrative
+- Event categories
+- Human probability labels
+- Personal interest filters in the Mini App
 - Market Mood
 - Simple Read
 - Activity Radar
@@ -86,7 +91,7 @@ Builder code is prepared for future official trading integration, but the curren
 
 ## Ecosystem Value
 
-PulseMarket AI helps new users discover Polymarket markets, understand probabilities in simple language, see why people care about specific markets, identify where public attention is rising, and open market pages on Polymarket. It also tracks engagement metrics such as searches, feedback, saved markets, digest activity, Activity Radar interactions, and market opens.
+PulseMarket AI helps new users discover Polymarket markets, understand probabilities in simple language, see why people care about specific markets, identify where public attention is rising, and open market pages on Polymarket. It adds a daily market briefing layer that turns public market data into calm context instead of raw dashboards. It also tracks engagement metrics such as searches, feedback, saved markets, digest activity, Activity Radar interactions, and market opens.
 
 ## Future Roadmap
 
@@ -95,6 +100,7 @@ PulseMarket AI helps new users discover Polymarket markets, understand probabili
 - Safe channel digest automation with manual approval
 - X/Twitter draft workflow for public updates
 - Deeper research-only public activity summaries
+- Better AI-assisted market context and category narratives
 - More advanced market health signals
 - Better topic personalization
 - More Polymarket discovery endpoints

@@ -81,11 +81,19 @@ async def test_miniapp_hot_api_shape() -> None:
     assert payload["data"][0]["market_id"] == "hot"
     assert payload["data"][0]["probability"] == 63
     assert payload["data"][0]["probability_label"] == "63%"
+    assert payload["data"][0]["probability_interpretation"] == "Likely"
     assert payload["data"][0]["pulse_score"] >= 0
     assert payload["data"][0]["pulse_description"] == "How interesting this market looks today."
     assert payload["data"][0]["market_health_score"] >= 0
     assert payload["data"][0]["market_mood_label"]
     assert payload["data"][0]["market_mood_reason"]
+    assert payload["data"][0]["category"]
+    assert payload["data"][0]["category_label"]
+    assert payload["data"][0]["why_people_care"]
+    assert payload["data"][0]["simple_read"]
+    assert payload["data"][0]["what_to_watch"]
+    assert payload["data"][0]["attention_summary"]
+    assert payload["data"][0]["topic_narrative"]
     assert payload["data"][0]["url"].startswith("https://polymarket.com")
 
 
@@ -106,6 +114,9 @@ async def test_miniapp_today_api_shape() -> None:
     assert "why_it_matters" in payload["data"][0]
     assert "why_people_care" in payload["data"][0]
     assert "risk_flags" in payload["data"][0]
+    assert payload["narrative"]
+    assert payload["what_changed"]
+    assert isinstance(payload["category_summaries"], dict)
 
 
 @pytest.mark.asyncio
@@ -149,3 +160,20 @@ async def test_miniapp_search_empty_query_returns_empty_array() -> None:
 
     assert payload["data"] == []
     assert payload["message"] == "search query is empty"
+
+
+@pytest.mark.asyncio
+async def test_miniapp_search_returns_ai_assisted_summary() -> None:
+    server = HealthServer(
+        "127.0.0.1",
+        0,
+        engine=object(),
+        market_analyzer=FakeMarketAnalyzer(),
+    )
+
+    response = await server._api_search(make_mocked_request("GET", "/api/search?q=bitcoin"))
+    payload = _payload(response)
+
+    assert payload["message"] == "ok"
+    assert payload["summary"]
+    assert payload["data"][0]["simple_read"]

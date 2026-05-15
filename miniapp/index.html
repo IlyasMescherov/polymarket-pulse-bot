@@ -31,6 +31,10 @@
         <button class="ghost-button" type="button" data-refresh data-i18n="refresh">Refresh</button>
       </section>
 
+      <section class="category-rail" aria-label="Event categories">
+        <div id="category-chips" class="category-rail__chips"></div>
+      </section>
+
       <div class="screen-stack">
         <section id="screen-today" class="screen is-active" data-screen="today" aria-labelledby="today-title">
           <div class="screen-intro">
@@ -38,6 +42,11 @@
             <h2 id="today-title" data-i18n="todayTitle">Daily Market Intelligence</h2>
             <p data-i18n="todaySubtitle">Your quick read of what matters today.</p>
           </div>
+
+          <section id="today-narrative" class="narrative-card skeleton-card" aria-live="polite">
+            <p class="section-kicker" data-i18n="narrativeKicker">Today’s Narrative</p>
+            <h3 data-i18n="narrativeTitle">What markets are reacting to today.</h3>
+          </section>
 
           <div id="today-hero" class="story-card story-card--hero skeleton-card"></div>
 
@@ -130,6 +139,14 @@
           </div>
 
           <div class="settings-card">
+            <div class="settings-row settings-row--stacked">
+              <div>
+                <strong data-i18n="interests">Interests</strong>
+                <span data-i18n="interestsHint">Prioritize categories you care about.</span>
+              </div>
+              <div id="interest-chips" class="chip-row chip-row--wrap"></div>
+            </div>
+
             <div class="settings-row">
               <div>
                 <strong data-i18n="language">Language</strong>
