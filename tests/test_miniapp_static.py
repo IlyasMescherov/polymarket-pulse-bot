@@ -273,8 +273,21 @@ def test_miniapp_loading_skeleton_and_error_states_exist() -> None:
     assert "renderLoadingSkeletons" in script_text
     assert "skeletonMarketCard" in script_text
     assert "skeletonLines" in script_text
+    assert "skeletonPills" in script_text
     assert "skeleton-card--structured" in script_text
+    assert "skeleton-pill" in index_text
+    assert "skeleton-button" in index_text
+    assert 'id="today-hero" class="story-card story-card--hero skeleton-card"></div>' not in index_text
+    assert index_text.count("skeleton-line") >= 14
+    assert index_text.count("skeleton-pill") >= 8
+    assert index_text.count("skeleton-button") >= 2
     assert "BOOT_LOADING_MIN_MS = 520" in script_text
+    assert "tg.ready()" in script_text
+    assert "tg.expand()" in script_text
+    assert 'tg.isVersionAtLeast("7.7")' in script_text
+    assert "tg.disableVerticalSwipes()" in script_text
+    assert "tg.setHeaderColor" in script_text
+    assert "tg.setBackgroundColor" in script_text
     assert "hideBootLoader" in script_text
     assert "Promise.race" in script_text
     assert "Could not load briefing." in script_text
@@ -286,6 +299,10 @@ def test_miniapp_loading_skeleton_and_error_states_exist() -> None:
     assert "refreshDashboard({ initial: true })" in script_text
     assert ".app-loading" in styles_text
     assert ".skeleton-line" in styles_text
+    assert ".skeleton-pill" in styles_text
+    assert ".skeleton-button" in styles_text
+    assert "overscroll-behavior: none" in styles_text
+    assert "overscroll-behavior: contain" in styles_text
     assert ".error-state" in styles_text
     assert "@keyframes loadingBar" in styles_text
 

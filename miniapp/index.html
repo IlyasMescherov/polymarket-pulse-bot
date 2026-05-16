@@ -43,19 +43,39 @@
             <p data-i18n="todaySubtitle">Your quick read of what matters today.</p>
           </div>
 
-          <section id="today-narrative" class="narrative-card skeleton-card" aria-live="polite">
-            <p class="section-kicker" data-i18n="narrativeKicker">Today’s Narrative</p>
-            <h3 data-i18n="narrativeTitle">What markets are reacting to today.</h3>
+          <section id="today-narrative" class="narrative-card skeleton-card skeleton-card--structured" aria-live="polite">
+            <span class="skeleton-line skeleton-line--title"></span>
+            <span class="skeleton-line skeleton-line--wide"></span>
+            <span class="skeleton-line skeleton-line--medium"></span>
+            <div class="skeleton-pills" aria-hidden="true">
+              <span class="skeleton-pill"></span>
+              <span class="skeleton-pill skeleton-pill--small"></span>
+            </div>
           </section>
 
-          <div id="today-hero" class="story-card story-card--hero skeleton-card"></div>
+          <div id="today-hero" class="story-card story-card--hero skeleton-card skeleton-card--structured">
+            <span class="skeleton-line skeleton-line--title"></span>
+            <span class="skeleton-line skeleton-line--wide"></span>
+            <span class="skeleton-line skeleton-line--medium"></span>
+            <div class="skeleton-pills" aria-hidden="true">
+              <span class="skeleton-pill"></span>
+              <span class="skeleton-pill skeleton-pill--small"></span>
+            </div>
+            <span class="skeleton-button"></span>
+          </div>
 
           <div class="daily-snapshot" aria-live="polite">
-            <section id="what-changed" class="mini-panel skeleton-card">
-              <h3>What changed</h3>
+            <section id="what-changed" class="mini-panel skeleton-card skeleton-card--structured">
+              <span class="skeleton-line skeleton-line--title"></span>
+              <span class="skeleton-line skeleton-line--wide"></span>
+              <span class="skeleton-line skeleton-line--short"></span>
             </section>
-            <section id="mood-summary" class="mini-panel skeleton-card">
-              <h3>Market mood today</h3>
+            <section id="mood-summary" class="mini-panel skeleton-card skeleton-card--structured">
+              <span class="skeleton-line skeleton-line--title"></span>
+              <span class="skeleton-line skeleton-line--medium"></span>
+              <div class="skeleton-pills" aria-hidden="true">
+                <span class="skeleton-pill skeleton-pill--small"></span>
+              </div>
             </section>
           </div>
 
@@ -73,7 +93,16 @@
             <p data-i18n="radarSubtitle">Markets where public attention is rising.</p>
           </div>
 
-          <div id="smart-hero" class="insight-card skeleton-card"></div>
+          <div id="smart-hero" class="insight-card skeleton-card skeleton-card--structured">
+            <span class="skeleton-line skeleton-line--title"></span>
+            <span class="skeleton-line skeleton-line--wide"></span>
+            <span class="skeleton-line skeleton-line--medium"></span>
+            <div class="skeleton-pills" aria-hidden="true">
+              <span class="skeleton-pill"></span>
+              <span class="skeleton-pill skeleton-pill--small"></span>
+            </div>
+            <span class="skeleton-button"></span>
+          </div>
           <div id="radar-list" class="compact-list" aria-live="polite"></div>
         </section>
 

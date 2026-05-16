@@ -6,6 +6,10 @@ const EMPTY_MESSAGE = "No data yet. PulseMarket will keep watching.";
 const BOOT_LOADING_MIN_MS = 520;
 const STORAGE_PREFIX = "pulsemarket-miniapp:";
 const SEARCH_SUGGESTIONS = ["bitcoin", "election", "fed", "ai", "sports"];
+const TELEGRAM_CHROME_COLORS = {
+  dark: { header: "#050910", background: "#050910" },
+  light: { header: "#f4f7fb", background: "#f4f7fb" },
+};
 const EVENT_CATEGORIES = [
   { key: "all", en: "All", ru: "Все" },
   { key: "politics", en: "Politics", ru: "Политика" },
@@ -464,11 +468,36 @@ function prioritizeInterests(items) {
   });
 }
 
-if (tg) {
-  tg.ready();
-  tg.expand();
-  if (tg.BackButton) tg.BackButton.hide();
+function configureTelegramWebApp() {
+  if (!tg) return;
+  try {
+    if (typeof tg.ready === "function") tg.ready();
+    if (typeof tg.expand === "function") tg.expand();
+    if (
+      typeof tg.isVersionAtLeast === "function" &&
+      tg.isVersionAtLeast("7.7") &&
+      typeof tg.disableVerticalSwipes === "function"
+    ) {
+      tg.disableVerticalSwipes();
+    }
+    if (tg.BackButton) tg.BackButton.hide();
+  } catch {
+    // Browser preview should keep working even if Telegram WebApp APIs differ.
+  }
 }
+
+function setTelegramChromeColors(theme = "dark") {
+  if (!tg) return;
+  const colors = TELEGRAM_CHROME_COLORS[theme] || TELEGRAM_CHROME_COLORS.dark;
+  try {
+    if (typeof tg.setHeaderColor === "function") tg.setHeaderColor(colors.header);
+    if (typeof tg.setBackgroundColor === "function") tg.setBackgroundColor(colors.background);
+  } catch {
+    // Telegram clients vary; color sync is polish, not a blocker.
+  }
+}
+
+configureTelegramWebApp();
 
 const money = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -483,6 +512,7 @@ function applyTheme() {
   document.documentElement.dataset.theme = theme;
   document.documentElement.dataset.compact = state.toggles.compactMode ? "true" : "false";
   document.documentElement.dataset.reducedMotion = state.toggles.reducedAnimations ? "true" : "false";
+  setTelegramChromeColors(theme);
 }
 
 function applyCopy() {
@@ -663,7 +693,7 @@ async function loadJson(path) {
 }
 
 function clearNode(node) {
-  node.classList.remove("skeleton-card");
+  node.classList.remove("skeleton-card", "skeleton-card--structured");
   node.innerHTML = "";
 }
 
@@ -685,10 +715,20 @@ function skeletonLines(count = 3) {
   return Array.from({ length: count }, (_, index) => `<span class="skeleton-line skeleton-line--${index + 1}"></span>`).join("");
 }
 
+function skeletonPills(count = 2) {
+  return `
+    <div class="skeleton-pills" aria-hidden="true">
+      ${Array.from({ length: count }, (_, index) => `<span class="skeleton-pill${index ? " skeleton-pill--small" : ""}"></span>`).join("")}
+    </div>
+  `;
+}
+
 function skeletonMarketCard(variant = "compact") {
   return `
     <article class="market-card market-card--${variant} skeleton-card skeleton-card--structured">
-      ${skeletonLines(4)}
+      ${skeletonLines(3)}
+      ${skeletonPills(2)}
+      <span class="skeleton-button"></span>
     </article>
   `;
 }
@@ -701,18 +741,18 @@ function renderLoadingSkeletons() {
   const radarList = document.getElementById("radar-list");
   if (narrative) {
     narrative.classList.add("skeleton-card", "skeleton-card--structured");
-    narrative.innerHTML = skeletonLines(3);
+    narrative.innerHTML = `${skeletonLines(3)}${skeletonPills(2)}`;
   }
   if (hero) {
     hero.classList.add("skeleton-card", "skeleton-card--structured");
-    hero.innerHTML = skeletonLines(5);
+    hero.innerHTML = `${skeletonLines(3)}${skeletonPills(2)}<span class="skeleton-button"></span>`;
   }
   if (secondary) {
     secondary.innerHTML = [skeletonMarketCard("secondary"), skeletonMarketCard("secondary")].join("");
   }
   if (radar) {
     radar.classList.add("skeleton-card", "skeleton-card--structured");
-    radar.innerHTML = skeletonLines(4);
+    radar.innerHTML = `${skeletonLines(3)}${skeletonPills(2)}<span class="skeleton-button"></span>`;
   }
   if (radarList) {
     radarList.innerHTML = skeletonMarketCard("compact");
@@ -1235,8 +1275,8 @@ function renderDailySnapshot() {
   if (state.loading.today || state.loading.hot || state.loading.moves) {
     changed.classList.add("skeleton-card", "skeleton-card--structured");
     moodTarget.classList.add("skeleton-card", "skeleton-card--structured");
-    changed.innerHTML = skeletonLines(3);
-    moodTarget.innerHTML = skeletonLines(2);
+    changed.innerHTML = `${skeletonLines(3)}${skeletonPills(1)}`;
+    moodTarget.innerHTML = `${skeletonLines(2)}${skeletonPills(1)}`;
     return;
   }
 
@@ -1293,7 +1333,7 @@ function renderNarrative() {
 
   if (state.loading.today) {
     target.classList.add("skeleton-card", "skeleton-card--structured");
-    target.innerHTML = skeletonLines(3);
+    target.innerHTML = `${skeletonLines(3)}${skeletonPills(2)}`;
     return;
   }
   if (state.errors.today) {
