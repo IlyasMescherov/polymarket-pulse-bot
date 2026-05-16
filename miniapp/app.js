@@ -211,6 +211,14 @@ const copy = {
     relatedTopics: "Related topics",
     resolutionRules: "Resolution rules",
     resolutionRulesCopy: "Open the market page and review the official resolution criteria.",
+    marketIndicators: "Market indicators",
+    marketHeat: "Market heat",
+    confirmation: "Confirmation",
+    errorRisk: "Error risk",
+    timePressure: "Time pressure",
+    marketDepth: "Market depth",
+    aiVerdict: "AI verdict",
+    todaySummary: "Today",
     moodQuiet: "Quiet",
     moodActive: "Active",
     moodHeating: "Heating up",
@@ -219,6 +227,29 @@ const copy = {
     copied: "Copied",
     appShared: "PulseMarket AI helps you understand what matters on Polymarket.",
     memoryFallback: "Not enough history for comparison yet.",
+    heatHot: "Hot",
+    heatWarm: "Warm",
+    heatCalm: "Calm",
+    confirmationWeak: "Weak",
+    confirmationMedium: "Medium",
+    confirmationStrong: "Strong",
+    riskLow: "Low",
+    riskMedium: "Medium",
+    riskHigh: "High",
+    timeEndingSoon: "Ending soon",
+    timeHasTime: "Time available",
+    timeLongMarket: "Long market",
+    depthLive: "Live volume",
+    depthMedium: "Medium volume",
+    depthWeak: "Weak volume",
+    verdictWorthWatching: "Worth watching",
+    verdictCaution: "Caution",
+    verdictNotEnoughData: "Not enough data",
+    verdictStrongInterest: "Strong interest",
+    verdictNotConfident: "Not confident",
+    hotMarketsCount: "hot markets",
+    endingSoonCount: "ending soon",
+    weakConfirmationCount: "weak confirmation",
   },
   ru: {
     productLine: "Быстро понять, что важно на Polymarket.",
@@ -374,6 +405,14 @@ const copy = {
     relatedTopics: "Связанные темы",
     resolutionRules: "Правила разрешения",
     resolutionRulesCopy: "Открой страницу рынка и проверь официальные критерии разрешения.",
+    marketIndicators: "Индикаторы рынка",
+    marketHeat: "Температура",
+    confirmation: "Подтверждение",
+    errorRisk: "Риск ошибки",
+    timePressure: "Давление времени",
+    marketDepth: "Объём",
+    aiVerdict: "AI вывод",
+    todaySummary: "Сегодня",
     moodQuiet: "Тихо",
     moodActive: "Активно",
     moodHeating: "Разогревается",
@@ -382,6 +421,29 @@ const copy = {
     copied: "Скопировано",
     appShared: "PulseMarket AI помогает быстро понять, что важно на Polymarket.",
     memoryFallback: "Пока мало истории для сравнения.",
+    heatHot: "Горячий",
+    heatWarm: "Тёплый",
+    heatCalm: "Спокойный",
+    confirmationWeak: "Слабое",
+    confirmationMedium: "Среднее",
+    confirmationStrong: "Сильное",
+    riskLow: "Низкий",
+    riskMedium: "Средний",
+    riskHigh: "Высокий",
+    timeEndingSoon: "Скоро завершение",
+    timeHasTime: "Есть время",
+    timeLongMarket: "Долгий рынок",
+    depthLive: "Живой объём",
+    depthMedium: "Средний объём",
+    depthWeak: "Слабый объём",
+    verdictWorthWatching: "Стоит смотреть",
+    verdictCaution: "Осторожно",
+    verdictNotEnoughData: "Мало данных",
+    verdictStrongInterest: "Сильный интерес",
+    verdictNotConfident: "Не выглядит уверенно",
+    hotMarketsCount: "горячих рынка",
+    endingSoonCount: "скоро завершатся",
+    weakConfirmationCount: "слабое подтверждение",
   },
 };
 
@@ -801,7 +863,7 @@ function shortReason(item) {
 }
 
 function insightStrength(item) {
-  const raw = String((item && (item.insight_strength || item.attention_signal)) || "");
+  const raw = String((item && item.insight_strength) || "");
   const movement = Math.abs(Number((item && item.movement) || 0));
   const activity = Number((item && (item.public_activity || item.volume)) || 0);
   let key = "noticeable";
@@ -895,6 +957,155 @@ function marketRegime(item) {
   return labels[currentLanguage()].quiet;
 }
 
+function keyedLabel(item, field, labels, fallback = "") {
+  const key = String((item && item[`${field}_key`]) || "").trim();
+  if (key && labels[key]) return t(labels[key]);
+  const direct = String((item && item[field]) || "").trim();
+  if (direct && matchesCurrentLanguage(direct)) return direct;
+  return fallback;
+}
+
+function marketHeat(item) {
+  return keyedLabel(
+    item,
+    "market_heat",
+    { hot: "heatHot", warm: "heatWarm", calm: "heatCalm" },
+    t("heatCalm"),
+  );
+}
+
+function confirmationLevel(item) {
+  return keyedLabel(
+    item,
+    "confirmation_level",
+    { weak: "confirmationWeak", medium: "confirmationMedium", strong: "confirmationStrong" },
+    t("confirmationWeak"),
+  );
+}
+
+function errorRisk(item) {
+  return keyedLabel(
+    item,
+    "error_risk",
+    { low: "riskLow", medium: "riskMedium", high: "riskHigh" },
+    t("riskMedium"),
+  );
+}
+
+function timePressure(item) {
+  return keyedLabel(
+    item,
+    "time_pressure",
+    { ending_soon: "timeEndingSoon", has_time: "timeHasTime", long_market: "timeLongMarket" },
+    marketRegime(item),
+  );
+}
+
+function marketDepth(item) {
+  return keyedLabel(
+    item,
+    "market_depth",
+    { live: "depthLive", medium: "depthMedium", weak: "depthWeak" },
+    t("depthWeak"),
+  );
+}
+
+function aiVerdict(item) {
+  return keyedLabel(
+    item,
+    "ai_verdict",
+    {
+      worth_watching: "verdictWorthWatching",
+      caution: "verdictCaution",
+      not_enough_data: "verdictNotEnoughData",
+      strong_interest: "verdictStrongInterest",
+      not_confident: "verdictNotConfident",
+    },
+    insightStrength(item),
+  );
+}
+
+function indicatorSummary(item) {
+  const direct = String((item && item.indicator_summary) || "").trim();
+  if (direct && matchesCurrentLanguage(direct)) return direct;
+  const confirmation = String((item && item.confirmation_level_key) || "weak");
+  const risk = String((item && item.error_risk_key) || "medium");
+  if (isRu()) {
+    if (risk === "high") return "Вывод требует осторожности: риск ошибки выше среднего.";
+    if (confirmation === "strong") return "Вероятность и объём смотрятся согласованно.";
+    return "Интерес есть, но подтверждение пока ограниченное.";
+  }
+  if (risk === "high") return "The read needs caution because error risk is elevated.";
+  if (confirmation === "strong") return "Probability and volume look aligned.";
+  return "Interest is present, but confirmation is still limited.";
+}
+
+function indicatorGrid(item, compact = false) {
+  const entries = [
+    [t("confirmation"), confirmationLevel(item), "confirmation"],
+    [t("errorRisk"), errorRisk(item), "risk"],
+    [t("marketDepth"), marketDepth(item), "depth"],
+    [t("pulseScore"), pulseMeta(item), "pulse"],
+  ];
+  return `
+    <div class="indicator-grid${compact ? " indicator-grid--compact" : ""}">
+      ${entries
+        .map(
+          ([label, value, key]) => `
+            <div class="indicator-cell indicator-cell--${key}">
+              <span>${escapeHtml(label)}</span>
+              <strong>${escapeHtml(value)}</strong>
+            </div>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function probabilityBar(item) {
+  const value = Math.max(0, Math.min(100, Number((item && item.probability) || 0)));
+  return `
+    <div class="probability-bar" aria-hidden="true">
+      <span style="width: ${value}%"></span>
+    </div>
+  `;
+}
+
+function indicatorTopRow(item) {
+  return `
+    <div class="pill-row pill-row--indicators">
+      <span class="pill pill--prob">${escapeHtml(probabilityDisplay(item))}</span>
+      <span class="pill pill--heat">${escapeHtml(marketHeat(item))}</span>
+      <span class="pill pill--time">${escapeHtml(timePressure(item))}</span>
+    </div>
+  `;
+}
+
+function verdictLine(item) {
+  return `
+    <div class="verdict-line">
+      <span>${escapeHtml(t("aiVerdict"))}</span>
+      <strong>${escapeHtml(indicatorSummary(item))}</strong>
+    </div>
+  `;
+}
+
+function todaySummaryStrip(items) {
+  const markets = Array.isArray(items) ? items : [];
+  const hotCount = markets.filter((item) => String(item.market_heat_key || "") === "hot" || Number(item.pulse_score || 0) >= 75).length;
+  const endingCount = markets.filter((item) => String(item.time_pressure_key || "") === "ending_soon").length;
+  const weakCount = markets.filter((item) => String(item.confirmation_level_key || "weak") === "weak").length;
+  return `
+    <div class="today-summary-strip">
+      <span>${escapeHtml(t("todaySummary"))}</span>
+      <strong>${hotCount} ${escapeHtml(t("hotMarketsCount"))}</strong>
+      <strong>${endingCount} ${escapeHtml(t("endingSoonCount"))}</strong>
+      <strong>${weakCount} ${escapeHtml(t("weakConfirmationCount"))}</strong>
+    </div>
+  `;
+}
+
 function inferMoodKey(item) {
   const movement = Math.abs(Number(item.movement || 0));
   const volume = Number(item.volume || item.public_activity || 0);
@@ -980,6 +1191,19 @@ function normalizeMarket(item) {
     market_regime: item && item.market_regime,
     market_regime_key: item && item.market_regime_key,
     regime_reason: item && item.regime_reason,
+    market_heat: item && item.market_heat,
+    market_heat_key: item && item.market_heat_key,
+    confirmation_level: item && item.confirmation_level,
+    confirmation_level_key: item && item.confirmation_level_key,
+    error_risk: item && item.error_risk,
+    error_risk_key: item && item.error_risk_key,
+    time_pressure: item && item.time_pressure,
+    time_pressure_key: item && item.time_pressure_key,
+    market_depth: item && item.market_depth,
+    market_depth_key: item && item.market_depth_key,
+    ai_verdict: item && item.ai_verdict,
+    ai_verdict_key: item && item.ai_verdict_key,
+    indicator_summary: item && item.indicator_summary,
     memory_pattern: item && item.memory_pattern,
     changed_since_last_seen: item && item.changed_since_last_seen,
     historical_context: item && item.historical_context,
@@ -1014,7 +1238,7 @@ function removeSaved(id) {
 
 function marketText(item) {
   const mood = marketMood(item);
-  return `${item.title || "Polymarket market"}\n${t("probability")}: ${probability(item)}\n${t("marketMood")}: ${mood.label}\n${pulseLabel(item)} · ${item.pulse_score ?? 0}/100\n${t("whyPeopleCare")}: ${shortReason(item)}\n${safeUrl(item.url)}`;
+  return `${item.title || "Polymarket market"}\n${t("probability")}: ${probability(item)}\n${t("marketMood")}: ${mood.label}\n${t("confirmation")}: ${confirmationLevel(item)}\n${t("errorRisk")}: ${errorRisk(item)}\n${t("aiVerdict")}: ${indicatorSummary(item)}\n${safeUrl(item.url)}`;
 }
 
 async function shareText(text) {
@@ -1057,19 +1281,18 @@ function buttonRow(item) {
 }
 
 function marketCard(item, variant = "compact") {
-  const regime = marketRegime(item);
   return `
     <article class="market-card market-card--${variant}">
       <div class="market-card__main">
         <div class="market-card__titleline">
           <h3>${escapeHtml(compactTitle(item.title))}</h3>
-          <span class="pill pill--regime">${escapeHtml(regime)}</span>
         </div>
         <p>${escapeHtml(shortReason(item))}</p>
       </div>
-      <div class="pill-row">
-        <span class="pill pill--prob">${escapeHtml(probabilityDisplay(item))}</span>
-      </div>
+      ${indicatorTopRow(item)}
+      ${probabilityBar(item)}
+      ${indicatorGrid(item)}
+      ${verdictLine(item)}
       ${pulseSecondary(item)}
       ${buttonRow(item)}
     </article>
@@ -1078,19 +1301,17 @@ function marketCard(item, variant = "compact") {
 
 function savedCard(item, removable = false) {
   const encoded = encodeURIComponent(JSON.stringify(item));
-  const regime = marketRegime(item);
   return `
     <article class="market-card market-card--saved">
       <div class="market-card__main">
         <div class="market-card__titleline">
           <h3>${escapeHtml(compactTitle(item.title))}</h3>
-          <span class="pill pill--regime">${escapeHtml(regime)}</span>
         </div>
         <p>${escapeHtml(item.why || t("selectedToday"))}</p>
       </div>
-      <div class="pill-row">
-        <span class="pill pill--prob">${escapeHtml(probabilityDisplay(item))}</span>
-      </div>
+      ${indicatorTopRow(item)}
+      ${indicatorGrid(item, true)}
+      ${verdictLine(item)}
       ${pulseSecondary(item)}
       <div class="action-row">
         <a class="primary-action" href="${escapeHtml(safeUrl(item.url))}" target="_blank" rel="noreferrer" data-open-market="${encoded}">${escapeHtml(t("open"))}</a>
@@ -1118,6 +1339,15 @@ function openExplain(item) {
 
   title.textContent = normalized.title;
   body.innerHTML = `
+    <section class="indicator-panel">
+      <div class="indicator-panel__head">
+        <span>${escapeHtml(t("marketIndicators"))}</span>
+        <strong>${escapeHtml(aiVerdict(normalized))}</strong>
+      </div>
+      ${indicatorTopRow(normalized)}
+      ${indicatorGrid(normalized)}
+      ${verdictLine(normalized)}
+    </section>
     <div class="detail-list">
       <div>
         <span>${escapeHtml(t("quickTake"))}</span>
@@ -1392,17 +1622,17 @@ function renderToday(payload) {
   }
 
   const top = visibleToday[0];
-  const topRegime = marketRegime(top);
   hero.innerHTML = `
     <div class="story-card__topline">
       <span>${escapeHtml(t("mainStory"))}</span>
-      <span>${escapeHtml(pulseLabel(top))}</span>
+      <span>${escapeHtml(aiVerdict(top))}</span>
     </div>
+    ${todaySummaryStrip(visibleToday)}
     <h3>${escapeHtml(compactTitle(top.title, 86))}</h3>
-    <div class="pill-row">
-      <span class="pill pill--prob">${escapeHtml(probabilityDisplay(top))}</span>
-      <span class="pill pill--regime">${escapeHtml(topRegime)}</span>
-    </div>
+    ${indicatorTopRow(top)}
+    ${probabilityBar(top)}
+    ${indicatorGrid(top)}
+    ${verdictLine(top)}
     ${pulseSecondary(top)}
     <p>${escapeHtml(shortReason(top))}</p>
     ${buttonRow(top)}
@@ -1438,6 +1668,9 @@ function renderRadar(payload) {
     </div>
     <h3>${escapeHtml(compactTitle(top.title || "Public market activity", 82))}</h3>
     <p>${escapeHtml(shortReason(top))}</p>
+    ${indicatorTopRow(top)}
+    ${indicatorGrid(top, true)}
+    ${verdictLine(top)}
     ${buttonRow({ ...top, pulse_score: top.pulse_score || 0, probability: top.probability })}
   `;
 

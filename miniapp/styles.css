@@ -556,6 +556,18 @@ button {
   background: rgba(123, 214, 164, 0.1);
 }
 
+.pill--heat {
+  color: #dce8f3;
+  border: 1px solid rgba(75, 141, 255, 0.22);
+  background: rgba(75, 141, 255, 0.12);
+}
+
+.pill--time {
+  color: var(--text-soft);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.045);
+}
+
 .pill--mood {
   color: #b7dec7;
   border: 1px solid rgba(123, 214, 164, 0.22);
@@ -566,6 +578,148 @@ button {
   color: var(--text-soft);
   border: 1px solid rgba(118, 154, 255, 0.2);
   background: rgba(118, 154, 255, 0.08);
+}
+
+.pill-row--indicators {
+  gap: 6px;
+}
+
+.indicator-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.indicator-grid--compact {
+  gap: 5px;
+}
+
+.indicator-cell {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.indicator-cell span {
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.indicator-cell strong {
+  color: var(--text);
+  font-size: 0.76rem;
+  line-height: 1.18;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.indicator-cell--risk strong {
+  color: #f3c58f;
+}
+
+.indicator-cell--confirmation strong,
+.indicator-cell--pulse strong {
+  color: #b9d3ff;
+}
+
+.probability-bar {
+  height: 5px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: rgba(148, 179, 209, 0.12);
+}
+
+.probability-bar span {
+  display: block;
+  height: 100%;
+  min-width: 3px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #4b8dff, #7bd6a4);
+}
+
+.verdict-line {
+  display: grid;
+  gap: 3px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.verdict-line span,
+.indicator-panel__head span {
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.verdict-line strong {
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  line-height: 1.25;
+}
+
+.today-summary-strip {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  overflow-x: auto;
+  margin-top: 8px;
+  padding-bottom: 1px;
+  scrollbar-width: none;
+}
+
+.today-summary-strip span,
+.today-summary-strip strong {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 5px 8px;
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+
+.today-summary-strip span {
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.today-summary-strip strong {
+  color: var(--text);
+  background: rgba(75, 141, 255, 0.09);
+}
+
+.indicator-panel {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.indicator-panel__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.indicator-panel__head strong {
+  color: var(--text);
+  font-size: 0.8rem;
 }
 
 .pulse-subtle {

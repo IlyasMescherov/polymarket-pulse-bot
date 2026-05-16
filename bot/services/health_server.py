@@ -16,6 +16,7 @@ from bot.services.ai_insight_engine import generate_market_briefing
 from bot.services.event_categories import category_label, classify_market_category
 from bot.services.market_analyzer import MarketAnalyzer, MarketMovement
 from bot.services.market_health import calculate_market_health
+from bot.services.market_indicators import calculate_market_indicators
 from bot.services.market_mood import calculate_market_mood
 from bot.services.polymarket_client import Market
 from bot.services.pulse_score import calculate_pulse_score
@@ -75,6 +76,12 @@ def _market_to_api_object(
     pulse = calculate_pulse_score(market, delta=delta)
     health = calculate_market_health(market)
     mood = calculate_market_mood(market, delta=delta, language="en")
+    indicators = calculate_market_indicators(
+        market,
+        pulse_score=pulse.value,
+        delta=delta,
+        language="en",
+    )
     category = context.category if context is not None else classify_market_category(market)
     return {
         "market_id": market.id,
@@ -206,6 +213,7 @@ def _market_to_api_object(
             if context is not None
             else "Not enough history for comparison yet."
         ),
+        **indicators.as_dict(),
         "risk_flags": market_risk_flags(market, delta=delta),
         "url": market.url,
     }
@@ -256,8 +264,21 @@ def _smart_market_to_api_object(activity: MarketActivity) -> dict[str, Any]:
             "volume": activity.amount_usd,
             "probability_delta": 0,
             "probability": 0,
+            "pulse_score": 55,
         },
         "en",
+    )
+    indicators = calculate_market_indicators(
+        {
+            "title": activity.market_title,
+            "public_activity": activity.amount_usd,
+            "volume": activity.amount_usd,
+            "movement": 0,
+            "pulse_score": 55,
+        },
+        pulse_score=55,
+        delta=0,
+        language="en",
     )
     return {
         "market_id": activity.market_id,
@@ -265,6 +286,11 @@ def _smart_market_to_api_object(activity: MarketActivity) -> dict[str, Any]:
         "public_activity": round(activity.amount_usd, 2),
         "trades_count": activity.trades_count,
         "top_side": None,
+        "probability": 0,
+        "probability_label": "Unlikely",
+        "probability_interpretation": "Unlikely",
+        "pulse_score": 55,
+        "pulse_label": "Worth watching",
         "url": "https://polymarket.com",
         "quick_take": briefing["quick_take"],
         "why_it_matters": _attention_reason_for_title(activity.market_title),
@@ -277,17 +303,18 @@ def _smart_market_to_api_object(activity: MarketActivity) -> dict[str, Any]:
         "confidence_level": briefing["confidence_level"],
         "what_to_check": briefing["what_to_check"],
         "resolution_note": briefing["resolution_note"],
-            "category_voice": briefing["category_voice"],
-            "market_memory_summary": briefing["market_memory_summary"],
-            "market_regime": briefing["market_regime"],
-            "market_regime_key": "short_term_attention",
-            "regime_reason": briefing["regime_reason"],
-            "memory_pattern": briefing["memory_pattern"],
-            "changed_since_last_seen": briefing["changed_since_last_seen"],
-            "historical_context": briefing["historical_context"],
-            "related_topics": briefing["related_topics"],
-            "category": category,
-            "category_label": category_label(category, "en"),
+        "category_voice": briefing["category_voice"],
+        "market_memory_summary": briefing["market_memory_summary"],
+        "market_regime": briefing["market_regime"],
+        "market_regime_key": "short_term_attention",
+        "regime_reason": briefing["regime_reason"],
+        "memory_pattern": briefing["memory_pattern"],
+        "changed_since_last_seen": briefing["changed_since_last_seen"],
+        "historical_context": briefing["historical_context"],
+        "related_topics": briefing["related_topics"],
+        "category": category,
+        "category_label": category_label(category, "en"),
+        **indicators.as_dict(),
     }
 
 

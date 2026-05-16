@@ -6,6 +6,7 @@ from typing import Any
 from bot.database.models import MarketSnapshot, UserWatchlist
 from bot.services.market_analyzer import MarketMovement
 from bot.services.market_health import MarketHealth
+from bot.services.market_indicators import calculate_market_indicators
 from bot.services.market_mood import calculate_market_mood
 from bot.services.polymarket_client import Market
 from bot.services.pulse_score import PulseScore
@@ -93,6 +94,12 @@ def format_market_card(
     risk_flags: list[str] | None = None,
     language: str | None = None,
 ) -> str:
+    indicators = calculate_market_indicators(
+        market,
+        pulse_score=pulse_score.value if pulse_score is not None else None,
+        delta=movement_delta,
+        language=language,
+    )
     lines = [
         heading,
         "",
@@ -115,6 +122,16 @@ def format_market_card(
         "",
         _label("До завершения:", "Time left:", language),
         format_time_until(market.end_date, language=language),
+        "",
+        _label("Индикаторы:", "Indicators:", language),
+        f"{_label('Температура', 'Market heat', language)}: {indicators.market_heat}",
+        f"{_label('Подтверждение', 'Confirmation', language)}: {indicators.confirmation_level}",
+        f"{_label('Риск ошибки', 'Error risk', language)}: {indicators.error_risk}",
+        f"{_label('Давление времени', 'Time pressure', language)}: {indicators.time_pressure}",
+        f"{_label('Объём', 'Market depth', language)}: {indicators.market_depth}",
+        "",
+        _label("Вывод:", "Verdict:", language),
+        indicators.indicator_summary,
     ]
     mood = calculate_market_mood(market, delta=movement_delta, language=language)
     lines.extend(
@@ -193,6 +210,12 @@ def format_movement_card(
     risk_flags: list[str] | None = None,
     language: str | None = None,
 ) -> str:
+    indicators = calculate_market_indicators(
+        movement.market,
+        pulse_score=pulse_score.value if pulse_score is not None else None,
+        delta=movement.delta,
+        language=language,
+    )
     if normalize_language(language) == "en":
         direction = "increased" if movement.delta > 0 else "decreased"
         movement_label = f"Probability {direction}:"
@@ -214,6 +237,14 @@ def format_movement_card(
         "",
         _label("До завершения:", "Time left:", language),
         format_time_until(movement.market.end_date, language=language),
+        "",
+        _label("Индикаторы:", "Indicators:", language),
+        f"{_label('Температура', 'Market heat', language)}: {indicators.market_heat}",
+        f"{_label('Подтверждение', 'Confirmation', language)}: {indicators.confirmation_level}",
+        f"{_label('Риск ошибки', 'Error risk', language)}: {indicators.error_risk}",
+        "",
+        _label("Вывод:", "Verdict:", language),
+        indicators.indicator_summary,
     ]
     if pulse_score is not None:
         lines.extend(["", "⚡ Pulse Score:", f"{pulse_score.value}/100 · {pulse_score.label}"])
@@ -235,6 +266,12 @@ def format_today_pulse_card(
     market = item.market
     why = ai_why or item.why_it_matters
     mood = calculate_market_mood(market, delta=item.delta, language=language)
+    indicators = calculate_market_indicators(
+        market,
+        pulse_score=item.pulse_score.value,
+        delta=item.delta,
+        language=language,
+    )
     if normalize_language(language) == "en":
         lines = [
             "📰 Morning Briefing",
@@ -258,6 +295,14 @@ def format_today_pulse_card(
             "Pulse Score:",
             f"{item.pulse_score.value}/100",
             "How interesting this market looks today.",
+            "",
+            "Indicators:",
+            f"Market heat: {indicators.market_heat}",
+            f"Confirmation: {indicators.confirmation_level}",
+            f"Error risk: {indicators.error_risk}",
+            "",
+            "Verdict:",
+            indicators.indicator_summary,
             "",
             "Research only · No trade execution",
         ]
@@ -285,6 +330,14 @@ def format_today_pulse_card(
         "Pulse Score:",
         f"{item.pulse_score.value}/100",
         "Насколько рынок сейчас интересен.",
+        "",
+        "Индикаторы:",
+        f"Температура: {indicators.market_heat}",
+        f"Подтверждение: {indicators.confirmation_level}",
+        f"Риск ошибки: {indicators.error_risk}",
+        "",
+        "Вывод:",
+        indicators.indicator_summary,
         "",
         "Для анализа · Без сделок",
     ]
@@ -393,7 +446,15 @@ def format_beginner_explanation(
     market: Market,
     ai_brief: str | None = None,
     language: str | None = None,
+    pulse_score: PulseScore | None = None,
+    movement_delta: float | None = None,
 ) -> str:
+    indicators = calculate_market_indicators(
+        market,
+        pulse_score=pulse_score.value if pulse_score is not None else None,
+        delta=movement_delta,
+        language=language,
+    )
     if normalize_language(language) == "en":
         lines = [
             "🧠 Analysis",
@@ -405,6 +466,14 @@ def format_beginner_explanation(
             "Check the rules, volume quality, and time left before drawing conclusions.",
             "",
             f"Current probability: {format_probability(market.yes_probability, language)}",
+            "",
+            "Market indicators:",
+            f"Market heat: {indicators.market_heat}",
+            f"Confirmation: {indicators.confirmation_level}",
+            f"Error risk: {indicators.error_risk}",
+            f"Time pressure: {indicators.time_pressure}",
+            f"Market depth: {indicators.market_depth}",
+            f"AI verdict: {indicators.ai_verdict}",
         ]
         if ai_brief:
             lines.extend(["", "AI market read:", ai_brief])
@@ -420,6 +489,14 @@ def format_beginner_explanation(
         "Проверь правила, качество объёма и время до завершения, прежде чем делать выводы.",
         "",
         f"Текущая вероятность: {format_probability(market.yes_probability)}",
+        "",
+        "Индикаторы рынка:",
+        f"Температура: {indicators.market_heat}",
+        f"Подтверждение: {indicators.confirmation_level}",
+        f"Риск ошибки: {indicators.error_risk}",
+        f"Давление времени: {indicators.time_pressure}",
+        f"Объём: {indicators.market_depth}",
+        f"AI вывод: {indicators.ai_verdict}",
     ]
     if ai_brief:
         lines.extend(["", "AI анализ:", ai_brief])

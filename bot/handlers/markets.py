@@ -860,7 +860,12 @@ async def explain_market(
         )
     ai_brief = ai_brief or await ai_explainer.explain_market(market)
     await callback.message.answer(
-        format_beginner_explanation(market, ai_brief=ai_brief, language=language),
+        format_beginner_explanation(
+            market,
+            ai_brief=ai_brief,
+            language=language,
+            pulse_score=pulse_score,
+        ),
         disable_web_page_preview=True,
     )
 

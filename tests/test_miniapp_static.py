@@ -36,6 +36,13 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "Attention vs conviction",
         "Market memory",
         "Market regime",
+        "Market indicators",
+        "Market heat",
+        "Confirmation",
+        "Error risk",
+        "Time pressure",
+        "Market depth",
+        "AI verdict",
         "Strength of read",
         "Activity Radar",
         "Search",
@@ -98,6 +105,13 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "switch",
         "pill--mood",
         "pill--regime",
+        "pill--heat",
+        "pill--time",
+        "indicator-grid",
+        "indicator-panel",
+        "verdict-line",
+        "probability-bar",
+        "today-summary-strip",
         "pulse-subtle",
         "simple-read",
         "search-summary",
@@ -169,6 +183,14 @@ def test_miniapp_settings_language_theme_and_saved_features_exist() -> None:
     assert "attention_vs_conviction" in script_text
     assert "market_memory_summary" in script_text
     assert "marketRegime" in script_text
+    assert "market_heat" in script_text
+    assert "confirmation_level" in script_text
+    assert "error_risk" in script_text
+    assert "time_pressure" in script_text
+    assert "market_depth" in script_text
+    assert "ai_verdict" in script_text
+    assert "indicatorGrid" in script_text
+    assert "todaySummaryStrip" in script_text
     assert "changed_since_last_brief" in script_text
     assert "related_topics" in script_text
 
@@ -187,6 +209,9 @@ def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
     assert "no financial advice" in text
     assert "where public attention is rising" in text
     assert "market mood" in text
+    assert "market indicators" in text
+    assert "confirmation" in text
+    assert "error risk" in text
     assert "morning briefing" in text
     assert "what changed" in text
     assert "today’s narrative" in text
@@ -207,6 +232,9 @@ def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
         "alpha leak",
         "wallet connection",
         "order placement",
+        "good bet",
+        "buy now",
+        "sell now",
     )
     for phrase in banned:
         assert phrase not in text
@@ -242,6 +270,9 @@ def test_miniapp_cards_are_compressed_and_have_habit_layer() -> None:
     assert "mainTension" in script_text
     assert "marketMemory" in script_text
     assert "marketRegime" in script_text
+    assert "marketIndicators" in script_text
+    assert "indicatorGrid" in script_text
+    assert "indicatorSummary" in script_text
     assert "confidenceLevel" in script_text
     assert "whatInfluences" in script_text
     assert "relatedTopics" in script_text
