@@ -49,6 +49,7 @@ def market_analyst_system_prompt() -> str:
         "Write like a senior editor at a financial publication. "
         "Use short sentences. No filler. No robotic phrasing. "
         "Interpret what is happening instead of retelling the data. "
+        "Look for the tension between public attention, probability movement, volume, and time left. "
         "Do not make predictions, do not give financial advice, and do not use banned market jargon. "
         "Always answer what the situation means for the reader."
     )
@@ -63,14 +64,15 @@ def build_market_briefing_prompt(market_json: Mapping[str, Any], lang: str = "en
         "Generate a market briefing with exactly these sections:\n"
         "1. QUICK TAKE: one sentence with the main takeaway, not a description.\n"
         "2. WHAT IS HAPPENING: two or three factual sentences.\n"
-        "3. WHAT THIS MEANS: two or three interpretation sentences, no raw data repetition.\n"
-        "4. ATTENTION VS CONVICTION: one or two sentences on whether expectations actually changed.\n"
-        "5. HOW STRONG IS THE MOVE: one sentence using weak, moderate, or strong.\n"
-        "6. WHAT TO CHECK: two to four bullets about rules, volume, timeframe, and related markets.\n"
-        "7. RELATED THEMES: include only if a cross-market connection exists.\n"
-        "8. HOW THIS RESOLVES: one or two plain-language sentences.\n\n"
+        "3. MAIN TENSION: one sentence naming the contradiction in the data.\n"
+        "4. WHAT THIS MEANS: two or three interpretation sentences, no raw data repetition.\n"
+        "5. ATTENTION VS CONVICTION: one or two sentences on whether expectations actually changed.\n"
+        "6. STRENGTH OF READ: one sentence using weak, moderate, or strong.\n"
+        "7. WHAT TO CHECK: two to four bullets about rules, volume, timeframe, and related markets.\n"
+        "8. RELATED THEMES: include only if a cross-market connection exists.\n"
+        "9. RESOLUTION RULES: one or two plain-language sentences.\n\n"
         "Rules: separate every section clearly, do not repeat information, avoid banned phrasing, "
-        "and do not use directional advice."
+        "avoid generic wording, and do not use directional advice."
     )
 
 
@@ -84,6 +86,7 @@ def build_today_narrative_prompt(markets_json: Sequence[Mapping[str, Any]], lang
         "Synthesize markets into two or three theme-level observations. "
         "Explain whether attention is moving faster than actual expectation changes. "
         "If no dominant narrative exists, say so directly. "
+        "Sound like an editorial briefing, not a generic AI summary. "
         "Do not list markets one by one."
     )
 

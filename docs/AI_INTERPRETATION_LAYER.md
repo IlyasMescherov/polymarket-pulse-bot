@@ -14,7 +14,7 @@ AI acts as a calm market intelligence analyst. It explains:
 
 - why a market is getting attention
 - what changed around the market
-- whether activity looks like background noise or a stronger attention shift
+- whether the read is weak, notable, or more convincing than usual
 - whether attention is moving together with probability
 - which related topics matter
 - what to watch next
@@ -26,7 +26,9 @@ It does not tell users what to do.
 Market API objects can include:
 
 - `what_this_means`
-- `attention_signal`
+- `insight_strength`
+- `main_tension`
+- `confidence_level`
 - `attention_vs_conviction`
 - `related_topics`
 
@@ -34,21 +36,23 @@ Daily briefing payloads can include:
 
 - `interpretation`
 
-## Attention Signal
+## Insight Strength
 
 Allowed labels:
 
-- Noise
-- Moderate attention
-- Strong interest
-- Meaningful attention shift
+- Weak confirmation
+- Interest is present
+- More noticeable than usual
+- Strong attention
+- More convincing than usual
 
 Russian UI labels:
 
-- Шум
-- Умеренное внимание
-- Сильный интерес
-- Значимое движение внимания
+- Слабое подтверждение
+- Есть интерес
+- Рынок заметнее обычного
+- Сильное внимание
+- Движение выглядит убедительнее обычного
 
 These labels describe public attention, not future outcomes.
 
@@ -79,7 +83,7 @@ Everything is based on public market data and optional AI summaries.
 If `OPENAI_API_KEY` is missing or the API fails, deterministic fallback text still produces:
 
 - context-aware market meaning
-- attention signal
+- insight strength
 - attention vs conviction
 - related topics
 - daily interpretation

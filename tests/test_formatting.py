@@ -70,8 +70,8 @@ def test_market_card_supports_english_demo_labels() -> None:
     assert "Probability:" in card
     assert "Time left:" in card
     assert "Market Mood:" in card
-    assert "🧠 Explain simply" in beginner
-    assert "This market asks whether a specific event will happen." in beginner
+    assert "🧠 Analysis" in beginner
+    assert "The useful read is whether probability, volume, and timing point in the same direction." in beginner
     assert "📤 Polymarket market" in share
 
 

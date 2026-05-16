@@ -16,7 +16,7 @@ def test_short_russian_button_labels() -> None:
     assert label("open_market", "ru") == "🔗 Открыть"
     assert label("resolution", "ru") == "📜 Правила"
     assert label("why_moved", "ru") == "🧭 Почему это важно"
-    assert label("explain", "ru") == "🧠 Объяснить просто"
+    assert label("explain", "ru") == "🧠 Разбор"
     assert label("share_market", "ru") == "📤 Поделиться"
 
 
@@ -31,7 +31,7 @@ def test_short_english_button_labels() -> None:
     assert label("open_market", "en") == "🔗 Open"
     assert label("resolution", "en") == "📜 Rules"
     assert label("why_moved", "en") == "🧭 Why this matters"
-    assert label("explain", "en") == "🧠 Explain simply"
+    assert label("explain", "en") == "🧠 Analysis"
     assert label("timeline", "en") == "📊 Timeline"
 
 

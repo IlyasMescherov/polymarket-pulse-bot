@@ -9,6 +9,8 @@ from typing import Any, Iterable, Mapping, Sequence
 import httpx
 
 from bot.services.event_categories import category_label, classify_market_category
+from bot.services.ai_insight_engine import generate_market_briefing
+from bot.services.ai_prompts import market_analyst_system_prompt
 from bot.services.market_mood import MarketMood
 from bot.services.polymarket_client import Market
 from bot.services.pulse_score import PulseScore
@@ -33,7 +35,7 @@ _BANNED_FRAGMENTS = (
 _GENERIC_FRAGMENTS = (
     "people are watching because activity " + "increased",
     "activity " + "increased",
-    "this market is active today",
+    "this market is " + "active today",
     "public activity is above threshold",
     "public activity is above the visibility threshold",
     "активность выросла",
@@ -55,6 +57,13 @@ class MarketContext:
     what_this_means: str
     attention_signal: str
     attention_vs_conviction: str
+    quick_take: str
+    what_happened: str
+    main_tension: str
+    insight_strength: str
+    confidence_level: str
+    resolution_note: str
+    category_voice: str
     related_topics: tuple[str, ...]
 
 
@@ -164,7 +173,7 @@ class AIContextEngine:
                 max_chars=190,
             ),
             attention_signal=self._safe_signal(
-                result.get("attention_signal"),
+                result.get("insight_strength") or result.get("attention_signal"),
                 fallback.attention_signal,
                 normalize_language(language),
             ),
@@ -176,6 +185,41 @@ class AIContextEngine:
             related_topics=self._safe_topics(
                 result.get("related_topics"),
                 fallback.related_topics,
+            ),
+            quick_take=self._safe_short(
+                result.get("quick_take"),
+                fallback.quick_take,
+                max_chars=160,
+            ),
+            what_happened=self._safe_short(
+                result.get("what_happened"),
+                fallback.what_happened,
+                max_chars=180,
+            ),
+            main_tension=self._safe_short(
+                result.get("main_tension"),
+                fallback.main_tension,
+                max_chars=180,
+            ),
+            insight_strength=self._safe_signal(
+                result.get("insight_strength"),
+                fallback.insight_strength,
+                normalize_language(language),
+            ),
+            confidence_level=self._safe_short(
+                result.get("confidence_level"),
+                fallback.confidence_level,
+                max_chars=80,
+            ),
+            resolution_note=self._safe_short(
+                result.get("resolution_note"),
+                fallback.resolution_note,
+                max_chars=180,
+            ),
+            category_voice=self._safe_short(
+                result.get("category_voice"),
+                fallback.category_voice,
+                max_chars=180,
             ),
         )
         self._cache[cache_key] = context
@@ -194,62 +238,50 @@ class AIContextEngine:
         probability_label = self.probability_interpretation(market.yes_probability, normalized)
         abs_delta = abs(delta or 0)
         high_volume = (market.volume or 0) >= 100_000
+        briefing = generate_market_briefing(
+            self._market_payload(market, pulse_score, delta),
+            normalized,
+        )
         topic_reason = self._topic_reason(market.question, normalized)
-        signal = self._attention_signal(
-            market,
-            pulse_score,
-            mood,
-            delta=delta,
-            language=normalized,
-        )
-        attention_vs_conviction = self._attention_vs_conviction(
-            market,
-            mood,
-            delta=delta,
-            language=normalized,
-        )
-        what_this_means = self._what_this_means(
-            market,
-            mood,
-            delta=delta,
-            language=normalized,
-        )
-        related_topics = self._related_topics(market)
+        signal = str(briefing["insight_strength"])
+        attention_vs_conviction = str(briefing["attention_vs_conviction"])
+        what_this_means = str(briefing["what_this_means"])
+        related_topics = tuple(str(item) for item in briefing["related_topics"])  # type: ignore[index]
 
         if normalized == "en":
             if abs_delta >= 0.05:
-                why = "Probability moved enough to make this market stand out."
-                attention = "Probability movement made the market more noticeable."
+                why = str(briefing["quick_take"])
+                attention = str(briefing["what_happened"])
             elif high_volume:
                 why = topic_reason
-                attention = self._topic_attention(market.question, normalized)
+                attention = str(briefing["what_happened"])
             elif pulse_score.value >= 70:
                 why = topic_reason
-                attention = "This market is one of the clearer stories in today’s briefing."
+                attention = str(briefing["what_happened"])
             else:
-                why = "The story is still forming, but attention is present."
-                attention = "No major shift yet, but the topic is worth keeping on the radar."
+                why = str(briefing["quick_take"])
+                attention = str(briefing["what_happened"])
 
-            simple = "This market asks whether the event in the title will happen."
-            watch = "Watch probability changes, public activity, time left, and resolution rules."
-            narrative = f"{category_label(category, 'en')} markets are part of today’s attention map."
+            simple = "Plain read: the outcome depends on the event named in the title."
+            watch = "; ".join(str(item) for item in briefing["what_to_check"])  # type: ignore[index]
+            narrative = str(briefing["category_voice"])
         else:
             if abs_delta >= 0.05:
-                why = "Вероятность заметно изменилась, и рынок стал заметнее."
-                attention = "Движение вероятности сделало рынок заметнее."
+                why = str(briefing["quick_take"])
+                attention = str(briefing["what_happened"])
             elif high_volume:
                 why = topic_reason
-                attention = self._topic_attention(market.question, normalized)
+                attention = str(briefing["what_happened"])
             elif pulse_score.value >= 70:
                 why = topic_reason
-                attention = "Этот рынок стал одной из более понятных историй дня."
+                attention = str(briefing["what_happened"])
             else:
-                why = "История ещё формируется, но интерес уже есть."
-                attention = "Сильного сдвига пока нет, но тему стоит держать на радаре."
+                why = str(briefing["quick_take"])
+                attention = str(briefing["what_happened"])
 
-            simple = "Этот рынок спрашивает, произойдёт ли событие из названия."
-            watch = "Следи за вероятностью, активностью, временем до завершения и правилами."
-            narrative = f"{category_label(category, 'ru')} входят в сегодняшнюю карту внимания."
+            simple = "Простой смысл: исход зависит от события, указанного в названии."
+            watch = "; ".join(str(item) for item in briefing["what_to_check"])  # type: ignore[index]
+            narrative = str(briefing["category_voice"])
 
         return MarketContext(
             category=category,
@@ -264,6 +296,13 @@ class AIContextEngine:
             what_this_means=what_this_means,
             attention_signal=signal,
             attention_vs_conviction=attention_vs_conviction,
+            quick_take=str(briefing["quick_take"]),
+            what_happened=str(briefing["what_happened"]),
+            main_tension=str(briefing["main_tension"]),
+            insight_strength=str(briefing["insight_strength"]),
+            confidence_level=str(briefing["confidence_level"]),
+            resolution_note=str(briefing["resolution_note"]),
+            category_voice=str(briefing["category_voice"]),
             related_topics=related_topics,
         )
 
@@ -348,12 +387,12 @@ class AIContextEngine:
 
         if not markets:
             if normalized == "en":
-                headline = "PulseMarket is preparing today’s market read."
-                changes = ["No major shift yet."]
+                headline = "There is no dominant market narrative today."
+                changes = ["No clear theme yet."]
                 interpretation = "There is not enough fresh market activity to build a clear read yet."
             else:
-                headline = "PulseMarket готовит сегодняшнюю картину рынка."
-                changes = ["Сильного сдвига пока нет."]
+                headline = "Сегодня сильного доминирующего нарратива нет."
+                changes = ["Ясной темы пока нет."]
                 interpretation = "Пока мало свежей активности, чтобы собрать ясную картину дня."
         else:
             interpretation = self._daily_interpretation(grouped, contexts, normalized)
@@ -369,38 +408,38 @@ class AIContextEngine:
         text = title.lower()
         if any(word in text for word in ("bitcoin", "btc", "ethereum", "crypto", "binance")):
             return (
-                "Crypto volatility brought more attention to this market."
+                "Crypto volatility made this market more visible."
                 if language == "en"
                 else "Активность усилилась после движения крипторынка."
             )
         if any(word in text for word in ("iran", "israel", "trump", "election", "president", "war", "diplomacy")):
             return (
-                "Attention increased around political headlines."
+                "Political headlines made this market more visible."
                 if language == "en"
-                else "Внимание выросло вокруг политической повестки."
+                else "Политическая повестка сделала рынок заметнее."
             )
         if any(word in text for word in ("nba", "nfl", "ufc", "soccer", "football", "tennis", "match", "playoff")):
             return (
-                "Activity grew ahead of the event."
+                "Event timing made this market more visible."
                 if language == "en"
                 else "Рынок оживился перед спортивным событием."
             )
         if any(word in text for word in ("openai", "nvidia", "anthropic", " ai ")):
             return (
-                "AI-related attention increased today."
+                "AI news flow made this topic more visible today."
                 if language == "en"
                 else "Внимание к AI-теме усилилось."
             )
         return (
-            "Users started watching this topic more actively."
+            "The topic became more visible in today’s market read."
             if language == "en"
-            else "Пользователи активнее следят за развитием темы."
+            else "Тема стала заметнее в сегодняшнем чтении рынка."
         )
 
     def _topic_attention(self, title: str, language: str) -> str:
         reason = self._topic_reason(title, language)
         if language == "en":
-            return reason.replace("brought more attention to this market", "is shaping today’s attention").replace("increased today", "is rising")
+            return reason.replace("made this market more visible", "is shaping today’s read").replace("increased today", "is rising")
         return reason.replace("усилилась после движения крипторынка", "выделяет этот рынок сегодня").replace("усилилось", "растёт")
 
     def _editorial_changes(self, grouped: Mapping[str, int], language: str) -> list[str]:
@@ -415,7 +454,7 @@ class AIContextEngine:
                 "culture": "👀 Culture markets drew attention",
                 "global": "🔥 Global events became more active",
             }
-            fallback = "👀 Market attention increased"
+            fallback = "👀 A market theme became more visible"
         else:
             labels = {
                 "politics": "🔥 Политические рынки оживились",
@@ -426,7 +465,7 @@ class AIContextEngine:
                 "culture": "👀 Культурные рынки заметнее",
                 "global": "🔥 Мировые события активнее",
             }
-            fallback = "👀 Внимание к рынкам выросло"
+            fallback = "👀 Тема стала заметнее"
         return [labels.get(key, fallback) for key in ranked[:3]] or [fallback]
 
     def _category_summary(self, category: str, language: str) -> str:
@@ -465,19 +504,19 @@ class AIContextEngine:
         moderate = abs_delta >= 0.02 or volume >= 100_000 or pulse_score.value >= 50
         if language == "en":
             if meaningful:
-                return "Meaningful attention shift"
+                return "More convincing than usual"
             if strong:
-                return "Strong interest"
+                return "Strong attention"
             if moderate:
-                return "Moderate attention"
-            return "Noise"
+                return "More noticeable than usual"
+            return "Weak confirmation"
         if meaningful:
-            return "Значимое движение внимания"
+            return "Движение выглядит убедительнее обычного"
         if strong:
-            return "Сильный интерес"
+            return "Сильное внимание"
         if moderate:
-            return "Умеренное внимание"
-        return "Шум"
+            return "Рынок заметнее обычного"
+        return "Слабое подтверждение"
 
     def _attention_vs_conviction(
         self,
@@ -490,22 +529,22 @@ class AIContextEngine:
         volume = market.volume or 0
         if language == "en":
             if abs_delta >= 0.05 and volume >= 100_000:
-                return "Attention and probability moved together, so the reaction looks more meaningful."
+                return "Probability moved together with volume, which makes the reaction stronger than usual."
             if volume >= 100_000 and abs_delta < 0.02:
-                return "Attention rose, but expectations barely changed."
+                return "The market is getting more attention, but expectations barely moved."
             if mood.key == "ending_soon":
                 return "Attention is higher near resolution, but that does not always mean expectations changed."
             if abs_delta < 0.02:
-                return "So far this looks more like background attention than a conviction shift."
+                return "So far this looks more like interest than conviction."
             return "Probability moved, but more public attention would make the expectations read stronger."
         if abs_delta >= 0.05 and volume >= 100_000:
-            return "Внимание и вероятность двигались вместе, поэтому реакция выглядит значимее."
+            return "Вероятность сдвинулась вместе с объёмом, поэтому реакция выглядит сильнее обычной."
         if volume >= 100_000 and abs_delta < 0.02:
-            return "Внимание выросло, но ожидания участников почти не изменились."
+            return "Интерес вырос, но ожидания участников почти не изменились."
         if mood.key == "ending_soon":
             return "Перед завершением внимание выше, но это не всегда означает смену ожиданий."
         if abs_delta < 0.02:
-            return "Пока это больше похоже на фоновое внимание, а не на сдвиг убеждённости."
+            return "Пока здесь больше интереса, чем уверенности."
         return "Вероятность изменилась, но для сильного вывода нужна более заметная активность."
 
     def _what_this_means(
@@ -524,7 +563,7 @@ class AIContextEngine:
             if abs_delta >= 0.05:
                 return "This is more than passive attention because probability moved enough to change the market read."
             if volume >= 100_000 and abs_delta < 0.02:
-                return "People are watching the topic, but the market has not changed its mind much yet."
+                return "The topic is drawing interest, but expectations have barely moved."
             return {
                 "crypto": "This is mostly a read on whether short-term crypto volatility is changing expectations.",
                 "politics": "This market helps show whether political headlines are changing expectations.",
@@ -578,8 +617,8 @@ class AIContextEngine:
         language: str,
     ) -> str:
         meaningful = sum(
-            context.attention_signal
-            in {"Meaningful attention shift", "Значимое движение внимания"}
+            context.insight_strength
+            in {"More convincing than usual", "Движение выглядит убедительнее обычного"}
             for context in contexts
         )
         attention_without_conviction = sum(
@@ -590,14 +629,14 @@ class AIContextEngine:
         top_category = max(grouped, key=grouped.get) if grouped else "global"
         if language == "en":
             if meaningful:
-                return f"{category_label(top_category, 'en')} is moving with clearer attention and probability changes today."
+                return f"{category_label(top_category, 'en')} has the clearest mix of volume and probability movement today."
             if attention_without_conviction:
-                return "Several markets drew attention, but expectations have mostly stayed stable."
-            return "Today looks more like attention building than a broad shift in expectations."
+                return "Several markets look busier, but expectations have mostly stayed stable."
+            return "Today looks more like interest building than a broad shift in expectations."
         if meaningful:
-            return f"{category_label(top_category, 'ru')} сегодня движется заметнее: внимание и вероятность меняются вместе."
+            return f"{category_label(top_category, 'ru')} сегодня заметнее: объём и вероятность меняются вместе."
         if attention_without_conviction:
-            return "Несколько рынков привлекли внимание, но ожидания в основном остаются стабильными."
+            return "Несколько рынков стали заметнее, но ожидания в основном остаются стабильными."
         return "Сегодня это больше похоже на накопление внимания, а не на широкий сдвиг ожиданий."
 
     def search_summary(
@@ -651,17 +690,12 @@ class AIContextEngine:
             "messages": [
                 {
                     "role": "system",
-                    "content": (
-                        "You are a calm market intelligence analyst for Polymarket. "
-                        "Explain context, attention, and what to watch. "
-                        "Do not predict outcomes, do not provide financial advice, "
-                        "and avoid hype. Return compact JSON only."
-                    ),
+                    "content": market_analyst_system_prompt() + " Return compact JSON only.",
                 },
                 {"role": "user", "content": prompt},
             ],
             "temperature": 0.2,
-            "max_tokens": 360,
+            "max_tokens": 620,
             "response_format": {"type": "json_object"},
         }
         headers = {
@@ -698,10 +732,15 @@ class AIContextEngine:
             f"Language: {language_name}\n"
             "Return JSON with keys: why_people_care, simple_read, what_to_watch, "
             "attention_summary, topic_narrative, market_mood_reasoning, "
-            "what_this_means, attention_signal, attention_vs_conviction, related_topics.\n"
-            "attention_signal must be exactly one of: Noise, Moderate attention, Strong interest, Meaningful attention shift.\n"
+            "quick_take, what_happened, main_tension, what_this_means, "
+            "attention_vs_conviction, insight_strength, confidence_level, "
+            "resolution_note, category_voice, related_topics.\n"
+            "insight_strength must be exactly one of: Weak confirmation, Interest is present, "
+            "More noticeable than usual, Strong attention, More convincing than usual.\n"
             "related_topics must be an array of 2-4 short topic labels.\n"
-            "Each sentence must explain meaning, not outcomes. No directional advice.\n\n"
+            "Each sentence must explain the reader takeaway, not market outcomes. "
+            "Name the main tension between probability, volume, time left, and related markets. "
+            "No directional advice.\n\n"
             f"Market title: {market.question}\n"
             f"Probability: {market.yes_probability}\n"
             f"Volume: {market.volume}\n"
@@ -767,20 +806,43 @@ class AIContextEngine:
     def _safe_signal(self, value: object, fallback: str, language: str) -> str:
         text = str(value or "").strip()
         allowed_en = {
-            "Noise",
-            "Moderate attention",
+            "Weak confirmation",
+            "Interest is present",
+            "More noticeable than usual",
             "Strong interest",
-            "Meaningful attention shift",
+            "Strong attention",
+            "More convincing than usual",
         }
         allowed_ru = {
-            "Шум",
-            "Умеренное внимание",
+            "Слабое подтверждение",
+            "Есть интерес",
+            "Рынок заметнее обычного",
             "Сильный интерес",
-            "Значимое движение внимания",
+            "Сильное внимание",
+            "Движение выглядит убедительнее обычного",
         }
         if language == "en":
             return text if text in allowed_en else fallback
         return text if text in allowed_ru else fallback
+
+    @staticmethod
+    def _market_payload(
+        market: Market,
+        pulse_score: PulseScore,
+        delta: float | None,
+    ) -> dict[str, Any]:
+        return {
+            "id": market.id,
+            "title": market.question,
+            "question": market.question,
+            "category": classify_market_category(market),
+            "probability": market.yes_probability,
+            "probability_delta": delta or 0,
+            "volume": market.volume or 0,
+            "end_date": market.end_date,
+            "pulse_score": pulse_score.value,
+            "description": market.raw.get("description") or "",
+        }
 
     def _safe_topics(self, value: object, fallback: tuple[str, ...]) -> tuple[str, ...]:
         if not isinstance(value, Iterable) or isinstance(value, (str, bytes)):

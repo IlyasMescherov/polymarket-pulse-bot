@@ -13,7 +13,7 @@ The role of AI is not to predict outcomes. It acts as a calm market intelligence
 - Creates short daily narratives for the Mini App.
 - Interprets what market activity means through `what_this_means`.
 - Separates attention from conviction so users can see whether activity changed expectations or only visibility.
-- Labels public activity as Noise, Moderate attention, Strong interest, or Meaningful attention shift.
+- Labels the read as Weak confirmation, Interest is present, More noticeable than usual, Strong attention, or More convincing than usual.
 - Produces a safe fallback when no AI key is configured.
 
 ## What It Does Not Do
@@ -55,7 +55,9 @@ Outputs:
 - `topic_narrative`
 - `market_mood_reasoning`
 - `what_this_means`
-- `attention_signal`
+- `insight_strength`
+- `main_tension`
+- `confidence_level`
 - `attention_vs_conviction`
 - `related_topics`
 - human probability interpretation

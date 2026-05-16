@@ -41,18 +41,25 @@ async def test_ai_context_engine_fallback_works_without_api_key() -> None:
     assert context.simple_read
     assert context.what_to_watch
     assert context.what_this_means
-    assert context.attention_signal in {
-        "Noise",
-        "Moderate attention",
-        "Strong interest",
-        "Meaningful attention shift",
+    assert context.quick_take
+    assert context.what_happened
+    assert context.main_tension
+    assert context.insight_strength in {
+        "Weak confirmation",
+        "Interest is present",
+        "More noticeable than usual",
+        "Strong attention",
+        "More convincing than usual",
     }
+    assert context.confidence_level
+    assert context.resolution_note
+    assert context.category_voice
     assert context.attention_vs_conviction
     assert context.related_topics
     assert context.category == "crypto"
     assert context.probability_interpretation == "Likely"
     assert len(context.why_people_care) <= 140
-    assert context.why_people_care == "Crypto volatility brought more attention to this market."
+    assert context.why_people_care == "Crypto volatility made this market more visible."
     assert "People are watching because activity increased" not in context.why_people_care
     assert "Attention" in context.attention_vs_conviction or "expectations" in context.attention_vs_conviction
 
@@ -104,7 +111,7 @@ async def test_attention_vs_conviction_distinguishes_attention_from_expectations
     )
 
     assert context.what_this_means
-    assert context.attention_signal in {"Moderate attention", "Strong interest"}
+    assert context.insight_strength in {"Interest is present", "Strong attention"}
     assert "expectations" in context.attention_vs_conviction
     assert "buy" not in context.what_this_means.lower()
 

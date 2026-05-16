@@ -34,7 +34,7 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "Today’s Narrative",
         "What this means",
         "Attention vs conviction",
-        "How serious is this movement",
+        "Strength of read",
         "Activity Radar",
         "Search",
         "Saved markets",
@@ -158,7 +158,7 @@ def test_miniapp_settings_language_theme_and_saved_features_exist() -> None:
     assert "renderCategoryChips" in script_text
     assert "renderInterestChips" in script_text
     assert "pulseLabel" in script_text
-    assert "attentionSignal" in script_text
+    assert "insightStrength" in script_text
     assert "what_this_means" in script_text
     assert "attention_vs_conviction" in script_text
     assert "related_topics" in script_text
@@ -184,7 +184,7 @@ def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
     assert "what this means" in text
     assert "attention vs conviction" in text
     assert "interests" in text
-    assert "explain" in text
+    assert "analysis" in text
     assert "wallet list" not in text
     assert "wallet hash" not in text
 
@@ -229,6 +229,9 @@ def test_miniapp_cards_are_compressed_and_have_habit_layer() -> None:
     assert "buttonRow(item)" in script_text
     assert "data-explain-market" in script_text
     assert "whatMarketAsks" in script_text
+    assert "quickTake" in script_text
+    assert "mainTension" in script_text
+    assert "confidenceLevel" in script_text
     assert "whatInfluences" in script_text
     assert "relatedTopics" in script_text
     assert "resolutionRules" in script_text

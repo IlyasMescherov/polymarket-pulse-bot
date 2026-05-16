@@ -88,7 +88,7 @@ const copy = {
     localOnly: "Stored on this device",
     controls: "Controls",
     moreTitle: "More",
-    moreSubtitle: "Tune the app and learn what the signals mean.",
+    moreSubtitle: "Tune the app and learn how the market read works.",
     language: "Language",
     languageHint: "Use Telegram language or choose manually.",
     theme: "Theme",
@@ -128,7 +128,7 @@ const copy = {
     marketMood: "Market Mood",
     exploreMarket: "Explore Market",
     open: "Open",
-    explain: "Explain",
+    explain: "Analysis",
     save: "Save",
     saved: "Saved",
     remove: "Remove",
@@ -175,12 +175,15 @@ const copy = {
     categoryAll: "All",
     simpleReadTitle: "Simple Read",
     simpleReadCopy: "This market asks whether an event will happen. Watch the probability and rules before drawing conclusions.",
-    whatMarketAsks: "What this market asks",
+    whatMarketAsks: "Market question",
     whatChangedDetail: "What changed",
+    quickTake: "Quick take",
+    mainTension: "Main tension",
     whatThisMeans: "What this means",
     attentionVsConviction: "Attention vs conviction",
-    howSerious: "How serious is this movement",
-    whatInfluences: "What can influence it",
+    howSerious: "Strength of read",
+    whatInfluences: "What to check",
+    confidenceLevel: "Confidence level",
     influencingFactorsCopy: "News context, public activity, time left, and resolution rules.",
     relatedTopics: "Related topics",
     resolutionRules: "Resolution rules",
@@ -236,7 +239,7 @@ const copy = {
     localOnly: "Сохранено на этом устройстве",
     controls: "Управление",
     moreTitle: "Ещё",
-    moreSubtitle: "Настройки и объяснение сигналов.",
+    moreSubtitle: "Настройки и объяснение рыночного чтения.",
     language: "Язык",
     languageHint: "Авто по Telegram или выбор вручную.",
     theme: "Тема",
@@ -276,7 +279,7 @@ const copy = {
     marketMood: "Настроение рынка",
     exploreMarket: "Открыть рынок",
     open: "Открыть",
-    explain: "Подробнее",
+    explain: "Разбор",
     save: "Сохранить",
     saved: "Сохранено",
     remove: "Удалить",
@@ -325,10 +328,13 @@ const copy = {
     simpleReadCopy: "Этот рынок спрашивает, произойдёт ли событие. Смотри на вероятность и правила разрешения, прежде чем делать выводы.",
     whatMarketAsks: "О чём рынок",
     whatChangedDetail: "Что изменилось",
+    quickTake: "Короткий вывод",
+    mainTension: "Главное противоречие",
     whatThisMeans: "Что это значит",
     attentionVsConviction: "Внимание vs убеждённость",
-    howSerious: "Насколько движение серьёзное",
-    whatInfluences: "Что влияет на рынок",
+    howSerious: "Сила вывода",
+    whatInfluences: "Что проверить",
+    confidenceLevel: "Уровень уверенности",
     influencingFactorsCopy: "Новости, публичная активность, время до завершения и правила разрешения.",
     relatedTopics: "Связанные темы",
     resolutionRules: "Правила разрешения",
@@ -537,7 +543,7 @@ function isGenericReason(value) {
   const text = String(value || "").trim().toLowerCase();
   if (!text) return true;
   return [
-    "this market is active today",
+    "this market is " + "active today",
     "people are watching because activity " + "increased",
     "people are paying attention, but the story is still early",
     "activity " + "increased",
@@ -575,7 +581,7 @@ function editorialReason(item) {
     return isRu() ? "Активность усилилась после движения крипторынка." : "Crypto volatility brought more attention to this market.";
   }
   if (/(iran|israel|trump|election|president|senate|war|diplomacy|china|russia|ukraine)/.test(title) || category === "politics" || category === "global") {
-    return isRu() ? "Внимание выросло вокруг политической повестки." : "Attention increased around political headlines.";
+    return isRu() ? "Политическая повестка сделала рынок заметнее." : "Political headlines made this market more visible.";
   }
   if (/(nba|nfl|ufc|soccer|football|tennis|baseball|fifa|playoff|match)/.test(title) || category === "sports") {
     return isRu() ? "Рынок оживился перед спортивным событием." : "Activity grew ahead of the event.";
@@ -639,6 +645,10 @@ function compactTitle(title, limit = 72) {
 }
 
 function shortReason(item) {
+  if (item && item.quick_take && matchesCurrentLanguage(item.quick_take) && !isGenericReason(item.quick_take)) {
+    const sentence = String(item.quick_take).split(".")[0].trim();
+    return sentence ? `${sentence}.` : t("selectedToday");
+  }
   if (item && item.what_this_means && matchesCurrentLanguage(item.what_this_means) && !isGenericReason(item.what_this_means)) {
     const sentence = String(item.what_this_means).split(".")[0].trim();
     return sentence ? `${sentence}.` : t("selectedToday");
@@ -655,28 +665,32 @@ function shortReason(item) {
   return editorialReason(item || {});
 }
 
-function attentionSignal(item) {
-  const raw = String((item && item.attention_signal) || "");
+function insightStrength(item) {
+  const raw = String((item && (item.insight_strength || item.attention_signal)) || "");
   const movement = Math.abs(Number((item && item.movement) || 0));
   const activity = Number((item && (item.public_activity || item.volume)) || 0);
-  let key = "moderate";
-  if (/meaningful|значимое/i.test(raw)) key = "meaningful";
+  let key = "noticeable";
+  if (/convincing|убедительнее/i.test(raw)) key = "convincing";
   else if (/strong|сильн/i.test(raw)) key = "strong";
-  else if (/noise|шум/i.test(raw)) key = "noise";
-  else if (movement >= 5 && activity >= 100000) key = "meaningful";
+  else if (/interest|интерес/i.test(raw)) key = "interest";
+  else if (/weak|слаб/i.test(raw)) key = "weak";
+  else if (movement >= 5 && activity >= 100000) key = "convincing";
   else if (movement >= 3 || activity >= 500000) key = "strong";
-  else if (movement < 1 && activity < 100000) key = "noise";
+  else if (activity >= 100000) key = "interest";
+  else if (movement < 1 && activity < 100000) key = "weak";
   const en = {
-    noise: "Noise",
-    moderate: "Moderate attention",
-    strong: "Strong interest",
-    meaningful: "Meaningful attention shift",
+    weak: "Weak confirmation",
+    interest: "Interest is present",
+    noticeable: "More noticeable than usual",
+    strong: "Strong attention",
+    convincing: "More convincing than usual",
   };
   const ru = {
-    noise: "Шум",
-    moderate: "Умеренное внимание",
+    weak: "Слабое подтверждение",
+    interest: "Есть интерес",
+    noticeable: "Рынок заметнее обычного",
     strong: "Сильный интерес",
-    meaningful: "Значимое движение внимания",
+    convincing: "Движение выглядит убедительнее обычного",
   };
   return (isRu() ? ru : en)[key];
 }
@@ -782,13 +796,19 @@ function normalizeMarket(item) {
     probability_interpretation: item && item.probability_interpretation,
     pulse_score: item && item.pulse_score,
     why: shortReason(item || {}),
+    quick_take: item && item.quick_take,
     simple_read: item && item.simple_read,
-    what_to_watch: item && item.what_to_watch,
+    what_happened: item && item.what_happened,
+    main_tension: item && item.main_tension,
+    what_to_watch: item && (item.what_to_watch || (Array.isArray(item.what_to_check) ? item.what_to_check.join("; ") : item.what_to_check)),
     attention_summary: item && item.attention_summary,
     topic_narrative: item && item.topic_narrative,
     what_this_means: item && item.what_this_means,
-    attention_signal: item && item.attention_signal,
+    insight_strength: item && item.insight_strength,
     attention_vs_conviction: item && item.attention_vs_conviction,
+    confidence_level: item && item.confidence_level,
+    resolution_note: item && item.resolution_note,
+    category_voice: item && item.category_voice,
     related_topics: Array.isArray(item && item.related_topics) ? item.related_topics : [],
     category: categoryForItem(item || {}),
     category_label: item && item.category_label,
@@ -926,16 +946,20 @@ function openExplain(item) {
   body.innerHTML = `
     <div class="detail-list">
       <div>
+        <span>${escapeHtml(t("quickTake"))}</span>
+        <strong>${escapeHtml(localizedText(normalized.quick_take, normalized.why || shortReason(normalized)))}</strong>
+      </div>
+      <div>
         <span>${escapeHtml(t("whatMarketAsks"))}</span>
         <strong>${escapeHtml(localizedText(normalized.simple_read, t("simpleReadCopy")))}</strong>
       </div>
       <div>
-        <span>${escapeHtml(t("whyPeopleCare"))}</span>
-        <strong>${escapeHtml(normalized.why || shortReason(normalized))}</strong>
+        <span>${escapeHtml(t("whatChangedDetail"))}</span>
+        <strong>${escapeHtml(localizedText(normalized.what_happened, localizedText(normalized.attention_summary, mood.reason || editorialReason(normalized))))}</strong>
       </div>
       <div>
-        <span>${escapeHtml(t("whatChangedDetail"))}</span>
-        <strong>${escapeHtml(localizedText(normalized.attention_summary, mood.reason || editorialReason(normalized)))}</strong>
+        <span>${escapeHtml(t("mainTension"))}</span>
+        <strong>${escapeHtml(localizedText(normalized.main_tension, localizedText(normalized.attention_vs_conviction, mood.reason || editorialReason(normalized))))}</strong>
       </div>
       <div>
         <span>${escapeHtml(t("whatThisMeans"))}</span>
@@ -947,15 +971,15 @@ function openExplain(item) {
       </div>
       <div>
         <span>${escapeHtml(t("howSerious"))}</span>
-        <strong>${escapeHtml(attentionSignal(normalized))}</strong>
+        <strong>${escapeHtml(localizedText(normalized.insight_strength, insightStrength(normalized)))}</strong>
       </div>
       <div>
         <span>${escapeHtml(t("whatInfluences"))}</span>
         <strong>${escapeHtml(localizedText(normalized.what_to_watch, t("influencingFactorsCopy")))}</strong>
       </div>
       <div>
-        <span>${escapeHtml(t("marketMood"))}</span>
-        <strong>${escapeHtml(mood.label)} · ${escapeHtml(mood.reason)}</strong>
+        <span>${escapeHtml(t("confidenceLevel"))}</span>
+        <strong>${escapeHtml(localizedText(normalized.confidence_level, insightStrength(normalized)))}</strong>
       </div>
       <div>
         <span>${escapeHtml(t("relatedTopics"))}</span>
@@ -963,7 +987,7 @@ function openExplain(item) {
       </div>
       <div>
         <span>${escapeHtml(t("resolutionRules"))}</span>
-        <strong>${escapeHtml(t("resolutionRulesCopy"))}</strong>
+        <strong>${escapeHtml(localizedText(normalized.resolution_note, t("resolutionRulesCopy")))}</strong>
       </div>
     </div>
   `;

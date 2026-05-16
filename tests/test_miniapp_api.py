@@ -94,9 +94,15 @@ async def test_miniapp_hot_api_shape() -> None:
     assert payload["data"][0]["what_to_watch"]
     assert payload["data"][0]["attention_summary"]
     assert payload["data"][0]["topic_narrative"]
+    assert payload["data"][0]["quick_take"]
+    assert payload["data"][0]["what_happened"]
+    assert payload["data"][0]["main_tension"]
     assert payload["data"][0]["what_this_means"]
-    assert payload["data"][0]["attention_signal"]
     assert payload["data"][0]["attention_vs_conviction"]
+    assert payload["data"][0]["insight_strength"]
+    assert payload["data"][0]["confidence_level"]
+    assert payload["data"][0]["resolution_note"]
+    assert payload["data"][0]["category_voice"]
     assert isinstance(payload["data"][0]["related_topics"], list)
     assert payload["data"][0]["url"].startswith("https://polymarket.com")
 
@@ -146,8 +152,11 @@ async def test_miniapp_smart_money_api_shape() -> None:
     assert active_payload["data"][0]["public_activity"] == 42000
     assert active_payload["data"][0]["trades_count"] == 3
     assert active_payload["data"][0]["why_it_matters"]
+    assert active_payload["data"][0]["quick_take"]
+    assert active_payload["data"][0]["main_tension"]
     assert active_payload["data"][0]["what_this_means"]
     assert active_payload["data"][0]["attention_vs_conviction"]
+    assert active_payload["data"][0]["insight_strength"]
     assert traders_payload["data"][0]["wallet"] == "0x1111...1111"
     assert traders_payload["data"][0]["why_it_matters"]
     assert traders_payload["data"][0]["trader_score"] == 74

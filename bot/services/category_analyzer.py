@@ -6,7 +6,7 @@ CATEGORY_VOICE: dict[str, dict[str, tuple[str, ...] | str]] = {
     "politics": {
         "focus": ("diplomatic expectations", "geopolitical positioning", "policy cues"),
         "avoid": ("volume-first language", "sports timing language"),
-        "example_tone": "The market reflects cautious diplomatic expectations rather than a firm shift.",
+        "example_tone": "The market reflects cautious diplomatic expectations rather than a firm repricing.",
     },
     "crypto": {
         "focus": ("short-term volatility", "volume bursts", "longer-term calm"),
@@ -26,7 +26,7 @@ CATEGORY_VOICE: dict[str, dict[str, tuple[str, ...] | str]] = {
     "ai": {
         "focus": ("news cycles", "announcement-driven interest", "discussion versus conviction"),
         "avoid": ("sports timing language", "macro language"),
-        "example_tone": "Attention rose around a recent announcement, but conviction remains limited.",
+        "example_tone": "A recent announcement made the topic louder, but conviction remains limited.",
     },
     "global": {
         "focus": ("macro events", "policy timing", "cross-market attention"),
@@ -65,20 +65,19 @@ def category_summary(category: str, lang: str = "en") -> str:
     if normalized == "ru":
         return {
             "politics": "Политические рынки читают осторожные ожидания вокруг дипломатии и решений власти.",
-            "crypto": "Крипторынки реагируют на краткосрочную волатильность, пока долгий горизонт спокойнее.",
-            "sports": "Спортивные рынки оживают ближе к событиям с коротким окном разрешения.",
+            "crypto": "Крипторынки сейчас больше про краткосрочную волатильность, чем про долгий горизонт.",
+            "sports": "Спортивные рынки завязаны на тайминг матчей и короткое окно разрешения.",
             "esports": "Киберспорт чаще двигается вокруг матчевого тайминга и сетки турнира.",
-            "ai": "AI-рынки реагируют на новости и обсуждения, но уверенность часто появляется позже.",
+            "ai": "AI-рынки зависят от новостного цикла: обсуждение приходит раньше уверенности.",
             "global": "Мировые рынки отражают широкий событийный фон, а не одну isolated headline.",
             "culture": "Культурные рынки зависят от публичного обсуждения и календаря релизов.",
         }.get(category, "Эта категория заметна, но сильного вывода пока нет.")
     return {
         "politics": "Political markets are reading cautious expectations around diplomacy and policy.",
-        "crypto": "Crypto markets are reacting to short-term volatility while longer horizons look calmer.",
-        "sports": "Sports markets get busier near events with short resolution windows.",
+        "crypto": "Crypto is mostly about short-term volatility while longer horizons look calmer.",
+        "sports": "Sports markets lean on event timing and short resolution windows.",
         "esports": "Esports markets often move around match timing and bracket narratives.",
-        "ai": "AI markets react to announcements and discussion before conviction appears.",
+        "ai": "AI markets are driven by news cycles, where discussion often comes before conviction.",
         "global": "Global markets reflect a wider event cycle rather than one isolated headline.",
         "culture": "Culture markets depend on public discussion and release timing.",
     }.get(category, "This category is visible, but the read is still limited.")
-

@@ -15,32 +15,32 @@ def _title_category_reason(market: Market, language: str) -> str:
     title = market.question.lower()
     if any(word in title for word in ("bitcoin", "btc", "ethereum", "crypto", "binance")):
         return (
-            "Crypto volatility brought more attention to this market."
+            "Crypto volatility made this market more visible."
             if language == "en"
             else "Активность усилилась после движения крипторынка."
         )
     if any(word in title for word in ("iran", "israel", "trump", "election", "president", "war", "diplomacy")):
         return (
-            "Attention increased around political headlines."
+            "Political headlines made this market more visible."
             if language == "en"
-            else "Внимание выросло вокруг политической повестки."
+            else "Политическая повестка сделала рынок заметнее."
         )
     if any(word in title for word in ("nba", "nfl", "ufc", "soccer", "football", "tennis", "match", "playoff")):
         return (
-            "Activity grew ahead of the event."
+            "Event timing made this market more visible."
             if language == "en"
             else "Рынок оживился перед спортивным событием."
         )
     if any(word in title for word in ("openai", "nvidia", "anthropic", " ai ")):
         return (
-            "AI-related attention increased today."
+            "AI news flow made this topic more visible today."
             if language == "en"
             else "Внимание к AI-теме усилилось."
         )
     return (
-        "Users started watching this topic more actively."
+        "The topic became more visible in today’s market read."
         if language == "en"
-        else "Пользователи активнее следят за развитием темы."
+        else "Тема стала заметнее в сегодняшнем чтении рынка."
     )
 
 
@@ -75,9 +75,9 @@ def explain_why_it_matters(
     normalized = normalize_language(language)
     if delta is not None and abs(delta) >= 0.05:
         return (
-            "Attention is rising because probability moved today."
+            "Probability moved today, so the market deserves a closer read."
             if normalized == "en"
-            else "Внимание растёт, потому что вероятность сегодня изменилась."
+            else "Вероятность сегодня изменилась, поэтому рынок заслуживает разбора."
         )
 
     if market.volume is not None and market.volume >= 100_000:

@@ -396,12 +396,13 @@ def format_beginner_explanation(
 ) -> str:
     if normalize_language(language) == "en":
         lines = [
-            "🧠 Explain simply",
+            "🧠 Analysis",
             "",
             "In plain English:",
-            "This market asks whether a specific event will happen.",
-            "People care because the topic is getting attention today.",
-            "Watch the probability, public activity, and resolution rules before drawing conclusions.",
+            "Quick take:",
+            "This market is about the event named in the title.",
+            "The useful read is whether probability, volume, and timing point in the same direction.",
+            "Check the rules, volume quality, and time left before drawing conclusions.",
             "",
             f"Current probability: {format_probability(market.yes_probability, language)}",
         ]
@@ -410,12 +411,13 @@ def format_beginner_explanation(
         return "\n".join(lines)
 
     lines = [
-        "🧠 Объяснить проще",
+        "🧠 Разбор",
         "",
         "Простыми словами:",
-        "Этот рынок спрашивает, произойдёт ли конкретное событие.",
-        "За ним следят, потому что тема сегодня получает внимание.",
-        "Смотри на вероятность, публичную активность и правила разрешения, прежде чем делать выводы.",
+        "Короткий вывод:",
+        "Этот рынок про событие, указанное в названии.",
+        "Полезное чтение — совпадают ли вероятность, объём и тайминг.",
+        "Проверь правила, качество объёма и время до завершения, прежде чем делать выводы.",
         "",
         f"Текущая вероятность: {format_probability(market.yes_probability)}",
     ]

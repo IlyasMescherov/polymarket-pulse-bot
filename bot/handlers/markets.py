@@ -820,21 +820,29 @@ async def explain_market(
     if language == "en":
         ai_brief = "\n".join(
             [
+                f"Quick take: {context.quick_take}",
+                f"What is happening: {context.what_happened}",
+                f"Main tension: {context.main_tension}",
                 f"What this means: {context.what_this_means}",
                 f"Attention vs conviction: {context.attention_vs_conviction}",
-                f"How serious: {context.attention_signal}",
-                f"What to watch: {context.what_to_watch}",
+                f"Strength of read: {context.insight_strength}",
+                f"What to check: {context.what_to_watch}",
                 f"Related topics: {', '.join(context.related_topics)}",
+                f"Resolution rules: {context.resolution_note}",
             ]
         )
     else:
         ai_brief = "\n".join(
             [
+                f"Короткий вывод: {context.quick_take}",
+                f"Что происходит: {context.what_happened}",
+                f"Главное противоречие: {context.main_tension}",
                 f"Что это значит: {context.what_this_means}",
                 f"Внимание vs убеждённость: {context.attention_vs_conviction}",
-                f"Насколько серьёзно: {context.attention_signal}",
-                f"За чем следить: {context.what_to_watch}",
+                f"Сила вывода: {context.insight_strength}",
+                f"Что проверить: {context.what_to_watch}",
                 f"Связанные темы: {', '.join(context.related_topics)}",
+                f"Как решается рынок: {context.resolution_note}",
             ]
         )
     ai_brief = ai_brief or await ai_explainer.explain_market(market)

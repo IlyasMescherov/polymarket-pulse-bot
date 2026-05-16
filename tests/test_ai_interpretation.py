@@ -4,7 +4,9 @@ from datetime import datetime, timedelta, timezone
 
 from bot.services.ai_insight_engine import (
     classify_attention_vs_conviction,
+    classify_insight_strength,
     classify_movement_strength,
+    detect_main_tension,
     detect_resolution_proximity,
     detect_speculative_attention,
     generate_market_briefing,
@@ -80,15 +82,22 @@ def test_explain_has_required_sections() -> None:
 
     for key in (
         "quick_take",
+        "what_happened",
         "what_is_happening",
+        "main_tension",
         "what_this_means",
         "attention_vs_conviction",
+        "insight_strength",
+        "confidence_level",
+        "strength_of_read",
         "how_strong_is_the_move",
         "what_to_check",
-        "related_themes",
-        "how_this_resolves",
+        "related_topics",
+        "resolution_note",
+        "category_voice",
     ):
         assert briefing[key]
+    assert briefing["what_this_means"] != briefing["what_happened"]
 
 
 def test_weak_data_fallback_not_empty() -> None:
@@ -126,7 +135,7 @@ def test_cross_market_grouping() -> None:
 def test_pulse_score_humanized() -> None:
     assert humanize_pulse_score(12, "en") == "Quiet"
     assert humanize_pulse_score(57, "en") == "Attention rising"
-    assert humanize_pulse_score(57, "ru") == "Внимание выросло"
+    assert humanize_pulse_score(57, "ru") == "Рынок заметнее"
     assert "/" not in humanize_pulse_score(57, "en")
 
 
@@ -149,6 +158,26 @@ def test_attention_vs_conviction_classification() -> None:
     assert conviction["conviction_level"] == "medium"
     assert both["attention_level"] == "high"
     assert both["conviction_level"] == "high"
+
+
+def test_contradiction_detection_activity_flat_probability() -> None:
+    text = detect_main_tension(_market(volume=300_000, probability_delta=1), "en")
+    assert "expectations did not move" in text
+
+
+def test_contradiction_detection_probability_move_weak_volume() -> None:
+    text = detect_main_tension(_market(volume=5_000, probability_delta=8), "en")
+    assert "volume is weak" in text.lower()
+
+
+def test_insight_strength_scale() -> None:
+    weak = classify_insight_strength(_market(volume=1_000, probability_delta=0), "en")
+    attention = classify_insight_strength(_market(volume=300_000, probability_delta=1), "en")
+    stronger = classify_insight_strength(_market(volume=300_000, probability_delta=7, pulse_score=80), "en")
+
+    assert weak["label"] == "Weak confirmation"
+    assert attention["label"] == "Interest is present"
+    assert stronger["label"] in {"More noticeable than usual", "More convincing than usual"}
 
 
 def test_resolution_and_speculative_attention_helpers() -> None:

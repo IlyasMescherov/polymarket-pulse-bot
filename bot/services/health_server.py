@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from bot.database.db import ping_database
 from bot.database.repositories import get_latest_snapshots
 from bot.services.ai_context_engine import AIContextEngine, MarketContext
+from bot.services.ai_insight_engine import generate_market_briefing
 from bot.services.event_categories import category_label, classify_market_category
 from bot.services.market_analyzer import MarketAnalyzer, MarketMovement
 from bot.services.market_health import calculate_market_health
@@ -102,10 +103,15 @@ def _market_to_api_object(
         ),
         "category": category,
         "category_label": context.category_label if context is not None else category_label(category, "en"),
+        "quick_take": (
+            context.quick_take
+            if context is not None
+            else "The market stands out enough to review."
+        ),
         "why_people_care": (
             context.why_people_care
             if context is not None
-            else "People are paying attention, but the story is still early."
+            else "The market stands out enough to review."
         ),
         "simple_read": (
             context.simple_read
@@ -130,13 +136,39 @@ def _market_to_api_object(
             if context is not None
             else "This market is one clue in today’s attention picture."
         ),
-        "attention_signal": (
-            context.attention_signal if context is not None else "Moderate attention"
+        "what_happened": (
+            context.what_happened if context is not None else "The market is becoming more visible."
+        ),
+        "main_tension": (
+            context.main_tension
+            if context is not None
+            else "The market stands out, but the read still needs confirmation."
         ),
         "attention_vs_conviction": (
             context.attention_vs_conviction
             if context is not None
             else "Attention is present, but expectations have not clearly shifted."
+        ),
+        "insight_strength": (
+            context.insight_strength if context is not None else "Interest is present"
+        ),
+        "confidence_level": (
+            context.confidence_level if context is not None else "Low confidence"
+        ),
+        "what_to_check": (
+            [item.strip() for item in context.what_to_watch.split(";") if item.strip()]
+            if context is not None
+            else ["Official resolution rules", "Volume quality"]
+        ),
+        "resolution_note": (
+            context.resolution_note
+            if context is not None
+            else "Open the market page and read the official resolution criteria."
+        ),
+        "category_voice": (
+            context.category_voice
+            if context is not None
+            else f"{category_label(category, 'en')} markets need a separate read."
         ),
         "related_topics": list(context.related_topics) if context is not None else [],
         "risk_flags": market_risk_flags(market, delta=delta),
@@ -160,11 +192,11 @@ def _category_from_title(title: str) -> str:
 def _attention_reason_for_title(title: str) -> str:
     category = _category_from_title(title)
     return {
-        "crypto": "Crypto volatility brought more attention to this market.",
-        "politics": "Attention increased around political headlines.",
-        "sports": "Activity grew ahead of the event.",
-        "ai": "AI-related attention increased today.",
-        "global": "Public attention is rising around this market.",
+        "crypto": "Crypto volatility made this market more visible.",
+        "politics": "Political headlines made this market more visible.",
+        "sports": "Event timing made this market more visible.",
+        "ai": "AI news flow made this topic more visible today.",
+        "global": "This market became more visible in the public activity layer.",
     }[category]
 
 
@@ -181,6 +213,17 @@ def _market_movement_to_api_object(item: MarketMovement) -> dict[str, Any]:
 
 def _smart_market_to_api_object(activity: MarketActivity) -> dict[str, Any]:
     category = _category_from_title(activity.market_title)
+    briefing = generate_market_briefing(
+        {
+            "title": activity.market_title,
+            "category": category,
+            "public_activity": activity.amount_usd,
+            "volume": activity.amount_usd,
+            "probability_delta": 0,
+            "probability": 0,
+        },
+        "en",
+    )
     return {
         "market_id": activity.market_id,
         "title": activity.market_title,
@@ -188,12 +231,19 @@ def _smart_market_to_api_object(activity: MarketActivity) -> dict[str, Any]:
         "trades_count": activity.trades_count,
         "top_side": None,
         "url": "https://polymarket.com",
+        "quick_take": briefing["quick_take"],
         "why_it_matters": _attention_reason_for_title(activity.market_title),
-        "attention_summary": _attention_reason_for_title(activity.market_title),
-        "what_this_means": "Public activity is pointing attention toward this market.",
-        "attention_signal": "Strong interest",
-        "attention_vs_conviction": "This is attention data; probability movement is needed to read conviction.",
-        "related_topics": [category_label(category, "en")],
+        "attention_summary": briefing["what_happened"],
+        "what_happened": briefing["what_happened"],
+        "main_tension": briefing["main_tension"],
+        "what_this_means": briefing["what_this_means"],
+        "attention_vs_conviction": briefing["attention_vs_conviction"],
+        "insight_strength": briefing["insight_strength"],
+        "confidence_level": briefing["confidence_level"],
+        "what_to_check": briefing["what_to_check"],
+        "resolution_note": briefing["resolution_note"],
+        "category_voice": briefing["category_voice"],
+        "related_topics": briefing["related_topics"],
         "category": category,
         "category_label": category_label(category, "en"),
     }

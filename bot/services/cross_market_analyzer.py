@@ -42,15 +42,15 @@ def _group_interpretation(label: str, markets: list[Mapping[str, Any]]) -> str:
     if moved >= 2 and high_activity >= 2:
         text = (
             f"Several markets around {label} moved together. "
-            "That makes the theme more important to review."
+            "This is no longer a single-market move. The topic itself is moving."
         )
     elif high_activity >= 2:
         text = (
-            f"Several markets around {label} became busier, but most expectations still look stable."
+            f"Several markets around {label} became busier, but most probabilities still look stable."
         )
     else:
         text = (
-            f"{label} is visible across related markets, but the read is still early."
+            f"{label} appears across related markets, but the read is still early."
         )
     return "The cross-market read was filtered." if validate_ai_output(text) else text
 
