@@ -8,7 +8,7 @@ OFFICIAL_RSS_SOURCES: tuple[SourceConfig, ...] = (
     SourceConfig(
         source_type="official",
         name="White House Briefing Room",
-        url="https://www.whitehouse.gov/briefing-room/feed/",
+        url="https://www.whitehouse.gov/news/feed/",
         category="politics",
         credibility_score=94,
     ),
