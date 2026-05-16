@@ -601,6 +601,48 @@ button {
   align-items: center;
 }
 
+.yes-no-strip {
+  display: grid;
+  gap: 6px;
+}
+
+.yes-no-strip__labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text);
+  font-size: 0.76rem;
+}
+
+.side-split-bar {
+  display: flex;
+  height: 7px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 179, 209, 0.16);
+  border-radius: var(--radius-pill);
+  background: rgba(148, 179, 209, 0.1);
+}
+
+.side-split-bar__yes,
+.side-split-bar__no {
+  min-width: 2px;
+}
+
+.side-split-bar__yes {
+  background: linear-gradient(90deg, #6aa0ff, #7fb7ff);
+}
+
+.side-split-bar__no {
+  background: linear-gradient(90deg, rgba(123, 214, 164, 0.42), rgba(123, 214, 164, 0.72));
+}
+
+.side-read {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  line-height: 1.28;
+}
+
 .score-pill {
   border: 1px solid var(--line);
   border-radius: var(--radius-pill);
@@ -659,6 +701,8 @@ button {
   color: #f3c58f;
 }
 
+.score-item--side .score-value,
+.score-item--side-confidence .score-value,
 .score-item--confirmation .score-value,
 .score-item--pulse .score-value {
   color: #b9d3ff;
@@ -772,6 +816,46 @@ button {
   color: var(--muted);
   font-size: 0.76rem;
   line-height: 1.3;
+}
+
+.side-panel {
+  display: grid;
+  gap: 9px;
+  margin-top: 12px;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.side-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.side-panel__grid span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.side-panel__grid strong {
+  color: var(--text);
+  font-size: 0.84rem;
+  text-transform: none;
+}
+
+.side-panel p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  line-height: 1.35;
 }
 
 .pulse-subtle {

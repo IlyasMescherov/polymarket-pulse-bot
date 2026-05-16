@@ -16,6 +16,7 @@ AI acts as a calm market intelligence analyst. It explains:
 - what changed around the market
 - whether the read is weak, notable, or more convincing than usual
 - whether attention is moving together with probability
+- how YES and NO sides are balanced
 - how the market changed compared with prior snapshots
 - what behavior regime the market is currently in
 - which related topics matter
@@ -39,6 +40,14 @@ Market API objects can include:
 - `memory_pattern`
 - `changed_since_last_seen`
 - `historical_context`
+- `side_summary`
+- `dominant_side`
+- `yes_probability`
+- `no_probability`
+- `side_balance`
+- `side_tension`
+- `side_confidence`
+- `side_verdict`
 
 Daily briefing payloads can include:
 
@@ -74,6 +83,20 @@ PulseMarket separates attention from conviction:
 
 This is the main interpretation advantage over raw dashboards.
 
+## YES / NO Side Balance
+
+Polymarket markets usually have two sides. PulseMarket now interprets whether the market leans toward YES, NO, or remains balanced.
+
+The side layer explains:
+
+- current YES and NO probabilities
+- which side is dominant
+- whether side confidence is low, medium, or high
+- whether the opposite side still has visible interest
+- what the side balance means for understanding the market
+
+This is interpretation only. It does not tell the user what to do.
+
 ## Market Memory
 
 Market Memory compares the current market with stored `market_snapshots`.
@@ -107,7 +130,7 @@ These labels describe market behavior, not future outcomes.
 
 The interpretation layer must not include:
 
-- buy/sell advice
+- directional advice
 - outcome certainty
 - certainty language
 - private information claims

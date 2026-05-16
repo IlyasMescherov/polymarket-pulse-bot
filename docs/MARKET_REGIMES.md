@@ -36,6 +36,7 @@ Russian:
 - activity up + flat probability: Short-term attention
 - probability moved + weak volume: Weak confirmation
 - probability moved + strong volume: More confident move
+- clear YES / NO side balance + stronger volume: More confident move
 - related markets moving together: News-driven reaction
 - low movement + low volume: Quiet market
 
@@ -48,3 +49,5 @@ Russian:
 ## Product Role
 
 Regimes are not predictions. They are plain-language behavior labels for reading market dynamics.
+
+YES / NO side balance can support a regime label when one side is clearly dominant and the volume read is stronger than usual.

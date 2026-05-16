@@ -67,6 +67,8 @@ def classify_market_regime(
     weak_volume = current_volume < 50_000 and volume_change < 10_000
     strong_volume = current_volume >= 100_000 or volume_change >= 50_000
     close = _is_close_to_resolution(_end_datetime(current_market))
+    dominant_side = str(_get(current_market, "dominant_side", "UNKNOWN")).upper()
+    side_confidence = str(_get(current_market, "side_confidence", "low")).lower()
 
     if close and activity_up:
         return _result(
@@ -95,6 +97,13 @@ def classify_market_regime(
             normalized,
             "Probability and volume moved together, so the read is stronger than usual.",
             "Вероятность и объём изменились вместе, поэтому чтение сильнее обычного.",
+        )
+    if dominant_side in {"YES", "NO"} and side_confidence == "high" and strong_volume:
+        return _result(
+            "more_confident",
+            normalized,
+            "Side balance and volume make the market read clearer than usual.",
+            "Баланс сторон и объём делают чтение рынка яснее обычного.",
         )
     if related_count >= 2 and activity_up:
         return _result(

@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from bot.database.repositories import get_latest_snapshots
 from bot.services.market_analyzer import MarketAnalyzer
+from bot.services.market_side_engine import analyze_market_side
 from bot.services.polymarket_client import PolymarketAPIError
 from bot.services.smart_money_analyzer import MarketActivity, SmartMoneyAnalyzer
 from bot.services.today_pulse import TodayPulseItem, build_today_pulse_items
@@ -29,6 +30,10 @@ def _title(text: str, limit: int = 100) -> str:
     return normalized[: limit - 1].rstrip() + "…"
 
 
+def _side_percent(value: int | None) -> str:
+    return "n/a" if value is None else f"{value}%"
+
+
 def format_today_pulse_channel_post(
     items: Sequence[TodayPulseItem],
     bot_handle: str = DEFAULT_BOT_HANDLE,
@@ -43,11 +48,15 @@ def format_today_pulse_channel_post(
         "",
     ]
     for index, item in enumerate(items[:3], start=1):
+        side = analyze_market_side(item.market, language="en")
         lines.extend(
             [
                 f"{index}. {_title(item.market.question)}",
                 f"Probability: {format_probability(item.market.yes_probability, 'en')}",
+                f"YES / NO: {_side_percent(side.yes_probability)} / {_side_percent(side.no_probability)}",
+                f"Market leans: {side.dominant_side}",
                 f"Pulse Score: {item.pulse_score.value}/100",
+                f"Side read: {side.side_verdict}",
                 f"Why people care: {item.why_it_matters}",
                 "",
             ]
@@ -79,11 +88,22 @@ def format_smart_money_channel_post(
         "",
     ]
     for index, activity in enumerate(activities[:3], start=1):
+        side = analyze_market_side(
+            {
+                "title": activity.market_title,
+                "probability": 0,
+                "public_activity": activity.amount_usd,
+                "volume": activity.amount_usd,
+            },
+            language="en",
+        )
         lines.extend(
             [
                 f"{index}. {_title(activity.market_title)}",
                 f"Public activity: {format_compact_usd(activity.amount_usd, 'en')}",
-                "Why people care: Attention is rising around this market.",
+                f"YES / NO: {_side_percent(side.yes_probability)} / {_side_percent(side.no_probability)}",
+                f"Side read: {side.side_verdict}",
+                "Why people care: This market stands out in the attention layer.",
                 "",
             ]
         )
@@ -110,10 +130,11 @@ def format_x_today_pulse_draft(
     for count in (2, 1):
         lines = ["📰 Today’s Pulse", ""]
         for index, item in enumerate(items[:count], start=1):
+            side = analyze_market_side(item.market, language="en")
             lines.append(
                 f"{index}) {_title(item.market.question, 54)} · "
-                f"{format_probability(item.market.yes_probability, 'en')} · "
-                f"Pulse {item.pulse_score.value}/100"
+                f"YES {_side_percent(side.yes_probability)} / "
+                f"NO {_side_percent(side.no_probability)}"
             )
         lines.extend(
             [
@@ -128,11 +149,13 @@ def format_x_today_pulse_draft(
             return draft
 
     item = items[0]
+    side = analyze_market_side(item.market, language="en")
     fallback = (
         "📰 Today’s Pulse\n\n"
         f"{_title(item.market.question, 72)} · "
-        f"{format_probability(item.market.yes_probability, 'en')} · "
-        f"Pulse {item.pulse_score.value}/100\n\n"
+        f"YES {_side_percent(side.yes_probability)} / "
+        f"NO {_side_percent(side.no_probability)}\n"
+        f"{side.side_verdict}\n\n"
         "Research only. No trading. No financial advice.\n\n"
         f"{bot_handle}"
     )

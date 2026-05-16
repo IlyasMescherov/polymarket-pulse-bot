@@ -37,6 +37,8 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "Market memory",
         "Market regime",
         "Market scorecard",
+        "YES / NO balance",
+        "Side confidence",
         "Market heat",
         "Confirmation",
         "Error risk",
@@ -112,6 +114,10 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "score-item",
         "score-label",
         "score-value",
+        "yes-no-strip",
+        "side-split-bar",
+        "side-read",
+        "side-panel",
         "indicator-panel",
         "verdict-line",
         "probability-bar",
@@ -195,7 +201,12 @@ def test_miniapp_settings_language_theme_and_saved_features_exist() -> None:
     assert "time_pressure" in script_text
     assert "market_depth" in script_text
     assert "ai_verdict" in script_text
+    assert "dominant_side" in script_text
+    assert "yes_probability" in script_text
+    assert "no_probability" in script_text
+    assert "side_verdict" in script_text
     assert "renderMarketScorecard" in script_text
+    assert "renderYesNoStrip" in script_text
     assert "renderScoreGrid" in script_text
     assert "score-grid" in script_text
     assert "probability-bar" in script_text
@@ -220,6 +231,7 @@ def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
     assert "where public attention is rising" in text
     assert "market mood" in text
     assert "market scorecard" in text
+    assert "yes / no balance" in text
     assert "confirmation" in text
     assert "error risk" in text
     assert "morning briefing" in text
@@ -285,11 +297,16 @@ def test_miniapp_cards_are_compressed_and_have_habit_layer() -> None:
     assert "marketRegime" in script_text
     assert "marketIndicators" in script_text
     assert "renderMarketScorecard" in script_text
+    assert "renderYesNoStrip" in script_text
+    assert "renderSideAnalysisPanel" in script_text
     assert "renderScoreGrid" in script_text
     assert "score-grid" in script_text
     assert "market-scorecard" in script_text
     assert "probability-bar" in script_text
     assert "confidence-bar" in script_text
+    assert "yes-no-strip" in script_text
+    assert "side-split-bar" in script_text
+    assert "side-panel" in script_text
     assert "indicatorSummary" in script_text
     assert "confidenceLevel" in script_text
     assert "whatInfluences" in script_text

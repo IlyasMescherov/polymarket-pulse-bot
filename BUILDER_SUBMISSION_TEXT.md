@@ -44,6 +44,7 @@ It also includes a Telegram Mini App dashboard for Today's Pulse, Activity Radar
 - AI Context Engine
 - Market Memory
 - Market Regimes
+- YES / NO Side Analysis
 - Today’s Narrative
 - Event categories
 - Human probability labels

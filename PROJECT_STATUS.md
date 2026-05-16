@@ -18,7 +18,7 @@ The current version focuses on becoming a daily market intelligence companion fo
 - New Markets view
 - Sharp Movement detection based on stored market snapshots
 - Why it moved explanations for market movement context
-- Pulse Score for market signal ranking
+- Pulse Score for market interest ranking
 - Market Health Score for public-data quality and activity context
 - Risk flags for low volume, missing data, ending soon, sharp move, and volatile history
 - Market search with local fallback filtering
@@ -47,7 +47,7 @@ The current version focuses on becoming a daily market intelligence companion fo
 - Docker Compose PostgreSQL service
 - Optional OpenAI explanations when `OPENAI_API_KEY` is configured
 - AI Context Engine for safe market reasoning, daily narratives, and category summaries
-- AI Interpretation Layer for what-this-means, attention vs conviction, attention signal labels, and related topics
+- AI Interpretation Layer for what-this-means, attention vs conviction, strength labels, and related topics
 - Event categories for Politics, Crypto, AI, Sports, Esports, Global, and Culture
 - Human probability interpretation for unlikely, possible, likely, and highly likely states
 - Local Mini App interests for category prioritization
@@ -180,13 +180,15 @@ PulseMarket AI now has an optional reasoning layer on top of ranking and filteri
 - AI Market Interpretation Layer: [docs/AI_INTERPRETATION_LAYER.md](docs/AI_INTERPRETATION_LAYER.md)
 - Market Memory: [docs/MARKET_MEMORY.md](docs/MARKET_MEMORY.md)
 - Market Regimes: [docs/MARKET_REGIMES.md](docs/MARKET_REGIMES.md)
+- YES / NO Side Analysis: [docs/YES_NO_SIDE_ANALYSIS.md](docs/YES_NO_SIDE_ANALYSIS.md)
 - AI Market Briefing: [docs/AI_MARKET_BRIEFING.md](docs/AI_MARKET_BRIEFING.md)
 - Event Category System: [docs/EVENT_CATEGORY_SYSTEM.md](docs/EVENT_CATEGORY_SYSTEM.md)
 - Mini App Today tab includes Today’s Narrative and category-aware briefing copy.
-- Mini App Explain sheet includes What this means, Attention vs conviction, attention signal, related topics, and what to watch.
+- Mini App Explain sheet includes What this means, Attention vs conviction, strength labels, related topics, and what to watch.
 - Mini App category selector filters Today, Radar, and search suggestions.
 - Search API returns a short context summary.
 - All AI behavior has deterministic fallback when `OPENAI_API_KEY` is missing.
+- Market cards and APIs include YES / NO balance, dominant side, side confidence, and side verdict.
 
 Telegram requires HTTPS for a real Mini App URL in BotFather. The current HTTP route is a browser preview until a domain and HTTPS are configured.
 

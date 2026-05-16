@@ -49,6 +49,7 @@ Builder submission package:
 - AI market briefing: [docs/AI_MARKET_BRIEFING.md](docs/AI_MARKET_BRIEFING.md)
 - Market Memory: [docs/MARKET_MEMORY.md](docs/MARKET_MEMORY.md)
 - Market Regimes: [docs/MARKET_REGIMES.md](docs/MARKET_REGIMES.md)
+- YES / NO side analysis: [docs/YES_NO_SIDE_ANALYSIS.md](docs/YES_NO_SIDE_ANALYSIS.md)
 - Event category system: [docs/EVENT_CATEGORY_SYSTEM.md](docs/EVENT_CATEGORY_SYSTEM.md)
 - Static landing page: [landing/](landing/)
 - Telegram Mini App preview: [miniapp/](miniapp/)
@@ -79,6 +80,7 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - AI Market Interpretation Layer: explains what activity means, separates attention from conviction, and labels how strong the market read looks.
 - Market Memory: compares current markets with stored snapshots so PulseMarket can say whether activity is holding, cooling, or newly visible.
 - Market Regimes: labels behavior such as Quiet market, Short-term attention, Near resolution, Sustained interest, Weak confirmation, and More confident move.
+- YES / NO Side Analysis: explains how confidence is distributed between the two market sides.
 - Today’s Narrative: explains what public markets are reacting to today without making predictions.
 - Event categories: All, Politics, Crypto, AI, Sports, Esports, Global, and Culture help users filter the daily briefing and Activity Radar.
 - Human probability language: unlikely, possible, likely, and highly likely labels make raw percentages easier to read.
@@ -366,8 +368,9 @@ The Mini App and bot now prioritize meaning before metrics:
 - Simple Read turns a market into plain language: what it asks, why people care, what to watch, and where to inspect rules.
 - Activity Radar focuses on where public attention is rising instead of leading with raw wallet data.
 - Market Memory and Market Regimes help PulseMarket read how behavior changes over time.
+- YES / NO Side Analysis explains whether the market leans toward YES, NO, or remains balanced.
 
-See [docs/PRODUCT_STRATEGY_NEXT.md](docs/PRODUCT_STRATEGY_NEXT.md), [docs/MORNING_BRIEFING.md](docs/MORNING_BRIEFING.md), [docs/MARKET_MOOD.md](docs/MARKET_MOOD.md), [docs/MARKET_MEMORY.md](docs/MARKET_MEMORY.md), and [docs/MARKET_REGIMES.md](docs/MARKET_REGIMES.md).
+See [docs/PRODUCT_STRATEGY_NEXT.md](docs/PRODUCT_STRATEGY_NEXT.md), [docs/MORNING_BRIEFING.md](docs/MORNING_BRIEFING.md), [docs/MARKET_MOOD.md](docs/MARKET_MOOD.md), [docs/MARKET_MEMORY.md](docs/MARKET_MEMORY.md), [docs/MARKET_REGIMES.md](docs/MARKET_REGIMES.md), and [docs/YES_NO_SIDE_ANALYSIS.md](docs/YES_NO_SIDE_ANALYSIS.md).
 
 ## Roadmap
 

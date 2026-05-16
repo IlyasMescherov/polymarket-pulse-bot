@@ -11,6 +11,7 @@ Market Memory reuses the existing `market_snapshots` table. No new trading, wall
 - recent volume growth between snapshots
 - time left before resolution
 - whether attention is holding, cooling, or appearing for the first time
+- whether the YES / NO balance changed enough to alter the market read
 
 ## User-Facing Outputs
 
@@ -38,3 +39,5 @@ Russian:
 ## Safety Scope
 
 Market Memory is interpretation only. It does not tell users what to do and does not execute anything.
+
+Side analysis complements memory by showing whether today’s confidence is concentrated on YES, concentrated on NO, or still balanced.

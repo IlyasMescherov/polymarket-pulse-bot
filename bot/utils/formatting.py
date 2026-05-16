@@ -8,6 +8,7 @@ from bot.services.market_analyzer import MarketMovement
 from bot.services.market_health import MarketHealth
 from bot.services.market_indicators import calculate_market_indicators
 from bot.services.market_mood import calculate_market_mood
+from bot.services.market_side_engine import analyze_market_side
 from bot.services.polymarket_client import Market
 from bot.services.pulse_score import PulseScore
 from bot.utils.i18n import normalize_language
@@ -36,6 +37,20 @@ def format_percentage_points(value: float | None, language: str | None = None) -
     if value is None:
         return _missing_data(language)
     return f"{value * 100:+.0f}%"
+
+
+def _format_side_percent(value: int | None) -> str:
+    return "n/a" if value is None else f"{value}%"
+
+
+def _side_lines(market: Market, language: str | None = None, delta: float | None = None) -> list[str]:
+    side = analyze_market_side(market, delta=delta, language=language)
+    return [
+        f"YES: {_format_side_percent(side.yes_probability)}",
+        f"NO: {_format_side_percent(side.no_probability)}",
+        f"{_label('Рынок склоняется', 'Market leans', language)}: {side.dominant_side}",
+        f"{_label('Баланс сторон', 'Side read', language)}: {side.side_verdict}",
+    ]
 
 
 def format_usd(value: float | None) -> str:
@@ -108,6 +123,9 @@ def format_market_card(
         "",
         _label("Вероятность:", "Probability:", language),
         format_probability(market.yes_probability, language),
+        "",
+        _label("Баланс YES / NO:", "YES / NO balance:", language),
+        *_side_lines(market, language=language, delta=movement_delta),
         "",
         _label("Движение:", "Movement:", language),
         (
@@ -238,6 +256,9 @@ def format_movement_card(
         _label("До завершения:", "Time left:", language),
         format_time_until(movement.market.end_date, language=language),
         "",
+        _label("Баланс YES / NO:", "YES / NO balance:", language),
+        *_side_lines(movement.market, language=language, delta=movement.delta),
+        "",
         _label("Индикаторы:", "Indicators:", language),
         f"{_label('Температура', 'Market heat', language)}: {indicators.market_heat}",
         f"{_label('Подтверждение', 'Confirmation', language)}: {indicators.confirmation_level}",
@@ -292,6 +313,9 @@ def format_today_pulse_card(
             "Probability:",
             format_probability(market.yes_probability, language),
             "",
+            "YES / NO balance:",
+            *_side_lines(market, language=language, delta=item.delta),
+            "",
             "Pulse Score:",
             f"{item.pulse_score.value}/100",
             "How interesting this market looks today.",
@@ -326,6 +350,9 @@ def format_today_pulse_card(
         "",
         "Вероятность:",
         format_probability(market.yes_probability, language),
+        "",
+        "Баланс YES / NO:",
+        *_side_lines(market, language=language, delta=item.delta),
         "",
         "Pulse Score:",
         f"{item.pulse_score.value}/100",
@@ -467,6 +494,9 @@ def format_beginner_explanation(
             "",
             f"Current probability: {format_probability(market.yes_probability, language)}",
             "",
+            "YES / NO balance:",
+            *_side_lines(market, language=language, delta=movement_delta),
+            "",
             "Market indicators:",
             f"Market heat: {indicators.market_heat}",
             f"Confirmation: {indicators.confirmation_level}",
@@ -489,6 +519,9 @@ def format_beginner_explanation(
         "Проверь правила, качество объёма и время до завершения, прежде чем делать выводы.",
         "",
         f"Текущая вероятность: {format_probability(market.yes_probability)}",
+        "",
+        "Баланс YES / NO:",
+        *_side_lines(market, language=language, delta=movement_delta),
         "",
         "Индикаторы рынка:",
         f"Температура: {indicators.market_heat}",

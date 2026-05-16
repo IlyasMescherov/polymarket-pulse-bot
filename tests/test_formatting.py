@@ -45,6 +45,9 @@ def test_market_card_contains_core_fields() -> None:
 
     assert "Will this test pass?" in card
     assert "63%" in card
+    assert "YES:" in card
+    assert "NO:" in card
+    assert "Рынок склоняется:" in card
     assert "$120K" in card
     assert "До завершения:" in card
     assert "Настроение рынка:" in card
@@ -73,6 +76,8 @@ def test_market_card_supports_english_demo_labels() -> None:
 
     assert "Title:" in card
     assert "Probability:" in card
+    assert "YES / NO balance:" in card
+    assert "Market leans:" in card
     assert "Time left:" in card
     assert "Market Mood:" in card
     assert "Indicators:" in card
@@ -80,6 +85,7 @@ def test_market_card_supports_english_demo_labels() -> None:
     assert "Confirmation:" in card
     assert "Error risk:" in card
     assert "Market indicators:" in beginner
+    assert "YES / NO balance:" in beginner
     assert "🧠 Analysis" in beginner
     assert "The useful read is whether probability, volume, and timing point in the same direction." in beginner
     assert "📤 Polymarket market" in share

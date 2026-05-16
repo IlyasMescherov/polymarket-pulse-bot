@@ -207,11 +207,19 @@ const copy = {
     howSerious: "Strength of read",
     whatInfluences: "What to check",
     confidenceLevel: "Confidence level",
+    sideConfidenceLow: "Low",
+    sideConfidenceMedium: "Medium",
+    sideConfidenceHigh: "High",
     influencingFactorsCopy: "News context, public activity, time left, and resolution rules.",
     relatedTopics: "Related topics",
     resolutionRules: "Resolution rules",
     resolutionRulesCopy: "Open the market page and review the official resolution criteria.",
     marketIndicators: "Market scorecard",
+    yesNoBalance: "YES / NO balance",
+    side: "Side",
+    sideConfidence: "Side confidence",
+    marketLeans: "Market leans",
+    sideRead: "Side read",
     marketHeat: "Market heat",
     confirmation: "Confirmation",
     confirmationShort: "Confirm.",
@@ -410,11 +418,19 @@ const copy = {
     howSerious: "Сила вывода",
     whatInfluences: "Что проверить",
     confidenceLevel: "Уровень уверенности",
+    sideConfidenceLow: "Слабая",
+    sideConfidenceMedium: "Средняя",
+    sideConfidenceHigh: "Сильная",
     influencingFactorsCopy: "Новости, публичная активность, время до завершения и правила разрешения.",
     relatedTopics: "Связанные темы",
     resolutionRules: "Правила разрешения",
     resolutionRulesCopy: "Открой страницу рынка и проверь официальные критерии разрешения.",
     marketIndicators: "Скоринг рынка",
+    yesNoBalance: "Баланс YES / NO",
+    side: "Сторона",
+    sideConfidence: "Уверенность стороны",
+    marketLeans: "Рынок склоняется",
+    sideRead: "Баланс сторон",
     marketHeat: "Температура",
     confirmation: "Подтверждение",
     confirmationShort: "Подтвержд.",
@@ -684,6 +700,37 @@ function probabilityNumber(item) {
   const label = String((item && item.probability_label) || "").trim();
   if (label && !/[a-zа-я]/i.test(label)) return label;
   return "n/a";
+}
+
+function sidePercent(value) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return "n/a";
+  return `${Math.max(0, Math.min(100, Math.round(Number(value))))}%`;
+}
+
+function sideConfidenceLabel(item) {
+  const value = String((item && item.side_confidence) || "low").toLowerCase();
+  if (value === "high") return t("sideConfidenceHigh");
+  if (value === "medium") return t("sideConfidenceMedium");
+  return t("sideConfidenceLow");
+}
+
+function dominantSide(item) {
+  const side = String((item && item.dominant_side) || "UNKNOWN").toUpperCase();
+  return ["YES", "NO", "BALANCED"].includes(side) ? side : "UNKNOWN";
+}
+
+function sideBalanceText(item) {
+  const side = dominantSide(item);
+  if (isRu()) {
+    if (side === "YES") return "Рынок склоняется к YES";
+    if (side === "NO") return "Рынок склоняется к NO";
+    if (side === "BALANCED") return "Стороны близки";
+    return "Данных по сторонам мало";
+  }
+  if (side === "YES") return "Market leans YES";
+  if (side === "NO") return "Market leans NO";
+  if (side === "BALANCED") return "Both sides are close";
+  return "Not enough side data";
 }
 
 function probabilityMeaning(item) {
@@ -1092,6 +1139,8 @@ function depthScoreValue(item) {
 
 function renderScoreGrid(item) {
   const entries = [
+    [t("side"), dominantSide(item), "side"],
+    [t("sideConfidence"), sideConfidenceLabel(item), "side-confidence"],
     [t("depthShort"), depthScoreValue(item), "depth"],
     [t("confirmationShort"), confirmationLevel(item), "confirmation"],
     [t("riskShort"), errorRisk(item), "risk"],
@@ -1140,6 +1189,29 @@ function scorePills(item) {
   `;
 }
 
+function renderYesNoStrip(item) {
+  const yes = item && item.yes_probability !== undefined ? Number(item.yes_probability) : Number(item && item.probability);
+  const safeYes = Number.isNaN(yes) ? 0 : Math.max(0, Math.min(100, yes));
+  const noValue = item && item.no_probability !== undefined && item.no_probability !== null
+    ? Number(item.no_probability)
+    : 100 - safeYes;
+  const safeNo = Number.isNaN(noValue) ? Math.max(0, 100 - safeYes) : Math.max(0, Math.min(100, noValue));
+  const side = dominantSide(item).toLowerCase();
+  return `
+    <div class="yes-no-strip yes-no-strip--${escapeHtml(side)}">
+      <div class="yes-no-strip__labels">
+        <strong>YES ${escapeHtml(sidePercent(safeYes))}</strong>
+        <strong>NO ${escapeHtml(sidePercent(safeNo))}</strong>
+      </div>
+      <div class="side-split-bar" aria-hidden="true">
+        <span class="side-split-bar__yes" style="width: ${safeYes}%"></span>
+        <span class="side-split-bar__no" style="width: ${safeNo}%"></span>
+      </div>
+      <p class="side-read">${escapeHtml(sideBalanceText(item))}</p>
+    </div>
+  `;
+}
+
 function verdictLine(item) {
   return `
     <div class="verdict-line verdict-line--scorecard">
@@ -1152,6 +1224,7 @@ function renderMarketScorecard(item, options = {}) {
   const compact = Boolean(options.compact);
   return `
     <div class="market-scorecard${compact ? " market-scorecard--compact" : ""}">
+      ${renderYesNoStrip(item)}
       ${scorePills(item)}
       ${probabilityBar(item)}
       ${compact ? "" : renderScoreGrid(item)}
@@ -1307,6 +1380,19 @@ function normalizeMarket(item) {
     ai_verdict: item && item.ai_verdict,
     ai_verdict_key: item && item.ai_verdict_key,
     indicator_summary: item && item.indicator_summary,
+    side_summary: item && item.side_summary,
+    dominant_side: item && item.dominant_side,
+    opposite_side: item && item.opposite_side,
+    yes_probability: item && item.yes_probability,
+    no_probability: item && item.no_probability,
+    yes_price: item && item.yes_price,
+    no_price: item && item.no_price,
+    side_balance: item && item.side_balance,
+    side_tension: item && item.side_tension,
+    side_confidence: item && item.side_confidence,
+    opposite_interest: item && item.opposite_interest,
+    side_verdict: item && item.side_verdict,
+    side_risk_note: item && item.side_risk_note,
     memory_pattern: item && item.memory_pattern,
     changed_since_last_seen: item && item.changed_since_last_seen,
     historical_context: item && item.historical_context,
@@ -1471,6 +1557,26 @@ function renderWhatToCheck(item) {
   `;
 }
 
+function renderSideAnalysisPanel(item) {
+  return `
+    <section class="side-panel">
+      <div class="indicator-panel__head">
+        <span>${escapeHtml(t("yesNoBalance"))}</span>
+        <strong>${escapeHtml(dominantSide(item))}</strong>
+      </div>
+      ${renderYesNoStrip(item)}
+      <div class="side-panel__grid">
+        <span>YES <strong>${escapeHtml(sidePercent(item.yes_probability))}</strong></span>
+        <span>NO <strong>${escapeHtml(sidePercent(item.no_probability))}</strong></span>
+        <span>${escapeHtml(t("marketLeans"))} <strong>${escapeHtml(dominantSide(item))}</strong></span>
+        <span>${escapeHtml(t("sideConfidence"))} <strong>${escapeHtml(sideConfidenceLabel(item))}</strong></span>
+      </div>
+      <p>${escapeHtml(localizedText(item.side_tension, sideBalanceText(item)))}</p>
+      <p>${escapeHtml(localizedText(item.side_verdict, localizedText(item.side_summary, sideBalanceText(item))))}</p>
+    </section>
+  `;
+}
+
 function openExplain(item) {
   const normalized = normalizeMarket(item);
   state.lastExplained = normalized;
@@ -1501,6 +1607,7 @@ function openExplain(item) {
       </div>
       ${renderMarketScorecard(normalized)}
     </section>
+    ${renderSideAnalysisPanel(normalized)}
     <div class="detail-list">
       <div>
         <span>${escapeHtml(t("whatInfluences"))}</span>

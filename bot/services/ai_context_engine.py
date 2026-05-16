@@ -14,6 +14,7 @@ from bot.services.ai_prompts import market_analyst_system_prompt
 from bot.services.market_mood import MarketMood
 from bot.services.market_memory_engine import MarketMemoryResult, compare_current_to_previous
 from bot.services.market_regime_engine import MarketRegimeResult, classify_market_regime
+from bot.services.market_side_engine import analyze_market_side
 from bot.services.polymarket_client import Market
 from bot.services.pulse_score import PulseScore
 from bot.utils.i18n import normalize_language
@@ -74,6 +75,15 @@ class MarketContext:
     memory_pattern: str
     changed_since_last_seen: str
     historical_context: str
+    side_summary: str
+    dominant_side: str
+    opposite_side: str
+    side_balance: str
+    side_tension: str
+    side_confidence: str
+    opposite_interest: str
+    side_verdict: str
+    side_risk_note: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -274,6 +284,15 @@ class AIContextEngine:
                 fallback.historical_context,
                 max_chars=190,
             ),
+            side_summary=fallback.side_summary,
+            dominant_side=fallback.dominant_side,
+            opposite_side=fallback.opposite_side,
+            side_balance=fallback.side_balance,
+            side_tension=fallback.side_tension,
+            side_confidence=fallback.side_confidence,
+            opposite_interest=fallback.opposite_interest,
+            side_verdict=fallback.side_verdict,
+            side_risk_note=fallback.side_risk_note,
         )
         self._cache[cache_key] = context
         return context
@@ -379,6 +398,15 @@ class AIContextEngine:
             memory_pattern=str(briefing["memory_pattern"]),
             changed_since_last_seen=str(briefing["changed_since_last_seen"]),
             historical_context=str(briefing["historical_context"]),
+            side_summary=str(briefing["side_summary"]),
+            dominant_side=str(briefing["dominant_side"]),
+            opposite_side=str(briefing["opposite_side"]),
+            side_balance=str(briefing["side_balance"]),
+            side_tension=str(briefing["side_tension"]),
+            side_confidence=str(briefing["side_confidence"]),
+            opposite_interest=str(briefing["opposite_interest"]),
+            side_verdict=str(briefing["side_verdict"]),
+            side_risk_note=str(briefing["side_risk_note"]),
         )
 
     async def daily_narrative(
@@ -812,12 +840,14 @@ class AIContextEngine:
             "attention_vs_conviction, insight_strength, confidence_level, "
             "resolution_note, category_voice, related_topics, "
             "market_memory_summary, market_regime, regime_reason, memory_pattern, "
-            "changed_since_last_seen, historical_context.\n"
+            "changed_since_last_seen, historical_context, side_summary, side_tension, "
+            "side_verdict, side_risk_note.\n"
             "insight_strength must be exactly one of: Weak confirmation, Interest is present, "
             "More noticeable than usual, Strong attention, More convincing than usual.\n"
             "related_topics must be an array of 2-4 short topic labels.\n"
             "Each sentence must explain the reader takeaway, not market outcomes. "
             "Name the main tension between probability, volume, time left, and related markets. "
+            "Use the YES / NO balance to explain which side the market leans toward. "
             "Use market memory to compare the current market with previous snapshots. "
             "Use market regime to name the current behavior type. "
             "No directional advice.\n\n"
@@ -832,6 +862,10 @@ class AIContextEngine:
             f"Changed since last brief: {fallback.changed_since_last_seen}\n"
             f"Historical context: {fallback.historical_context}\n"
             f"Market regime: {fallback.market_regime} - {fallback.regime_reason}\n"
+            f"YES / NO balance: {fallback.side_balance}\n"
+            f"Dominant side: {fallback.dominant_side}\n"
+            f"Side tension: {fallback.side_tension}\n"
+            f"Side confidence: {fallback.side_confidence}\n"
             f"Ends: {market.end_date}\n"
             f"Description: {market.raw.get('description') or ''}\n"
         )
@@ -854,6 +888,9 @@ class AIContextEngine:
                 "market_memory": context.market_memory_summary,
                 "market_regime": context.market_regime,
                 "changed_since_last_brief": context.changed_since_last_seen,
+                "dominant_side": context.dominant_side,
+                "side_balance": context.side_balance,
+                "side_tension": context.side_tension,
             }
             for market, context in zip(markets[:5], contexts[:5], strict=False)
         ]
@@ -933,7 +970,9 @@ class AIContextEngine:
             "end_date": market.end_date,
             "pulse_score": pulse_score.value,
             "description": market.raw.get("description") or "",
+            "raw": market.raw,
         }
+        payload.update(analyze_market_side(market, delta=delta, language="en").as_dict())
         if memory is not None:
             payload.update(memory.as_dict())
         if regime is not None:

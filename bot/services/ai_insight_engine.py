@@ -8,6 +8,7 @@ from bot.services.category_analyzer import category_summary
 from bot.services.cross_market_analyzer import group_markets_by_narrative
 from bot.services.market_memory_engine import NO_HISTORY_MESSAGE
 from bot.services.market_regime_engine import REGIME_LABELS
+from bot.services.market_side_engine import analyze_market_side
 from bot.utils.i18n import normalize_language
 
 FALLBACK_MESSAGES: dict[str, dict[str, str]] = {
@@ -468,6 +469,12 @@ def generate_market_briefing(
     related_count: int = 0,
 ) -> dict[str, str | list[str]]:
     normalized = _lang(lang)
+    side = analyze_market_side(
+        market,
+        delta=_signed_probability_delta(market),
+        confirmation_level=str(market.get("confirmation_level") or market.get("confirmation_level_key") or ""),
+        language=normalized,
+    )
     attention = classify_attention_vs_conviction(market, normalized)
     strength = classify_movement_strength(market)
     strength_read = classify_insight_strength(market, normalized, related_count=related_count)
@@ -528,6 +535,21 @@ def generate_market_briefing(
         quick_take = _safe(memory_summary, attention["interpretation"])
     else:
         quick_take = _safe(attention["interpretation"], FALLBACK_MESSAGES[normalized]["explain_fallback"])
+    if side.dominant_side != "UNKNOWN":
+        quick_take = _safe(side.side_verdict, quick_take)
+        main_tension = _safe(side.side_tension, main_tension)
+        if side.dominant_side in {"YES", "NO", "BALANCED"}:
+            what_this_means = _safe(
+                (
+                    f"{side.side_balance}. {side.side_risk_note}"
+                    if normalized == "en"
+                    else f"{side.side_balance}. {side.side_risk_note}"
+                ),
+                what_this_means,
+            )
+        side_check = "YES / NO balance" if normalized == "en" else "баланс YES / NO"
+        if side_check not in checks:
+            checks = [side_check, *checks][:4]
     return {
         "quick_take": quick_take,
         "what_happened": what_happened,
@@ -551,6 +573,7 @@ def generate_market_briefing(
         "historical_context": historical_context,
         "market_regime": regime_label,
         "regime_reason": regime_reason,
+        **side.as_dict(),
     }
 
 
