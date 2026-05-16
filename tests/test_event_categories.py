@@ -47,3 +47,13 @@ def test_classify_market_category_uses_title_tags_and_description() -> None:
     assert classify_market_category(markets[2]) == "esports"
     assert classify_market_category(markets[3]) == "global"
     assert [market.id for market in filter_markets_by_category(markets, "crypto")] == ["c"]
+
+
+def test_music_award_market_does_not_match_war_keyword() -> None:
+    market = _market(
+        "award",
+        "Will a local music award happen this month?",
+        {"category": "Culture", "description": "Local entertainment and music event"},
+    )
+
+    assert classify_market_category(market) == "culture"

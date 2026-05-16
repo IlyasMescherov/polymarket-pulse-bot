@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from typing import Iterable
 
 from bot.services.polymarket_client import Market
@@ -181,12 +182,21 @@ def classify_market_category(market: Market) -> str:
     text = _market_text(market)
     scores: dict[str, int] = {}
     for category in EVENT_CATEGORIES:
-        score = sum(1 for keyword in category.keywords if keyword in text)
+        score = sum(1 for keyword in category.keywords if _contains_keyword(text, keyword))
         if score:
             scores[category.key] = score
     if not scores:
         return "global"
     return max(scores.items(), key=lambda item: item[1])[0]
+
+
+def _contains_keyword(text: str, keyword: str) -> bool:
+    normalized = str(keyword).lower().strip()
+    if not normalized:
+        return False
+    if "." in normalized or " " in normalized:
+        return normalized in text
+    return re.search(rf"(?<![a-z0-9]){re.escape(normalized)}(?![a-z0-9])", text) is not None
 
 
 def filter_markets_by_category(markets: Iterable[Market], category_key: str | None) -> list[Market]:

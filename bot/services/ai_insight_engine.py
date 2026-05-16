@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import datetime, timezone
 from typing import Any, Mapping, Sequence
 
@@ -452,15 +453,29 @@ def related_topics_for_market(market: Mapping[str, Any]) -> list[str]:
         ("AI", ("openai", "nvidia", "anthropic", " ai ")),
         ("Sports", ("nba", "nfl", "ufc", "soccer", "football", "tennis", "playoff", "match")),
         ("Esports", ("cs2", "league of legends", "valorant", "esports", "lck")),
-        ("Culture", ("movie", "album", "grammy", "oscar", "celebrity", "eurovision")),
+        ("Culture", ("award", "music", "movie", "album", "grammy", "oscar", "celebrity", "eurovision")),
     )
     padded = f" {text} "
     for label, words in checks:
-        if any(word in padded for word in words):
+        if _has_topic_keyword(padded, words):
             topics.append(label)
     if not topics:
         topics.append(_category(market).replace("_", " ").title())
     return list(dict.fromkeys(topics))[:4]
+
+
+def _has_topic_keyword(text: str, keywords: tuple[str, ...]) -> bool:
+    for keyword in keywords:
+        normalized = keyword.strip().lower()
+        if not normalized:
+            continue
+        if " " in normalized or "." in normalized:
+            if normalized in text:
+                return True
+            continue
+        if re.search(rf"(?<![a-z0-9]){re.escape(normalized)}(?![a-z0-9])", text):
+            return True
+    return False
 
 
 def generate_market_briefing(

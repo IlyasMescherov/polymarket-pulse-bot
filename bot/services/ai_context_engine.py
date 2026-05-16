@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import re
 from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, Sequence
 
@@ -576,29 +577,35 @@ class AIContextEngine:
 
     def _topic_reason(self, title: str, language: str) -> str:
         text = title.lower()
-        if any(word in text for word in ("bitcoin", "btc", "ethereum", "crypto", "binance")):
+        if self._contains_topic(text, ("bitcoin", "btc", "ethereum", "crypto", "binance")):
             return (
                 "Crypto volatility made this market more visible."
                 if language == "en"
                 else "Активность усилилась после движения крипторынка."
             )
-        if any(word in text for word in ("iran", "israel", "trump", "election", "president", "war", "diplomacy")):
+        if self._contains_topic(text, ("iran", "israel", "trump", "election", "president", "war", "diplomacy")):
             return (
                 "Political headlines made this market more visible."
                 if language == "en"
                 else "Политическая повестка сделала рынок заметнее."
             )
-        if any(word in text for word in ("nba", "nfl", "ufc", "soccer", "football", "tennis", "match", "playoff")):
+        if self._contains_topic(text, ("nba", "nfl", "ufc", "soccer", "football", "tennis", "match", "playoff")):
             return (
                 "Event timing made this market more visible."
                 if language == "en"
                 else "Рынок оживился перед спортивным событием."
             )
-        if any(word in text for word in ("openai", "nvidia", "anthropic", " ai ")):
+        if self._contains_topic(text, ("openai", "nvidia", "anthropic", "ai")):
             return (
                 "AI news flow made this topic more visible today."
                 if language == "en"
                 else "Внимание к AI-теме усилилось."
+            )
+        if self._contains_topic(text, ("award", "music", "film", "movie", "grammy", "oscar", "celebrity")):
+            return (
+                "Culture attention made this market more visible."
+                if language == "en"
+                else "Культурная повестка сделала рынок заметнее."
             )
         return (
             "The topic became more visible in today’s market read."
@@ -770,15 +777,29 @@ class AIContextEngine:
             ("AI", ("openai", "nvidia", "anthropic", " ai ")),
             ("Sports", ("nba", "nfl", "ufc", "soccer", "football", "tennis", "playoff", "match")),
             ("Esports", ("cs2", "league of legends", "valorant", "esports")),
-            ("Culture", ("movie", "album", "grammy", "oscar", "celebrity")),
+            ("Culture", ("award", "music", "movie", "film", "album", "grammy", "oscar", "celebrity")),
         )
         padded = f" {text} "
         for label, words in checks:
-            if any(word in padded for word in words):
+            if self._contains_topic(padded, words):
                 topics.append(label)
         if not topics:
             topics.append(category_label(classify_market_category(market), "en"))
         return tuple(dict.fromkeys(topics))[:4]
+
+    @staticmethod
+    def _contains_topic(text: str, words: Sequence[str]) -> bool:
+        for word in words:
+            normalized = str(word).lower().strip()
+            if not normalized:
+                continue
+            if " " in normalized:
+                if normalized in text:
+                    return True
+                continue
+            if re.search(rf"(?<![a-z0-9]){re.escape(normalized)}(?![a-z0-9])", text):
+                return True
+        return False
 
     def _daily_interpretation(
         self,

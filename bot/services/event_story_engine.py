@@ -719,11 +719,59 @@ def _market_title(market: Any) -> str:
 
 def _market_category(market: Any) -> str:
     if isinstance(market, Mapping):
-        return str(market.get("category") or "global")
+        explicit = _normalize_category(market.get("category"))
+        if explicit:
+            return explicit
+        title = _market_title(market).lower()
+        if _contains_story_keyword(title, ("award", "oscars", "grammy", "movie", "film", "music", "celebrity")):
+            return "culture"
+        if _contains_story_keyword(title, ("bitcoin", "btc", "ethereum", "crypto", "binance")):
+            return "crypto"
+        if _contains_story_keyword(title, ("nba", "nfl", "ufc", "soccer", "football", "tennis", "match", "playoff")):
+            return "sports"
+        if _contains_story_keyword(title, ("openai", "nvidia", "anthropic", "ai")):
+            return "ai"
+        if _contains_story_keyword(title, ("iran", "israel", "trump", "election", "president", "war", "diplomacy")):
+            return "politics"
+        return "global"
     try:
         return classify_market_category(market)
     except Exception:
         return "global"
+
+
+def _normalize_category(value: Any) -> str | None:
+    key = str(value or "").strip().lower().replace(" ", "_")
+    aliases = {
+        "political": "politics",
+        "politics": "politics",
+        "crypto": "crypto",
+        "cryptocurrency": "crypto",
+        "ai": "ai",
+        "ai_tech": "ai",
+        "sports": "sports",
+        "sport": "sports",
+        "esports": "esports",
+        "global": "global",
+        "culture": "culture",
+        "media": "culture",
+        "entertainment": "culture",
+    }
+    return aliases.get(key)
+
+
+def _contains_story_keyword(text: str, keywords: tuple[str, ...]) -> bool:
+    for keyword in keywords:
+        normalized = keyword.strip().lower()
+        if not normalized:
+            continue
+        if " " in normalized or "." in normalized:
+            if normalized in text:
+                return True
+            continue
+        if re.search(rf"(?<![a-z0-9]){re.escape(normalized)}(?![a-z0-9])", text):
+            return True
+    return False
 
 
 def _number(value: Any) -> float | None:

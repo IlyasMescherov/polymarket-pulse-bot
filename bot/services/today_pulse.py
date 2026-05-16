@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
@@ -13,25 +14,31 @@ from bot.utils.i18n import normalize_language
 
 def _title_category_reason(market: Market, language: str) -> str:
     title = market.question.lower()
-    if any(word in title for word in ("bitcoin", "btc", "ethereum", "crypto", "binance")):
+    if _title_has_keyword(title, ("bitcoin", "btc", "ethereum", "crypto", "binance")):
         return (
             "Crypto volatility made this market more visible."
             if language == "en"
             else "Активность усилилась после движения крипторынка."
         )
-    if any(word in title for word in ("iran", "israel", "trump", "election", "president", "war", "diplomacy")):
+    if _title_has_keyword(title, ("award", "oscars", "grammy", "movie", "film", "music", "celebrity")):
+        return (
+            "Culture attention made this market more visible."
+            if language == "en"
+            else "Культурная повестка сделала рынок заметнее."
+        )
+    if _title_has_keyword(title, ("iran", "israel", "trump", "election", "president", "war", "diplomacy")):
         return (
             "Political headlines made this market more visible."
             if language == "en"
             else "Политическая повестка сделала рынок заметнее."
         )
-    if any(word in title for word in ("nba", "nfl", "ufc", "soccer", "football", "tennis", "match", "playoff")):
+    if _title_has_keyword(title, ("nba", "nfl", "ufc", "soccer", "football", "tennis", "match", "playoff")):
         return (
             "Event timing made this market more visible."
             if language == "en"
             else "Рынок оживился перед спортивным событием."
         )
-    if any(word in title for word in ("openai", "nvidia", "anthropic", " ai ")):
+    if _title_has_keyword(title, ("openai", "nvidia", "anthropic", "ai")):
         return (
             "AI news flow made this topic more visible today."
             if language == "en"
@@ -42,6 +49,20 @@ def _title_category_reason(market: Market, language: str) -> str:
         if language == "en"
         else "Тема стала заметнее в сегодняшнем чтении рынка."
     )
+
+
+def _title_has_keyword(text: str, keywords: tuple[str, ...]) -> bool:
+    for keyword in keywords:
+        normalized = keyword.strip().lower()
+        if not normalized:
+            continue
+        if " " in normalized or "." in normalized:
+            if normalized in text:
+                return True
+            continue
+        if re.search(rf"(?<![a-z0-9]){re.escape(normalized)}(?![a-z0-9])", text):
+            return True
+    return False
 
 
 @dataclass(frozen=True, slots=True)

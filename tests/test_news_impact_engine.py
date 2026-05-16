@@ -93,6 +93,7 @@ def test_social_only_context_lowers_confidence() -> None:
 
     assert impact.impact_type == "social_only"
     assert impact.catalyst_type == "weak_signal"
+    assert impact.catalyst_label == "Weak signal"
     assert impact.confidence_level == "low"
 
 
@@ -129,7 +130,7 @@ def test_no_news_low_reaction_has_no_clear_catalyst() -> None:
     )
 
     assert impact.catalyst_type == "no_clear_signal"
-    assert impact.catalyst_label == "No clear catalyst"
+    assert impact.catalyst_label == "No clear signal"
 
 
 def test_news_impact_has_no_advice_language() -> None:

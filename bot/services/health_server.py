@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import copy
 import logging
+import re
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -332,15 +333,31 @@ def _market_to_api_object(
 
 def _category_from_title(title: str) -> str:
     text = title.lower()
-    if any(word in text for word in ("bitcoin", "btc", "ethereum", "crypto", "binance")):
+    if _title_has_keyword(text, ("bitcoin", "btc", "ethereum", "crypto", "binance")):
         return "crypto"
-    if any(word in text for word in ("iran", "israel", "trump", "election", "president", "war", "diplomacy")):
+    if _title_has_keyword(text, ("award", "oscars", "grammy", "movie", "film", "music", "celebrity")):
+        return "culture"
+    if _title_has_keyword(text, ("iran", "israel", "trump", "election", "president", "war", "diplomacy")):
         return "politics"
-    if any(word in text for word in ("nba", "nfl", "ufc", "soccer", "football", "tennis", "match", "playoff")):
+    if _title_has_keyword(text, ("nba", "nfl", "ufc", "soccer", "football", "tennis", "match", "playoff")):
         return "sports"
-    if any(word in text for word in ("openai", "nvidia", "anthropic", " ai ")):
+    if _title_has_keyword(text, ("openai", "nvidia", "anthropic", "ai")):
         return "ai"
     return "global"
+
+
+def _title_has_keyword(text: str, keywords: tuple[str, ...]) -> bool:
+    for keyword in keywords:
+        normalized = keyword.strip().lower()
+        if not normalized:
+            continue
+        if " " in normalized or "." in normalized:
+            if normalized in text:
+                return True
+            continue
+        if re.search(rf"(?<![a-z0-9]){re.escape(normalized)}(?![a-z0-9])", text):
+            return True
+    return False
 
 
 def _attention_reason_for_title(title: str) -> str:
@@ -350,6 +367,7 @@ def _attention_reason_for_title(title: str) -> str:
         "politics": "Political headlines made this market more visible.",
         "sports": "Event timing made this market more visible.",
         "ai": "AI news flow made this topic more visible today.",
+        "culture": "Culture attention made this market more visible.",
         "global": "This market became more visible in the public activity layer.",
     }[category]
 

@@ -128,6 +128,35 @@ def test_probability_humanization_en_and_ru() -> None:
 
 
 @pytest.mark.asyncio
+async def test_ai_context_engine_treats_music_award_as_culture() -> None:
+    market = Market(
+        id="award",
+        question="Will a local music award happen this month?",
+        slug="local-music-award",
+        yes_probability=0.34,
+        volume=25_000,
+        end_date=datetime(2026, 12, 31, tzinfo=timezone.utc),
+        url="https://polymarket.com/market/local-music-award",
+        raw={"category": "Culture", "description": "Local entertainment and music event"},
+    )
+    pulse = calculate_pulse_score(market, delta=0.01)
+    mood = calculate_market_mood(market, delta=0.01, language="en")
+
+    context = await AIContextEngine(None).market_context(
+        market,
+        pulse,
+        mood,
+        delta=0.01,
+        language="en",
+    )
+
+    assert context.category == "culture"
+    assert "Culture" in context.related_topics
+    assert "Geopolitics" not in context.related_topics
+    assert "Political headlines" not in context.why_people_care
+
+
+@pytest.mark.asyncio
 async def test_attention_vs_conviction_distinguishes_attention_from_expectations() -> None:
     market = _market(probability=0.1)
     pulse = calculate_pulse_score(market, delta=0.0)

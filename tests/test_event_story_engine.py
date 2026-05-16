@@ -177,6 +177,34 @@ def test_weak_story_does_not_become_top_story() -> None:
     assert select_top_story(stories) is None
 
 
+def test_music_award_story_keeps_culture_category() -> None:
+    markets = [
+        _market(
+            "1",
+            "Will a local music award happen this month?",
+            event_title="Local music awards",
+            category="",
+            pulse_score=72,
+            volume=120_000,
+        ),
+        _market(
+            "2",
+            "Will a local music award winner be announced?",
+            event_title="Local music awards",
+            category="",
+            pulse_score=70,
+            volume=110_000,
+        ),
+    ]
+
+    stories = build_event_stories(markets, market_api_objects=[_api_object(item) for item in markets], events=[])
+
+    assert stories
+    assert stories[0].primary_category == "culture"
+    assert "politic" not in stories[0].story_title.lower()
+    assert "geopolitic" not in str(stories[0].as_dict()).lower()
+
+
 def test_top_story_prefers_official_and_fresh_context() -> None:
     weak_pair = [
         _market("1", "Will Bitcoin move today?", category="crypto", event_slug="btc", event_title="Bitcoin volatility"),

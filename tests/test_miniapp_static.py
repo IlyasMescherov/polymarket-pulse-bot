@@ -301,12 +301,64 @@ def test_story_layer_is_additive_and_has_market_fallback() -> None:
     assert "state.hot = dataFrom(payload)" in script_text
 
 
+def test_story_context_payload_is_attached_before_analysis_opens() -> None:
+    root = Path(__file__).resolve().parents[1]
+    script_text = (root / "miniapp" / "app.js").read_text()
+
+    assert "function storyPayloadForMarket" in script_text
+    assert "function attachStoryPayloadToMarket" in script_text
+    assert "function findLoadedStoryForMarket" in script_text
+    assert "function enrichMarketWithLoadedStory" in script_text
+    assert "story.linked_markets.map((market) => attachStoryPayloadToMarket(normalizeMarket(market), story))" in script_text
+    assert "state.todayMeta.top_story" in script_text
+    assert "...state.todayMeta.story_clusters" in script_text
+    assert "const normalized = enrichMarketWithLoadedStory(item);" in script_text
+    assert "renderStoryContextPanel(normalized)" in script_text
+
+
+def test_story_context_not_rendered_for_weak_market_without_story() -> None:
+    root = Path(__file__).resolve().parents[1]
+    script_text = (root / "miniapp" / "app.js").read_text()
+
+    assert "function renderStoryContextPanel(item)" in script_text
+    assert 'if (!hasMarketStory(item)) return "";' in script_text
+    assert "linked >= 2 || normalized.official_source_signal" in script_text
+
+
+def test_ru_story_labels_and_today_focus_copy_are_present() -> None:
+    root = Path(__file__).resolve().parents[1]
+    script_text = (root / "miniapp" / "app.js").read_text()
+
+    for phrase in (
+        "Сильное подтверждение",
+        "Возможный катализатор",
+        "Фоновый контекст",
+        "Слабый сигнал",
+        "Нет явного сигнала",
+        "Баланс YES / NO",
+        "Правила расчёта",
+        "Качество объёма",
+        'hotCountLabel: "В фокусе"',
+    ):
+        assert phrase in script_text
+    assert 'hotCountLabel: "Горячих рынков"' not in script_text
+
+
+def test_music_award_category_uses_word_boundaries_in_miniapp() -> None:
+    root = Path(__file__).resolve().parents[1]
+    script_text = (root / "miniapp" / "app.js").read_text()
+
+    assert "function hasMarketKeyword" in script_text
+    assert "escapeRegExp(normalized)" in script_text
+    assert '"award", "oscars", "grammy", "movie", "film", "music", "celebrity"' in script_text
+    assert "category === \"culture\"" in script_text
+
+
 def test_miniapp_removes_raw_technical_indicator_labels() -> None:
     root = Path(__file__).resolve().parents[1]
     visible_text = (root / "miniapp" / "index.html").read_text() + (root / "miniapp" / "app.js").read_text()
 
     for phrase in (
-        "Подтверждение",
         "Риск ошибки",
         "Живость",
         "Уверенность стороны",
@@ -315,6 +367,14 @@ def test_miniapp_removes_raw_technical_indicator_labels() -> None:
         "Side confidence",
         "Error risk",
         "Market depth",
+    ):
+        assert phrase not in visible_text
+
+    for phrase in (
+        "Подтверждение Слабое",
+        "Риск ошибки Высокий",
+        "Объём Живой объём",
+        "Pulse Score Pulse",
     ):
         assert phrase not in visible_text
 

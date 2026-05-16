@@ -41,15 +41,15 @@ CATALYST_LABELS: dict[str, dict[str, str]] = {
         "confirmed_catalyst": "Confirmed catalyst",
         "possible_catalyst": "Possible catalyst",
         "background_context": "Background context",
-        "weak_signal": "Weak evidence",
-        "no_clear_signal": "No clear catalyst",
+        "weak_signal": "Weak signal",
+        "no_clear_signal": "No clear signal",
     },
     "ru": {
         "confirmed_catalyst": "Подтверждённый катализатор",
         "possible_catalyst": "Возможный катализатор",
         "background_context": "Фоновый контекст",
-        "weak_signal": "Слабое подтверждение",
-        "no_clear_signal": "Ясного катализатора нет",
+        "weak_signal": "Слабый сигнал",
+        "no_clear_signal": "Нет явного сигнала",
     },
 }
 

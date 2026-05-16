@@ -268,7 +268,7 @@ const copy = {
     todaySummary: "Today",
     mainMarket: "Main market today",
     aiQuickTake: "AI quick take",
-    hotCountLabel: "Hot markets",
+    hotCountLabel: "In focus",
     endingCountLabel: "Ending soon",
     averageConfirmation: "Market read",
     mainTheme: "Main theme",
@@ -515,7 +515,7 @@ const copy = {
     todaySummary: "Сегодня",
     mainMarket: "Главный рынок дня",
     aiQuickTake: "AI краткий вывод",
-    hotCountLabel: "Горячих рынков",
+    hotCountLabel: "В фокусе",
     endingCountLabel: "Скоро завершатся",
     averageConfirmation: "Картина рынка",
     mainTheme: "Главная тема",
@@ -596,21 +596,61 @@ function isRu() {
   return currentLanguage() === "ru";
 }
 
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function hasMarketKeyword(text, words) {
+  const source = String(text || "").toLowerCase();
+  return words.some((word) => {
+    const normalized = String(word || "").toLowerCase().trim();
+    if (!normalized) return false;
+    if (normalized.includes(" ") || normalized.includes(".")) return source.includes(normalized);
+    return new RegExp(`(^|[^a-z0-9])${escapeRegExp(normalized)}([^a-z0-9]|$)`).test(source);
+  });
+}
+
+function normalizeCategoryKey(key) {
+  const normalized = String(key || "").trim().toLowerCase().replace(/[\s/]+/g, "_");
+  const aliases = {
+    all: "all",
+    politics: "politics",
+    political: "politics",
+    crypto: "crypto",
+    cryptocurrency: "crypto",
+    ai: "ai",
+    ai_tech: "ai",
+    tech: "ai",
+    sports: "sports",
+    sport: "sports",
+    esports: "esports",
+    global: "global",
+    worldwide: "global",
+    culture: "culture",
+    entertainment: "culture",
+    media: "culture",
+    other: "other",
+  };
+  return aliases[normalized] || (EVENT_CATEGORIES.some((item) => item.key === normalized) ? normalized : null);
+}
+
 function categoryLabel(key) {
-  if (key === "other") return t("categoryOther");
-  const category = EVENT_CATEGORIES.find((item) => item.key === key) || EVENT_CATEGORIES[0];
+  const normalized = normalizeCategoryKey(key) || "other";
+  if (normalized === "other") return t("categoryOther");
+  const category = EVENT_CATEGORIES.find((item) => item.key === normalized) || EVENT_CATEGORIES[0];
   return isRu() ? category.ru : category.en;
 }
 
 function categoryForItem(item) {
-  if (item && item.category) return String(item.category);
+  const explicitCategory = normalizeCategoryKey(item && item.category);
+  if (explicitCategory && explicitCategory !== "all") return explicitCategory;
   const title = String((item && item.title) || "").toLowerCase();
-  if (/(trump|election|president|senate|iran|israel|china|russia|ukraine|war|diplomacy)/.test(title)) return "politics";
-  if (/(bitcoin|btc|ethereum|eth|solana|xrp|crypto|binance|coinbase)/.test(title)) return "crypto";
-  if (/(openai|nvidia|tesla|apple|google|microsoft|anthropic|robot| ai )/.test(` ${title} `)) return "ai";
-  if (/(nba|nfl|ufc|soccer|football|tennis|baseball|fifa|playoff)/.test(title)) return "sports";
-  if (/(cs2|dota|valorant|league of legends|esports)/.test(title)) return "esports";
-  if (/(oscars|grammy|movie|film|music|celebrity|youtube|twitter)/.test(title)) return "culture";
+  if (hasMarketKeyword(title, ["trump", "election", "president", "senate", "iran", "israel", "china", "russia", "ukraine", "war", "diplomacy"])) return "politics";
+  if (hasMarketKeyword(title, ["bitcoin", "btc", "ethereum", "eth", "solana", "xrp", "crypto", "binance", "coinbase"])) return "crypto";
+  if (hasMarketKeyword(title, ["openai", "nvidia", "tesla", "apple", "google", "microsoft", "anthropic", "robot", "ai"])) return "ai";
+  if (hasMarketKeyword(title, ["nba", "nfl", "ufc", "soccer", "football", "tennis", "baseball", "fifa", "playoff", "match"])) return "sports";
+  if (hasMarketKeyword(title, ["cs2", "dota", "valorant", "league of legends", "esports"])) return "esports";
+  if (hasMarketKeyword(title, ["award", "oscars", "grammy", "movie", "film", "music", "celebrity", "youtube", "twitter"])) return "culture";
   return "global";
 }
 
@@ -1059,6 +1099,107 @@ function localizedText(value, fallback) {
   return matchesCurrentLanguage(value) ? String(value).trim() : fallback;
 }
 
+const RU_UI_LABELS = {
+  "Confirmed catalyst": "Подтверждённый катализатор",
+  "Possible catalyst": "Возможный катализатор",
+  "Background context": "Фоновый контекст",
+  "Weak signal": "Слабый сигнал",
+  "Weak evidence": "Слабое подтверждение",
+  "No clear signal": "Нет явного сигнала",
+  "No clear catalyst": "Нет явного катализатора",
+  "Strong evidence": "Сильное подтверждение",
+  "Medium evidence": "Среднее подтверждение",
+  "Background evidence": "Фоновое подтверждение",
+  "Official source confirmed": "Официальный источник",
+  "Multiple sources cover this": "Несколько источников",
+  "Social-only context": "Только социальный фон",
+  "Stale context": "Устаревший контекст",
+  "Market moved without strong news": "Рынок двинулся без сильного новостного фона",
+  "News present, market barely reacted": "Новость есть, рынок почти не отреагировал",
+  "Weak external context": "Слабый внешний контекст",
+  "YES / NO balance": "Баланс YES / NO",
+  "Official resolution rules": "Правила расчёта",
+  "Volume quality": "Качество объёма",
+  "outcome balance": "Баланс вариантов",
+  "time to resolution": "время до завершения",
+  "resolution rules": "правила расчёта",
+  "official sources": "официальные источники",
+  "related markets": "связанные рынки",
+};
+
+function localizedUiLabel(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  if (!isRu()) return text;
+  return RU_UI_LABELS[text] || RU_UI_LABELS[text.toLowerCase()] || text;
+}
+
+function localizedStoryText(value, fallback = "") {
+  const direct = localizedText(value, "");
+  if (direct) return direct;
+  const text = String(value || "").trim();
+  if (!text) return fallback;
+  if (!isRu()) return text || fallback;
+  if (text.includes("verifiable outside context appeared")) {
+    return "Появился проверяемый внешний контекст, и рынок отреагировал заметнее обычного.";
+  }
+  if (text.includes("several related markets now sit inside the same story")) {
+    return "Несколько связанных рынков стали частью одной истории.";
+  }
+  if (text.includes("the story is still forming around one market")) {
+    return "История пока формируется вокруг одного рынка.";
+  }
+  if (text.includes("Some linked markets are near resolution")) {
+    return "Часть рынков близка к завершению, поэтому реакция может быть краткосрочной.";
+  }
+  if (text.includes("Fresh outside context lines up")) {
+    return "Свежий внешний контекст совпал с текущим движением рынка.";
+  }
+  if (text.includes("not clearly tied to a very fresh source")) {
+    return "Движение не выглядит привязанным к очень свежему источнику.";
+  }
+  if (text.startsWith("Likely catalyst:")) {
+    return text.replace("Likely catalyst:", "Вероятный катализатор:").replace("a primary or official source", "первичный или официальный источник");
+  }
+  if (text.startsWith("Possible catalyst:")) {
+    return text.replace("Possible catalyst:", "Возможный катализатор:").replace("multiple sources, including", "несколько источников, включая");
+  }
+  if (text.startsWith("Background source:")) {
+    return text.replace("Background source:", "Фоновый источник:").replace("with limited market reaction", "реакция рынка ограничена");
+  }
+  if (text.startsWith("Source to verify:")) {
+    return text.replace("Source to verify:", "Источник для проверки:");
+  }
+  if (text.includes("Probability and volume are moving together")) {
+    return "Вероятность и объём двигаются вместе, поэтому реакция выглядит сильнее.";
+  }
+  if (text.includes("Probability moved, but volume")) {
+    return "Вероятность сдвинулась, но объём нужно проверить отдельно.";
+  }
+  if (text.includes("Markets are visible through activity")) {
+    return "Рынки заметны по активности, но вероятность меняется умеренно.";
+  }
+  if (text.includes("Probabilities do not show a sharp repricing")) {
+    return "Вероятности пока не показывают резкой переоценки.";
+  }
+  return fallback;
+}
+
+function storyEvidenceLabel(story) {
+  if (!story) return "";
+  const evidence = localizedUiLabel(story.catalyst_evidence);
+  if (evidence && matchesCurrentLanguage(evidence)) return evidence;
+  const type = String(story.catalyst_type || "").toLowerCase();
+  const labels = {
+    confirmed_catalyst: isRu() ? "Сильное подтверждение" : "Strong evidence",
+    possible_catalyst: isRu() ? "Среднее подтверждение" : "Medium evidence",
+    background_context: isRu() ? "Фоновый контекст" : "Background context",
+    weak_signal: isRu() ? "Слабый сигнал" : "Weak signal",
+    no_clear_signal: isRu() ? "Нет явного сигнала" : "No clear signal",
+  };
+  return labels[type] || localizedUiLabel(story.confidence_level || "");
+}
+
 function editorialReason(item) {
   const mood = marketMood(item || {});
   if (mood.key === "ending_soon") {
@@ -1070,16 +1211,19 @@ function editorialReason(item) {
 
   const title = String((item && item.title) || "").toLowerCase();
   const category = categoryForItem(item || {});
-  if (/(bitcoin|btc|ethereum|eth|crypto|binance|coinbase)/.test(title) || category === "crypto") {
+  if (hasMarketKeyword(title, ["bitcoin", "btc", "ethereum", "eth", "crypto", "binance", "coinbase"]) || category === "crypto") {
     return isRu() ? "Крипторынок двигается, поэтому этот сценарий стал заметнее." : "Crypto volatility made this scenario more visible.";
   }
-  if (/(iran|israel|trump|election|president|senate|war|diplomacy|china|russia|ukraine)/.test(title) || category === "politics" || category === "global") {
+  if (category === "culture" || hasMarketKeyword(title, ["award", "oscars", "grammy", "movie", "film", "music", "celebrity"])) {
+    return isRu() ? "Культурная повестка сделала рынок заметнее." : "Culture attention made this market more visible.";
+  }
+  if (hasMarketKeyword(title, ["iran", "israel", "trump", "election", "president", "senate", "war", "diplomacy", "china", "russia", "ukraine"]) || category === "politics" || category === "global") {
     return isRu() ? "Политическая повестка сделала рынок заметнее." : "Political headlines made this market more visible.";
   }
-  if (/(nba|nfl|ufc|soccer|football|tennis|baseball|fifa|playoff|match)/.test(title) || category === "sports") {
+  if (hasMarketKeyword(title, ["nba", "nfl", "ufc", "soccer", "football", "tennis", "baseball", "fifa", "playoff", "match"]) || category === "sports") {
     return isRu() ? "Близость события делает рынок чувствительнее к новым данным." : "Event timing makes this market more sensitive to new information.";
   }
-  if (/(openai|nvidia|anthropic|robot| ai )/.test(` ${title} `) || category === "ai") {
+  if (hasMarketKeyword(title, ["openai", "nvidia", "anthropic", "robot", "ai"]) || category === "ai") {
     return isRu() ? "AI-повестка сделала этот сценарий заметнее." : "The AI news cycle made this scenario more visible.";
   }
   if (Number((item && item.public_activity) || 0) > 0) {
@@ -1607,14 +1751,14 @@ function averageConfirmation(items) {
 
 function todaySummaryStrip(items) {
   const markets = Array.isArray(items) ? items : [];
-  const hotCount = markets.filter((item) => String(item.market_heat_key || "") === "hot" || Number(item.pulse_score || 0) >= 75).length;
+  const focusCount = markets.length;
   const endingCount = markets.filter((item) => String(item.time_pressure_key || "") === "ending_soon").length;
   return `
     <div class="today-dashboard">
       <div class="dashboard-item dashboard-item--hot">
         <b aria-hidden="true">🔥</b>
         <span>${escapeHtml(t("hotCountLabel"))}</span>
-        <strong>${hotCount}</strong>
+        <strong>${focusCount}</strong>
       </div>
       <div class="dashboard-item dashboard-item--time">
         <b aria-hidden="true">◷</b>
@@ -1987,7 +2131,7 @@ function uniqueAnalysisRows(rows) {
 function whatToCheckItems(item) {
   const raw = item && item.what_to_watch;
   const source = Array.isArray(raw) ? raw : String(raw || "").split(/[;•\n]/);
-  const items = source.map((value) => value.trim()).filter(Boolean);
+  const items = source.map((value) => localizedUiLabel(value.trim())).filter(Boolean);
   if (items.length) return items.slice(0, 3);
   return isRu()
     ? ["правила разрешения", "последние новости", "объём и ликвидность"]
@@ -2042,14 +2186,42 @@ function newsSourceLabel(item) {
   return t("noStrongNews");
 }
 
+function isGenericNewsContext(value) {
+  const text = normalizedSentence(value);
+  return (
+    !text ||
+    text.includes("новостной фон пока не даёт сильного подтверждения") ||
+    text.includes("news backdrop does not add strong confirmation") ||
+    text.includes("no strong external news matched yet") ||
+    text.includes("сильных внешних новостей пока не найдено")
+  );
+}
+
+function weakNewsContextLine(item) {
+  const category = categoryForItem(item || {});
+  const hasSomeNews = Number((item && item.source_count) || 0) > 0 || Number((item && item.news_count_24h) || 0) > 0;
+  if (isRu()) {
+    if (item && item.official_source_signal) return "Есть официальный источник, но реакцию рынка всё равно нужно сверить с правилами расчёта.";
+    if (hasSomeNews) return "Новости по теме есть, но они пока не дают ясного объяснения движению.";
+    if (category === "sports") return "Для этого рынка важнее время события и правила расчёта, чем новостной фон.";
+    if (category === "culture") return "Сильного внешнего повода пока не видно; культурные рынки часто зависят от единичных событий.";
+    if (category === "crypto") return "Сильной новости не найдено; движение лучше сверить с динамикой рынка.";
+    return "Сильной внешней причины пока не видно.";
+  }
+  if (item && item.official_source_signal) return "An official source exists, but the market reaction still needs to be checked against resolution rules.";
+  if (hasSomeNews) return "Related coverage exists, but it does not clearly explain the market move yet.";
+  if (category === "sports") return "Event timing and resolution rules matter more here than the news backdrop.";
+  if (category === "culture") return "No strong outside catalyst is visible yet; culture markets often depend on single events.";
+  if (category === "crypto") return "No strong news match is visible; compare this with broader market movement.";
+  return "No strong outside catalyst is visible yet.";
+}
+
 function newsContextLine(item) {
   const line = localizedText(item.why_moving_now, "");
-  if (line && matchesCurrentLanguage(line)) return line;
+  if (line && matchesCurrentLanguage(line) && !isGenericNewsContext(line)) return line;
   const context = localizedText(item.news_context, "");
-  if (context && matchesCurrentLanguage(context)) return context;
-  return isRu()
-    ? "Новостной фон пока не даёт сильного подтверждения."
-    : "The news backdrop does not add strong confirmation yet.";
+  if (context && matchesCurrentLanguage(context) && !isGenericNewsContext(context)) return context;
+  return weakNewsContextLine(item);
 }
 
 function renderNewsBadges(item) {
@@ -2077,7 +2249,77 @@ function hasStrongStory(story) {
 }
 
 function storyLinkedMarkets(story) {
-  return Array.isArray(story && story.linked_markets) ? story.linked_markets.map(normalizeMarket) : [];
+  return Array.isArray(story && story.linked_markets)
+    ? story.linked_markets.map((market) => attachStoryPayloadToMarket(normalizeMarket(market), story))
+    : [];
+}
+
+function storyPayloadForMarket(story) {
+  if (!hasStrongStory(story)) return null;
+  const linkedMarkets = Array.isArray(story.linked_markets) ? story.linked_markets : [];
+  return {
+    market_story_id: story.story_cluster_id,
+    story_title: story.story_title,
+    story_context: story.story_summary || story.story_context,
+    news_impact_type: story.news_impact_type,
+    news_impact_label: story.news_impact_label,
+    catalyst_type: story.catalyst_type,
+    catalyst_label: story.catalyst_label,
+    story_what_happened: story.what_happened || story.story_what_happened,
+    story_affected_markets: Array.isArray(story.affected_markets)
+      ? story.affected_markets
+      : linkedMarkets.map((market) => market.title).filter(Boolean),
+    movement_timing: story.movement_timing,
+    likely_catalyst: story.likely_catalyst,
+    catalyst_evidence: story.catalyst_evidence,
+    price_probability_context: story.price_probability_context,
+    what_to_verify_next: Array.isArray(story.what_to_verify_next) ? story.what_to_verify_next : [],
+    what_changed_in_story: story.what_changed || story.what_changed_in_story,
+    related_markets_count: Number(story.related_markets_count || linkedMarkets.length || 0),
+    source_count: Number(story.source_count || 0),
+    official_source_signal: Boolean(story.official_source_signal),
+    news_urgency: story.news_urgency,
+    confidence_from_news: story.confidence_level,
+  };
+}
+
+function attachStoryPayloadToMarket(market, story) {
+  const payload = storyPayloadForMarket(story);
+  return payload ? { ...market, ...payload } : market;
+}
+
+function sameMarketIdentity(left, right) {
+  const leftId = marketId(left);
+  const rightId = marketId(right);
+  if (leftId && rightId && leftId === rightId) return true;
+  const leftTitle = normalizedSentence(left && left.title);
+  const rightTitle = normalizedSentence(right && right.title);
+  if (leftTitle && rightTitle && leftTitle === rightTitle) return true;
+  const leftUrl = String((left && left.url) || "").split("?")[0].replace(/\/$/, "");
+  const rightUrl = String((right && right.url) || "").split("?")[0].replace(/\/$/, "");
+  return Boolean(leftUrl && rightUrl && leftUrl === rightUrl);
+}
+
+function findLoadedStoryForMarket(item) {
+  const directSources = [state.today, state.radar, state.searchResults, state.hot, state.moves].flat();
+  const direct = directSources.find((candidate) => sameMarketIdentity(item, candidate) && hasMarketStory(candidate));
+  if (direct) return direct;
+
+  const stories = [state.todayMeta.top_story, ...state.todayMeta.story_clusters].filter(hasStrongStory);
+  for (const story of stories) {
+    const linkedMarkets = Array.isArray(story.linked_markets) ? story.linked_markets : [];
+    if (linkedMarkets.some((market) => sameMarketIdentity(item, market))) {
+      return storyPayloadForMarket(story);
+    }
+  }
+  return null;
+}
+
+function enrichMarketWithLoadedStory(item) {
+  const normalized = normalizeMarket(item);
+  if (hasMarketStory(normalized)) return normalized;
+  const storyPayload = findLoadedStoryForMarket(normalized);
+  return storyPayload ? normalizeMarket({ ...normalized, ...storyPayload }) : normalized;
 }
 
 function storySourceBadge(story) {
@@ -2088,10 +2330,19 @@ function storySourceBadge(story) {
 }
 
 function storyImpactLabel(story) {
-  const catalyst = localizedText(story && story.catalyst_label, "");
-  if (catalyst) return catalyst;
-  const direct = localizedText(story && story.news_impact_label, "");
-  if (direct) return direct;
+  const catalyst = localizedUiLabel(story && story.catalyst_label);
+  if (catalyst && matchesCurrentLanguage(catalyst)) return catalyst;
+  const direct = localizedUiLabel(story && story.news_impact_label);
+  if (direct && matchesCurrentLanguage(direct)) return direct;
+  const catalystType = String((story && story.catalyst_type) || "").toLowerCase();
+  const catalystLabels = {
+    confirmed_catalyst: isRu() ? "Подтверждённый катализатор" : "Confirmed catalyst",
+    possible_catalyst: isRu() ? "Возможный катализатор" : "Possible catalyst",
+    background_context: isRu() ? "Фоновый контекст" : "Background context",
+    weak_signal: isRu() ? "Слабый сигнал" : "Weak signal",
+    no_clear_signal: isRu() ? "Нет явного сигнала" : "No clear signal",
+  };
+  if (catalystLabels[catalystType]) return catalystLabels[catalystType];
   const type = String((story && story.news_impact_type) || "").toLowerCase();
   if (type === "official_confirmed") return t("officialSource");
   if (type === "multiple_sources") return t("newsMedium");
@@ -2101,9 +2352,9 @@ function storyImpactLabel(story) {
 
 function storySummaryLine(story) {
   if (!story) return t("storyFallback");
-  const happened = localizedText(story.story_what_happened || story.what_happened, "");
+  const happened = localizedStoryText(story.story_what_happened || story.what_happened, "");
   if (happened) return happened;
-  const direct = localizedText(story.why_it_matters, "");
+  const direct = localizedStoryText(story.why_it_matters, "");
   if (direct) return direct;
   const linked = Number(story.related_markets_count || (Array.isArray(story.related_market_ids) ? story.related_market_ids.length : 0));
   if (isRu()) {
@@ -2135,7 +2386,7 @@ function storyVerifyLine(story) {
     ? story.what_to_verify_next
     : story && story.what_to_verify;
   if (Array.isArray(items) && items.length) {
-    return items.map((item) => String(item).trim()).filter(Boolean).slice(0, 4).join(" · ");
+    return items.map((item) => localizedUiLabel(String(item).trim())).filter(Boolean).slice(0, 4).join(" · ");
   }
   return t("whatToVerify");
 }
@@ -2172,11 +2423,11 @@ function renderStoryCard(story, variant = "compact") {
       <div class="story-metadata-row">
         <span>${escapeHtml(storySourceBadge(story))}</span>
         <span>${escapeHtml(linkedCount)} ${escapeHtml(t("linkedMarkets"))}</span>
-        <span>${escapeHtml(story.catalyst_evidence || story.confidence_level || "low")}</span>
+        <span>${escapeHtml(storyEvidenceLabel(story) || story.confidence_level || "low")}</span>
       </div>
       ${
         variant === "hero" && story.likely_catalyst
-          ? `<p>${escapeHtml(localizedText(story.likely_catalyst, storyImpactLabel(story)))}</p>`
+          ? `<p>${escapeHtml(localizedStoryText(story.likely_catalyst, storyImpactLabel(story)))}</p>`
           : ""
       }
       ${preview ? `<div class="story-linked-list">${preview}</div>` : ""}
@@ -2217,12 +2468,12 @@ function renderStoryContextPanel(item) {
     ? item.story_affected_markets.map((title) => compactTitle(String(title), 52)).filter(Boolean).slice(0, 3).join(" · ")
     : "";
   const rows = uniqueAnalysisRows([
-    { label: t("storyWhatHappened"), value: localizedText(item.story_what_happened, "") },
+    { label: t("storyWhatHappened"), value: localizedStoryText(item.story_what_happened, "") },
     { label: t("storyChanged"), value: storyChangedLine(item) },
-    { label: t("likelyCatalyst"), value: localizedText(item.likely_catalyst, "") },
-    { label: t("catalystEvidence"), value: localizedText(item.catalyst_evidence, localizedText(item.catalyst_label, "")) },
-    { label: t("movementTiming"), value: localizedText(item.movement_timing, "") },
-    { label: t("priceProbabilityContext"), value: localizedText(item.price_probability_context, "") },
+    { label: t("likelyCatalyst"), value: localizedStoryText(item.likely_catalyst, "") },
+    { label: t("catalystEvidence"), value: storyEvidenceLabel(item) || localizedText(item.catalyst_label, "") },
+    { label: t("movementTiming"), value: localizedStoryText(item.movement_timing, "") },
+    { label: t("priceProbabilityContext"), value: localizedStoryText(item.price_probability_context, "") },
     { label: t("affectedMarkets"), value: affectedMarkets },
     { label: t("newsContext"), value: storySummaryLine(item) },
     { label: t("officialConfirmation"), value: localizedText(item.official_source_status, newsSourceLabel(item)) },
@@ -2241,7 +2492,7 @@ function renderStoryContextPanel(item) {
 }
 
 function openExplain(item) {
-  const normalized = normalizeMarket(item);
+  const normalized = enrichMarketWithLoadedStory(item);
   state.lastExplained = normalized;
   const sheet = document.getElementById("explain-sheet");
   const title = document.getElementById("explain-title");
