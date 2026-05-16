@@ -33,6 +33,11 @@ def test_auto_publishing_config_defaults(monkeypatch) -> None:
     monkeypatch.delenv("ENABLE_TELEGRAM_SOURCE", raising=False)
     monkeypatch.delenv("ENABLE_RSS_SOURCE", raising=False)
     monkeypatch.delenv("ENABLE_OFFICIAL_SOURCES", raising=False)
+    monkeypatch.delenv("TODAY_REFRESH_MINUTES", raising=False)
+    monkeypatch.delenv("TODAY_CACHE_TTL_SECONDS", raising=False)
+    monkeypatch.delenv("TODAY_STALE_MAX_SECONDS", raising=False)
+    monkeypatch.delenv("ENABLE_TODAY_BACKGROUND_REFRESH", raising=False)
+    monkeypatch.delenv("OPENAI_REQUEST_TIMEOUT_SECONDS", raising=False)
     load_settings.cache_clear()
     try:
         settings = load_settings()
@@ -48,6 +53,11 @@ def test_auto_publishing_config_defaults(monkeypatch) -> None:
     assert settings.enable_telegram_source is False
     assert settings.enable_rss_source is True
     assert settings.enable_official_sources is True
+    assert settings.today_refresh_minutes == 5
+    assert settings.today_cache_ttl_seconds == 300
+    assert settings.today_stale_max_seconds == 3600
+    assert settings.enable_today_background_refresh is True
+    assert settings.openai_request_timeout_seconds == 10
 
 
 def test_openai_model_env(monkeypatch) -> None:

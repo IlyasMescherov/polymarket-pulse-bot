@@ -96,6 +96,8 @@ const copy = {
     pulseKicker: "Daily pulse",
     marketToday: "Market today",
     updatedAt: "Updated",
+    updatedJustNow: "Updated just now",
+    staleBriefing: "Showing last briefing, refreshing in background",
     narrativeKicker: "Today’s Narrative",
     narrativeTitle: "What markets are reacting to today.",
     aiBriefingLabel: "AI briefing",
@@ -335,6 +337,8 @@ const copy = {
     pulseKicker: "Пульс дня",
     marketToday: "Рынок сегодня",
     updatedAt: "Обновлено",
+    updatedJustNow: "Обновлено только что",
+    staleBriefing: "Показываем последний обзор, обновляем в фоне",
     narrativeKicker: "Нарратив дня",
     narrativeTitle: "На что сегодня реагируют рынки.",
     aiBriefingLabel: "AI обзор",
@@ -994,6 +998,19 @@ function updatedTimeLabel() {
   } catch (_error) {
     return "";
   }
+}
+
+function briefingUpdatedLabel() {
+  const seconds = Number(state.todayMeta && state.todayMeta.updated_ago_seconds);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    if (seconds < 60) return t("updatedJustNow");
+    const minutes = Math.max(1, Math.round(seconds / 60));
+    return isRu()
+      ? `${t("updatedAt")} ${minutes} мин назад`
+      : `${t("updatedAt")} ${minutes} min ago`;
+  }
+  const timeLabel = updatedTimeLabel();
+  return timeLabel ? `${t("updatedAt")} ${timeLabel}` : t("updatedAt");
 }
 
 function probabilityMeaning(item) {
@@ -2413,10 +2430,11 @@ function renderNarrative() {
   target.innerHTML = `
     <div class="daily-brief-card__top">
       <span class="section-kicker">${escapeHtml(topStory ? t("eventDesk") : t("pulseKicker"))}</span>
-      <span class="updated-pill">${escapeHtml(t("updatedAt"))} ${escapeHtml(updatedTimeLabel())} ↻</span>
+      <span class="updated-pill">${escapeHtml(briefingUpdatedLabel())}</span>
     </div>
     <h3>${escapeHtml(topStory ? topStory.story_title : t("marketToday"))}</h3>
     <p>${escapeHtml(topStory ? storySummaryLine(topStory) : todayMarketSummary(visibleToday, apiInterpretation || headline))}</p>
+    ${state.todayMeta.is_stale ? `<p class="briefing-status">${escapeHtml(t("staleBriefing"))}</p>` : ""}
     ${renderNewsThemeStrip()}
     ${todaySummaryStrip(visibleToday)}
   `;
@@ -2456,6 +2474,11 @@ function renderToday(payload) {
     story_clusters: Array.isArray(payload && payload.story_clusters)
       ? payload.story_clusters.filter(hasStrongStory)
       : [],
+    is_cached: Boolean(payload && payload.is_cached),
+    is_stale: Boolean(payload && payload.is_stale),
+    generated_at: payload && payload.generated_at,
+    updated_ago_seconds: payload && payload.updated_ago_seconds,
+    refresh_status: payload && payload.refresh_status,
   };
   const hero = document.getElementById("today-hero");
   const secondary = document.getElementById("today-secondary");

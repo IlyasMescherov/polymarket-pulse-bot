@@ -817,6 +817,9 @@ class AIContextEngine:
                 content = data["choices"][0]["message"]["content"]
                 loaded = json.loads(content)
                 return loaded if isinstance(loaded, Mapping) else None
+        except httpx.TimeoutException as exc:
+            logger.warning("AI context generation failed ai_timeout=true: %s", exc)
+            return None
         except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as exc:
             logger.warning("AI context generation failed: %s", exc)
             return None

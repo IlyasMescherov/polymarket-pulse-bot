@@ -50,6 +50,7 @@ The latest intelligence layer also matches markets with public RSS and official-
 - News Intelligence Layer for public RSS and official-source context
 - Event Story Layer for grouping related markets into daily stories
 - News Impact Engine for classifying outside context
+- Cached Today briefing with last-good fallback and background refresh
 - Today’s Narrative
 - Event categories
 - Human probability labels

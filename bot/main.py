@@ -86,10 +86,12 @@ async def main() -> None:
     ai_explainer = AIExplainer(
         settings.openai_api_key,
         model=settings.openai_model,
+        timeout=settings.openai_request_timeout_seconds,
     )
     ai_context_engine = AIContextEngine(
         settings.openai_api_key,
         model=settings.openai_model,
+        timeout=settings.openai_request_timeout_seconds,
     )
     news_intelligence_engine = NewsIntelligenceEngine.from_settings(settings)
     notifier = Notifier(bot, session_factory, market_analyzer, ai_explainer)
@@ -127,6 +129,10 @@ async def main() -> None:
         ai_context_engine=ai_context_engine,
         news_intelligence_engine=news_intelligence_engine,
         session_factory=session_factory,
+        today_refresh_minutes=settings.today_refresh_minutes,
+        today_cache_ttl_seconds=settings.today_cache_ttl_seconds,
+        today_stale_max_seconds=settings.today_stale_max_seconds,
+        enable_today_background_refresh=settings.enable_today_background_refresh,
     )
 
     dp = Dispatcher(storage=MemoryStorage())

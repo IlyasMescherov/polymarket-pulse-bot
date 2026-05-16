@@ -217,6 +217,41 @@ class MarketEventLink(Base):
     )
 
 
+class BriefingCache(Base):
+    __tablename__ = "briefing_cache"
+    __table_args__ = (
+        UniqueConstraint("cache_key", name="uq_briefing_cache_key"),
+        Index("ix_briefing_cache_key_status", "cache_key", "status"),
+        Index("ix_briefing_cache_expires", "expires_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    cache_key: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    payload_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    source_commit: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    status: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        default="ready",
+        server_default=text("'ready'"),
+        index=True,
+    )
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+        index=True,
+    )
+
+
 class UserWatchlist(Base):
     __tablename__ = "user_watchlist"
     __table_args__ = (

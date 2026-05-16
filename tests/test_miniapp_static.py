@@ -473,6 +473,15 @@ def test_miniapp_loading_skeleton_and_error_states_exist() -> None:
     assert "Promise.race" in script_text
     assert "Could not load briefing." in script_text
     assert "Не удалось загрузить обзор." in script_text
+    assert "Updated just now" in script_text
+    assert "min ago" in script_text
+    assert "мин назад" in script_text
+    assert "Showing last briefing, refreshing in background" in script_text
+    assert "Показываем последний обзор, обновляем в фоне" in script_text
+    assert "briefingUpdatedLabel" in script_text
+    assert "updated_ago_seconds" in script_text
+    assert "state.todayMeta.is_stale" in script_text
+    assert "refresh_status" in script_text
     assert "errorState" in script_text
     assert "data-refresh" in script_text
     assert "state.loading.today" in script_text
@@ -485,6 +494,7 @@ def test_miniapp_loading_skeleton_and_error_states_exist() -> None:
     assert "overscroll-behavior: none" in styles_text
     assert "overscroll-behavior: contain" in styles_text
     assert ".error-state" in styles_text
+    assert ".briefing-status" in styles_text
     assert "@keyframes loadingBar" in styles_text
 
 

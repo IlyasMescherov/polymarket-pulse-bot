@@ -8,6 +8,7 @@ from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.database.models import (
+    BriefingCache,
     ExternalEvent,
     ExternalSource,
     MarketLinkClick,
@@ -35,6 +36,7 @@ ALLOWED_SMART_SIGNAL_TYPES = {"large_trade", "active_market", "tracked_wallet"}
 ALLOWED_POST_PLATFORMS = {"telegram_channel", "x_draft", "x_api"}
 ALLOWED_POST_TYPES = {"today_pulse", "smart_money", "sharp_moves", "manual"}
 ALLOWED_POST_STATUSES = {"draft", "published", "failed", "skipped"}
+ALLOWED_BRIEFING_CACHE_STATUSES = {"ready", "refreshing", "failed"}
 ALLOWED_LINK_SOURCES = {
     "hot",
     "new",
@@ -56,6 +58,11 @@ ALLOWED_EXTERNAL_SOURCE_TYPES = {
     "x",
     "telegram",
 }
+
+
+def normalize_briefing_cache_status(status: str) -> str:
+    normalized = status.strip().lower()
+    return normalized if normalized in ALLOWED_BRIEFING_CACHE_STATUSES else "ready"
 
 
 def _full_name(telegram_user: Any) -> str | None:
@@ -503,6 +510,69 @@ async def get_recent_external_events(
         .limit(limit)
     )
     return list(result.scalars().all())
+
+
+async def get_briefing_cache(
+    session: AsyncSession,
+    cache_key: str,
+) -> BriefingCache | None:
+    result = await session.execute(
+        select(BriefingCache).where(BriefingCache.cache_key == cache_key).limit(1)
+    )
+    return result.scalar_one_or_none()
+
+
+async def get_last_good_briefing_cache(
+    session: AsyncSession,
+    cache_key: str,
+) -> BriefingCache | None:
+    result = await session.execute(
+        select(BriefingCache)
+        .where(
+            BriefingCache.cache_key == cache_key,
+            BriefingCache.status != "failed",
+        )
+        .order_by(desc(BriefingCache.updated_at), desc(BriefingCache.id))
+        .limit(1)
+    )
+    return result.scalar_one_or_none()
+
+
+async def upsert_briefing_cache(
+    session: AsyncSession,
+    *,
+    cache_key: str,
+    payload_json: dict[str, Any],
+    expires_at: datetime,
+    source_commit: str | None = None,
+    status: str = "ready",
+    error_message: str | None = None,
+) -> BriefingCache:
+    now = datetime.now(timezone.utc)
+    result = await session.execute(
+        select(BriefingCache).where(BriefingCache.cache_key == cache_key).limit(1)
+    )
+    item = result.scalar_one_or_none()
+    normalized_status = normalize_briefing_cache_status(status)
+    if item is None:
+        item = BriefingCache(
+            cache_key=cache_key,
+            payload_json=payload_json,
+            expires_at=expires_at,
+            source_commit=source_commit,
+            status=normalized_status,
+            error_message=error_message[:1000] if error_message else None,
+        )
+        session.add(item)
+    else:
+        item.payload_json = payload_json
+        item.expires_at = expires_at
+        item.source_commit = source_commit
+        item.status = normalized_status
+        item.error_message = error_message[:1000] if error_message else None
+        item.updated_at = now
+    await session.flush()
+    return item
 
 
 async def link_market_event(

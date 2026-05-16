@@ -473,6 +473,14 @@ button {
   line-height: 1.32;
 }
 
+.briefing-status {
+  color: var(--text-soft) !important;
+  background: rgba(95, 155, 255, 0.08) !important;
+  border: 1px solid rgba(95, 155, 255, 0.18);
+  border-radius: 10px;
+  padding: 7px 8px;
+}
+
 .narrative-points {
   display: flex;
   gap: 7px;

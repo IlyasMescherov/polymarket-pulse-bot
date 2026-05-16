@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import asyncio
+import copy
 import logging
-from datetime import datetime, timezone
+import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -10,11 +13,14 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from bot.database.db import ping_database
-from bot.database.models import ExternalEvent
+from bot.database.models import BriefingCache, ExternalEvent
 from bot.database.repositories import (
+    get_briefing_cache,
+    get_last_good_briefing_cache,
     get_latest_snapshots,
     get_recent_external_events,
     get_recent_snapshots,
+    upsert_briefing_cache,
 )
 from bot.services.ai_context_engine import AIContextEngine, MarketContext
 from bot.services.ai_insight_engine import generate_market_briefing
@@ -50,6 +56,14 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 LANDING_DIR = PROJECT_ROOT / "landing"
 MINIAPP_DIR = PROJECT_ROOT / "miniapp"
+TODAY_CACHE_KEY = "today:global:en"
+CACHE_METADATA_KEYS = {
+    "is_cached",
+    "is_stale",
+    "generated_at",
+    "updated_ago_seconds",
+    "refresh_status",
+}
 
 
 def landing_asset_path(filename: str) -> Path:
@@ -70,6 +84,41 @@ def _iso_datetime(value: datetime | None) -> str | None:
     if value is None:
         return None
     return value.isoformat()
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _aware(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value
+
+
+def _duration_ms(start: float) -> int:
+    return round((time.perf_counter() - start) * 1000)
+
+
+def _empty_today_timings() -> dict[str, int | bool]:
+    return {
+        "total_ms": 0,
+        "fetch_markets_ms": 0,
+        "news_ms": 0,
+        "story_ms": 0,
+        "ai_ms": 0,
+        "serialize_ms": 0,
+        "cache_hit": False,
+    }
+
+
+def _strip_cache_metadata(payload: dict[str, Any]) -> dict[str, Any]:
+    clean = copy.deepcopy(payload)
+    for key in CACHE_METADATA_KEYS:
+        clean.pop(key, None)
+    return clean
 
 
 def _probability_interpretation(value: float | None) -> str:
@@ -415,6 +464,10 @@ class HealthServer:
         ai_context_engine: AIContextEngine | None = None,
         news_intelligence_engine: NewsIntelligenceEngine | None = None,
         session_factory: async_sessionmaker[AsyncSession] | None = None,
+        today_refresh_minutes: int = 5,
+        today_cache_ttl_seconds: int = 300,
+        today_stale_max_seconds: int = 3600,
+        enable_today_background_refresh: bool = True,
     ) -> None:
         self._host = host
         self._port = port
@@ -429,6 +482,16 @@ class HealthServer:
         self._event_story_engine = EventStoryEngine()
         self._session_factory = session_factory
         self._runner: web.AppRunner | None = None
+        self._today_refresh_minutes = max(1, int(today_refresh_minutes))
+        self._today_cache_ttl_seconds = max(30, int(today_cache_ttl_seconds))
+        self._today_stale_max_seconds = max(
+            self._today_cache_ttl_seconds,
+            int(today_stale_max_seconds),
+        )
+        self._enable_today_background_refresh = bool(enable_today_background_refresh)
+        self._today_refresh_lock = asyncio.Lock()
+        self._today_refresh_task: asyncio.Task[Any] | None = None
+        self._today_periodic_task: asyncio.Task[Any] | None = None
 
     async def start(self) -> None:
         app = web.Application()
@@ -455,8 +518,23 @@ class HealthServer:
         site = web.TCPSite(self._runner, host=self._host, port=self._port)
         await site.start()
         logger.info("Web endpoint started on %s:%s", self._host, self._port)
+        if (
+            self._enable_today_background_refresh
+            and self._session_factory is not None
+            and self._market_analyzer is not None
+        ):
+            self._today_periodic_task = asyncio.create_task(self._today_refresh_loop())
 
     async def stop(self) -> None:
+        for task in (self._today_refresh_task, self._today_periodic_task):
+            if task is not None:
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+        self._today_refresh_task = None
+        self._today_periodic_task = None
         if self._runner is not None:
             await self._runner.cleanup()
             self._runner = None
@@ -567,23 +645,116 @@ class HealthServer:
         result["why_it_matters"] = context.why_people_care
         return result
 
-    async def _today_api_payload(self, items: list[TodayPulseItem]) -> dict[str, Any]:
-        data: list[dict[str, Any]] = []
-        contexts: list[MarketContext] = []
-        markets = [item.market for item in items]
-        external_events = await self._external_news_events()
-        for item in items:
-            pulse = item.pulse_score
-            mood = calculate_market_mood(item.market, delta=item.delta, language="en")
-            context = await self._ai_context_engine.market_context(
+    async def _safe_market_context(
+        self,
+        item: TodayPulseItem,
+        *,
+        timings: dict[str, int | bool],
+    ) -> MarketContext | None:
+        start = time.perf_counter()
+        mood = calculate_market_mood(item.market, delta=item.delta, language="en")
+        history = await self._market_history(item.market.id)
+        try:
+            return await self._ai_context_engine.market_context(
                 item.market,
-                pulse,
+                item.pulse_score,
                 mood,
                 delta=item.delta,
                 language="en",
-                history=await self._market_history(item.market.id),
+                history=history,
             )
-            contexts.append(context)
+        except asyncio.TimeoutError as exc:
+            logger.warning("Today market AI context failed ai_timeout=true: %s", exc)
+        except Exception as exc:
+            logger.warning("Today market AI context failed: %s", exc)
+        finally:
+            timings["ai_ms"] = int(timings.get("ai_ms", 0)) + _duration_ms(start)
+
+        fallback = getattr(self._ai_context_engine, "fallback_market_context", None)
+        if callable(fallback):
+            try:
+                return fallback(
+                    item.market,
+                    item.pulse_score,
+                    mood,
+                    delta=item.delta,
+                    language="en",
+                    history=history,
+                )
+            except Exception as exc:
+                logger.debug("Today market fallback context failed: %s", exc)
+        return None
+
+    async def _safe_daily_narrative(
+        self,
+        markets: list[Market],
+        contexts: list[MarketContext],
+        *,
+        timings: dict[str, int | bool],
+    ) -> Any:
+        start = time.perf_counter()
+        try:
+            return await self._ai_context_engine.daily_narrative(
+                markets,
+                contexts,
+                language="en",
+            )
+        except asyncio.TimeoutError as exc:
+            logger.warning("Today narrative generation failed ai_timeout=true: %s", exc)
+        except Exception as exc:
+            logger.warning("Today narrative generation failed: %s", exc)
+        finally:
+            timings["ai_ms"] = int(timings.get("ai_ms", 0)) + _duration_ms(start)
+
+        fallback = getattr(self._ai_context_engine, "fallback_daily_narrative", None)
+        if callable(fallback):
+            return fallback(markets, contexts, language="en")
+        return type(
+            "FallbackNarrative",
+            (),
+            {
+                "headline": "There is no dominant market narrative today.",
+                "interpretation": "There is not enough fresh market activity to build a clear read yet.",
+                "what_changed": ("No clear theme yet.",),
+                "category_summaries": {},
+            },
+        )()
+
+    async def _today_items(self, timings: dict[str, int | bool]) -> list[TodayPulseItem]:
+        if self._market_analyzer is None:
+            return []
+        start = time.perf_counter()
+        hot_markets = await self._market_analyzer.get_hot_markets(limit=20)
+        new_markets = await self._market_analyzer.get_new_markets(limit=10)
+        markets = [*hot_markets, *new_markets]
+        latest = {}
+        if self._session_factory is not None and markets:
+            async with self._session_factory() as session:
+                latest = await get_latest_snapshots(session, [market.id for market in markets])
+        timings["fetch_markets_ms"] = _duration_ms(start)
+        return build_today_pulse_items(
+            markets,
+            latest_snapshots=latest,
+            limit=5,
+            language="en",
+        )
+
+    async def _today_api_payload(
+        self,
+        items: list[TodayPulseItem],
+        timings: dict[str, int | bool] | None = None,
+    ) -> dict[str, Any]:
+        timings = timings if timings is not None else _empty_today_timings()
+        data: list[dict[str, Any]] = []
+        contexts: list[MarketContext] = []
+        markets = [item.market for item in items]
+        news_start = time.perf_counter()
+        external_events = await self._external_news_events()
+        timings["news_ms"] = int(timings.get("news_ms", 0)) + _duration_ms(news_start)
+        for item in items:
+            context = await self._safe_market_context(item, timings=timings)
+            if context is not None:
+                contexts.append(context)
             news_context = self._news_intelligence_engine.market_context(
                 item.market,
                 language="en",
@@ -595,22 +766,38 @@ class HealthServer:
                 context=context,
                 news_context=news_context,
             )
-            result["why_it_matters"] = context.why_people_care
+            if context is not None:
+                result["why_it_matters"] = context.why_people_care
             data.append(result)
 
-        stories = self._event_story_engine.build_stories(
-            markets,
-            market_api_objects=data,
-            events=external_events,
-            language="en",
-        )
-        data = enrich_markets_with_stories(data, stories)
-        narrative = await self._ai_context_engine.daily_narrative(
+        story_start = time.perf_counter()
+        try:
+            stories = self._event_story_engine.build_stories(
+                markets,
+                market_api_objects=data,
+                events=external_events,
+                language="en",
+            )
+            data = enrich_markets_with_stories(data, stories)
+        except Exception as exc:
+            logger.warning("Today story generation failed, using market fallback: %s", exc)
+            stories = []
+        timings["story_ms"] = _duration_ms(story_start)
+
+        narrative = await self._safe_daily_narrative(
             [item.market for item in items],
             contexts,
-            language="en",
+            timings=timings,
         )
-        return {
+        serialize_start = time.perf_counter()
+        news_theme_start = time.perf_counter()
+        news_themes = self._news_intelligence_engine.today_themes(
+            [item.market for item in items],
+            language="en",
+            events=external_events,
+        )
+        timings["news_ms"] = int(timings.get("news_ms", 0)) + _duration_ms(news_theme_start)
+        payload = {
             "data": data,
             "message": "ok",
             "narrative": narrative.headline,
@@ -622,35 +809,231 @@ class HealthServer:
                 if context.changed_since_last_seen
             ],
             "category_summaries": narrative.category_summaries,
-            "news_themes": self._news_intelligence_engine.today_themes(
-                [item.market for item in items],
-                language="en",
-                events=external_events,
-            ),
+            "news_themes": news_themes,
             "top_story": select_top_story(stories),
             "story_clusters": [story.as_dict() for story in stories],
         }
+        timings["serialize_ms"] = int(timings.get("serialize_ms", 0)) + _duration_ms(serialize_start)
+        return payload
+
+    async def _build_today_briefing_payload(
+        self,
+        timings: dict[str, int | bool] | None = None,
+    ) -> dict[str, Any]:
+        timings = timings if timings is not None else _empty_today_timings()
+        items = await self._today_items(timings)
+        return await self._today_api_payload(items, timings=timings)
+
+    def _cache_fresh(self, item: BriefingCache, now: datetime | None = None) -> bool:
+        current = now or _utcnow()
+        expires_at = _aware(item.expires_at)
+        return expires_at is not None and expires_at > current
+
+    def _cache_within_stale_window(
+        self,
+        item: BriefingCache,
+        now: datetime | None = None,
+    ) -> bool:
+        current = now or _utcnow()
+        generated_at = _aware(item.updated_at) or _aware(item.created_at)
+        if generated_at is None:
+            return False
+        return (current - generated_at).total_seconds() <= self._today_stale_max_seconds
+
+    def _with_cache_metadata(
+        self,
+        payload: dict[str, Any],
+        *,
+        cache_item: BriefingCache | None,
+        is_cached: bool,
+        is_stale: bool,
+        refresh_status: str,
+        generated_at: datetime | None = None,
+    ) -> dict[str, Any]:
+        current = _utcnow()
+        resolved_generated_at = (
+            _aware(generated_at)
+            or (_aware(cache_item.updated_at) if cache_item is not None else None)
+            or (_aware(cache_item.created_at) if cache_item is not None else None)
+            or current
+        )
+        result = copy.deepcopy(payload)
+        result.update(
+            {
+                "is_cached": is_cached,
+                "is_stale": is_stale,
+                "generated_at": resolved_generated_at.isoformat(),
+                "updated_ago_seconds": max(
+                    0,
+                    round((current - resolved_generated_at).total_seconds()),
+                ),
+                "refresh_status": refresh_status,
+            }
+        )
+        return {
+            **result,
+        }
+
+    def _log_today_timing(self, timings: dict[str, int | bool]) -> None:
+        logger.info(
+            "today_perf today.total_ms=%s today.fetch_markets_ms=%s "
+            "today.news_ms=%s today.story_ms=%s today.ai_ms=%s "
+            "today.serialize_ms=%s today.cache_hit=%s",
+            timings.get("total_ms", 0),
+            timings.get("fetch_markets_ms", 0),
+            timings.get("news_ms", 0),
+            timings.get("story_ms", 0),
+            timings.get("ai_ms", 0),
+            timings.get("serialize_ms", 0),
+            str(bool(timings.get("cache_hit", False))).lower(),
+        )
+
+    async def _save_today_cache(
+        self,
+        payload: dict[str, Any],
+        *,
+        cache_key: str = TODAY_CACHE_KEY,
+    ) -> BriefingCache | None:
+        if self._session_factory is None:
+            return None
+        clean_payload = _strip_cache_metadata(payload)
+        expires_at = _utcnow() + timedelta(seconds=self._today_cache_ttl_seconds)
+        async with self._session_factory() as session:
+            item = await upsert_briefing_cache(
+                session,
+                cache_key=cache_key,
+                payload_json=clean_payload,
+                expires_at=expires_at,
+                status="ready",
+            )
+            await session.commit()
+            return item
+
+    async def refresh_today_cache(self, *, reason: str = "scheduled") -> dict[str, Any] | None:
+        if self._market_analyzer is None or self._session_factory is None:
+            return None
+        async with self._today_refresh_lock:
+            timings = _empty_today_timings()
+            start = time.perf_counter()
+            try:
+                payload = await self._build_today_briefing_payload(timings)
+                await self._save_today_cache(payload)
+                timings["total_ms"] = _duration_ms(start)
+                timings["cache_hit"] = False
+                self._log_today_timing(timings)
+                logger.info("Today briefing cache refreshed reason=%s", reason)
+                return payload
+            except Exception as exc:
+                timings["total_ms"] = _duration_ms(start)
+                timings["cache_hit"] = False
+                self._log_today_timing(timings)
+                logger.warning("Today briefing refresh failed reason=%s: %s", reason, exc)
+                return None
+
+    def _schedule_today_refresh(self, *, reason: str) -> None:
+        if (
+            not self._enable_today_background_refresh
+            or self._market_analyzer is None
+            or self._session_factory is None
+        ):
+            return
+        if self._today_refresh_task is not None and not self._today_refresh_task.done():
+            return
+        self._today_refresh_task = asyncio.create_task(self.refresh_today_cache(reason=reason))
+
+    async def _today_refresh_loop(self) -> None:
+        await asyncio.sleep(2)
+        interval_seconds = max(60, self._today_refresh_minutes * 60)
+        while True:
+            try:
+                await self.refresh_today_cache(reason="background_interval")
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                logger.exception("Today background refresh loop failed")
+            await asyncio.sleep(interval_seconds)
 
     async def _api_today(self, request: web.Request) -> web.Response:
         if self._market_analyzer is None:
             return self._api_empty("market analyzer unavailable")
-        try:
-            hot_markets = await self._market_analyzer.get_hot_markets(limit=20)
-            new_markets = await self._market_analyzer.get_new_markets(limit=10)
-            markets = [*hot_markets, *new_markets]
-            latest = {}
-            if self._session_factory is not None and markets:
+        request_start = time.perf_counter()
+        timings = _empty_today_timings()
+        cache_key = TODAY_CACHE_KEY
+        if self._session_factory is not None:
+            try:
                 async with self._session_factory() as session:
-                    latest = await get_latest_snapshots(session, [market.id for market in markets])
-            items = build_today_pulse_items(
-                markets,
-                latest_snapshots=latest,
-                limit=5,
-                language="en",
+                    cache_item = await get_briefing_cache(session, cache_key)
+                    now = _utcnow()
+                    if cache_item is not None and self._cache_fresh(cache_item, now):
+                        serialize_start = time.perf_counter()
+                        payload = self._with_cache_metadata(
+                            cache_item.payload_json,
+                            cache_item=cache_item,
+                            is_cached=True,
+                            is_stale=False,
+                            refresh_status="fresh",
+                        )
+                        timings["serialize_ms"] = _duration_ms(serialize_start)
+                        timings["cache_hit"] = True
+                        timings["total_ms"] = _duration_ms(request_start)
+                        self._log_today_timing(timings)
+                        return web.json_response(payload)
+
+                    if cache_item is not None and self._cache_within_stale_window(cache_item, now):
+                        self._schedule_today_refresh(reason="stale_request")
+                        serialize_start = time.perf_counter()
+                        payload = self._with_cache_metadata(
+                            cache_item.payload_json,
+                            cache_item=cache_item,
+                            is_cached=True,
+                            is_stale=True,
+                            refresh_status="updating",
+                        )
+                        timings["serialize_ms"] = _duration_ms(serialize_start)
+                        timings["cache_hit"] = True
+                        timings["total_ms"] = _duration_ms(request_start)
+                        self._log_today_timing(timings)
+                        return web.json_response(payload)
+            except Exception as exc:
+                logger.warning("Today cache lookup failed: %s", exc)
+
+        try:
+            payload = await self._build_today_briefing_payload(timings)
+            cache_item = await self._save_today_cache(payload, cache_key=cache_key)
+            response_payload = self._with_cache_metadata(
+                payload,
+                cache_item=cache_item,
+                is_cached=False,
+                is_stale=False,
+                refresh_status="fresh",
+                generated_at=_utcnow(),
             )
-            return web.json_response(await self._today_api_payload(items))
+            timings["cache_hit"] = False
+            timings["total_ms"] = _duration_ms(request_start)
+            self._log_today_timing(timings)
+            return web.json_response(response_payload)
         except Exception as exc:
             logger.warning("Mini App Today API failed: %s", exc)
+            if self._session_factory is not None:
+                try:
+                    async with self._session_factory() as session:
+                        last_good = await get_last_good_briefing_cache(session, cache_key)
+                    if last_good is not None:
+                        payload = self._with_cache_metadata(
+                            last_good.payload_json,
+                            cache_item=last_good,
+                            is_cached=True,
+                            is_stale=True,
+                            refresh_status="last_good",
+                        )
+                        timings["cache_hit"] = True
+                        timings["total_ms"] = _duration_ms(request_start)
+                        self._log_today_timing(timings)
+                        return web.json_response(payload)
+                except Exception as fallback_exc:
+                    logger.warning("Today last-good cache fallback failed: %s", fallback_exc)
+            timings["total_ms"] = _duration_ms(request_start)
+            self._log_today_timing(timings)
             return self._api_empty("today pulse unavailable")
 
     async def _api_hot_markets(self, request: web.Request) -> web.Response:

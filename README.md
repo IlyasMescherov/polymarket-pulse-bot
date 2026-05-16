@@ -89,6 +89,7 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - News Intelligence Layer: matches markets with public RSS and official-source context so cards can explain whether outside information supports the market read.
 - Event Story Layer: groups related markets into story clusters so Today can explain the event behind multiple markets instead of showing a raw list.
 - News Impact Engine: classifies outside context as official-source, multi-source, social-only, stale, weak, or market movement without strong external context.
+- Cached Today briefing: `/api/today` serves the last good briefing immediately while heavy market, news, story, and AI refresh work runs in the background.
 - Today’s Narrative: explains what public markets are reacting to today without making predictions.
 - Event categories: All, Politics, Crypto, AI, Sports, Esports, Global, and Culture help users filter the daily briefing and Activity Radar.
 - Human probability language: unlikely, possible, likely, and highly likely labels make raw percentages easier to read.
@@ -158,6 +159,8 @@ The same lightweight web server exposes read-only JSON endpoints for the Mini Ap
 - `/api/smart-money/active`
 - `/api/smart-money/traders`
 - `/api/search?q=bitcoin`
+
+`/api/today` is cached through `briefing_cache`. Fresh cache is returned immediately, stale cache is shown as the last good briefing while a background refresh updates market, news, story, and AI context.
 
 When `OPENAI_API_KEY` is configured, the web API enriches market objects with safe context fields:
 

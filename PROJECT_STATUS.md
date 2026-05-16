@@ -195,6 +195,7 @@ PulseMarket AI now has an optional reasoning layer on top of ranking and filteri
 - Event Story Layer groups related markets into qualified story clusters, adds Top Story to `/api/today`, and keeps market-based fallback when stories are weak.
 - News Impact Engine classifies whether outside context is official-source, multi-source, social-only, stale, weak, or weaker than the market reaction.
 - Mini App Today now behaves more like an event intelligence front page while keeping Hot Markets, Search, Saved, and outcome cards additive.
+- `/api/today` now uses a PostgreSQL-backed last-good briefing cache with background refresh so Mini App opens do not wait on market/news/story/OpenAI generation.
 
 Telegram requires HTTPS for a real Mini App URL in BotFather. The current HTTP route is a browser preview until a domain and HTTPS are configured.
 

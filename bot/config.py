@@ -98,6 +98,11 @@ class Settings:
     enable_telegram_source: bool = False
     enable_rss_source: bool = True
     enable_official_sources: bool = True
+    today_refresh_minutes: int = 5
+    today_cache_ttl_seconds: int = 300
+    today_stale_max_seconds: int = 3600
+    enable_today_background_refresh: bool = True
+    openai_request_timeout_seconds: float = 10.0
 
 
 @lru_cache(maxsize=1)
@@ -166,5 +171,15 @@ def load_settings() -> Settings:
         enable_official_sources=_bool(
             os.getenv("ENABLE_OFFICIAL_SOURCES"),
             default=True,
+        ),
+        today_refresh_minutes=int(os.getenv("TODAY_REFRESH_MINUTES", "5")),
+        today_cache_ttl_seconds=int(os.getenv("TODAY_CACHE_TTL_SECONDS", "300")),
+        today_stale_max_seconds=int(os.getenv("TODAY_STALE_MAX_SECONDS", "3600")),
+        enable_today_background_refresh=_bool(
+            os.getenv("ENABLE_TODAY_BACKGROUND_REFRESH"),
+            default=True,
+        ),
+        openai_request_timeout_seconds=float(
+            os.getenv("OPENAI_REQUEST_TIMEOUT_SECONDS", "10")
         ),
     )
