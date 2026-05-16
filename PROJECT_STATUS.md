@@ -190,6 +190,8 @@ PulseMarket AI now has an optional reasoning layer on top of ranking and filteri
 - Search API returns a short context summary.
 - All AI behavior has deterministic fallback when `OPENAI_API_KEY` is missing.
 - Market cards and APIs include real outcome labels for YES / NO, team-vs-team, moneyline, and custom markets.
+- External News Intelligence matches public RSS and official sources to markets, with X, Telegram, and News API adapters prepared as disabled stubs.
+- Mini App market cards and Analysis now show a compact outside-context read when relevant news is available.
 
 Telegram requires HTTPS for a real Mini App URL in BotFather. The current HTTP route is a browser preview until a domain and HTTPS are configured.
 

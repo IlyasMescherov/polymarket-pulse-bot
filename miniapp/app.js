@@ -89,6 +89,19 @@ const copy = {
     narrativeKicker: "Today’s Narrative",
     narrativeTitle: "What markets are reacting to today.",
     aiBriefingLabel: "AI briefing",
+    newsContext: "News context",
+    newsHigh: "News: high",
+    newsMedium: "News: medium",
+    newsLow: "News: low",
+    officialSource: "Official source",
+    socialBuzz: "Social buzz",
+    noStrongNews: "No strong news",
+    whyMovingNow: "Why moving now",
+    latestImportantNews: "Latest important news",
+    sourcesLabel: "Sources",
+    officialConfirmation: "Official confirmation",
+    whatToVerify: "What to verify",
+    todayReactsTo: "Today markets react to",
     interests: "Interests",
     interestsHint: "Prioritize categories you care about.",
     shareSnapshot: "Share briefing",
@@ -305,6 +318,19 @@ const copy = {
     narrativeKicker: "Нарратив дня",
     narrativeTitle: "На что сегодня реагируют рынки.",
     aiBriefingLabel: "AI обзор",
+    newsContext: "Новостной фон",
+    newsHigh: "Новости: много",
+    newsMedium: "Новости: средне",
+    newsLow: "Новости: мало",
+    officialSource: "Официальный источник",
+    socialBuzz: "Социальный фон",
+    noStrongNews: "Сильных новостей нет",
+    whyMovingNow: "Почему рынок двигается",
+    latestImportantNews: "Последняя важная новость",
+    sourcesLabel: "Источники",
+    officialConfirmation: "Официальное подтверждение",
+    whatToVerify: "Что проверить",
+    todayReactsTo: "Сегодня рынки реагируют на",
     interests: "Интересы",
     interestsHint: "Выбери категории, которые важнее для тебя.",
     shareSnapshot: "Поделиться обзором",
@@ -1678,6 +1704,24 @@ function normalizeMarket(item) {
     memory_pattern: item && item.memory_pattern,
     changed_since_last_seen: item && item.changed_since_last_seen,
     historical_context: item && item.historical_context,
+    news_context: item && item.news_context,
+    latest_relevant_news: Array.isArray(item && item.latest_relevant_news) ? item.latest_relevant_news : [],
+    related_news: Array.isArray(item && item.related_news) ? item.related_news : [],
+    source_count: Number((item && item.source_count) || 0),
+    credible_source_count: Number((item && item.credible_source_count) || 0),
+    social_heat: item && item.social_heat,
+    telegram_heat: item && item.telegram_heat,
+    x_heat: item && item.x_heat,
+    official_source_signal: Boolean(item && item.official_source_signal),
+    official_source_status: item && item.official_source_status,
+    news_urgency: item && item.news_urgency,
+    why_moving_now: item && item.why_moving_now,
+    what_changed_outside_market: item && item.what_changed_outside_market,
+    confidence_from_news: item && item.confidence_from_news,
+    news_risk_note: item && item.news_risk_note,
+    news_count_24h: Number((item && item.news_count_24h) || 0),
+    top_news_reason: item && item.top_news_reason,
+    source_mix: (item && item.source_mix) || {},
     related_topics: Array.isArray(item && item.related_topics) ? item.related_topics : [],
     category: categoryForItem(item || {}),
     category_label: item && item.category_label,
@@ -1774,7 +1818,9 @@ function renderMarketCard(item, variant = "compact", options = {}) {
         </div>
         <h3>${escapeHtml(compactTitle(item.title, titleLimit))}</h3>
         ${renderYesNoDuel(item, { large: variant === "hero" })}
+        ${renderNewsBadges(normalized)}
         <p class="unified-read">${escapeHtml(humanRead(item))}</p>
+        ${renderNewsContextLine(normalized)}
         ${
           variant === "analysis"
             ? ""
@@ -1813,7 +1859,15 @@ function renderMarketCard(item, variant = "compact", options = {}) {
         </div>
       </div>
       <button class="bookmark-action" type="button" data-save-market="${encoded}" aria-label="${escapeHtml(t("save"))}">☆</button>
-      ${showActions ? `<div class="unified-market-card__read">${escapeHtml(humanRead(item))}</div>` : ""}
+      <div class="unified-market-card__news">${renderNewsBadges(normalized)}</div>
+      ${
+        showActions
+          ? `<div class="unified-market-card__read">
+              <span>${escapeHtml(humanRead(item))}</span>
+              ${renderNewsContextLine(normalized)}
+            </div>`
+          : `<div class="unified-market-card__read unified-market-card__read--compact">${escapeHtml(newsContextLine(normalized))}</div>`
+      }
       ${
         showActions
           ? `<div class="action-row action-row--compact">
@@ -1903,6 +1957,50 @@ function renderSideAnalysisPanel(item) {
   `;
 }
 
+function newsLevel(item) {
+  const level = String(item.news_urgency || item.confidence_from_news || "low").toLowerCase();
+  if (level === "high") return "high";
+  if (level === "medium") return "medium";
+  return "low";
+}
+
+function newsLevelLabel(item) {
+  const level = newsLevel(item);
+  if (level === "high") return t("newsHigh");
+  if (level === "medium") return t("newsMedium");
+  return t("newsLow");
+}
+
+function newsSourceLabel(item) {
+  if (item.official_source_signal) return t("officialSource");
+  if (String(item.social_heat || "").toLowerCase() === "high" || String(item.x_heat || "").toLowerCase() === "high") return t("socialBuzz");
+  return t("noStrongNews");
+}
+
+function newsContextLine(item) {
+  const line = localizedText(item.why_moving_now, "");
+  if (line && matchesCurrentLanguage(line)) return line;
+  const context = localizedText(item.news_context, "");
+  if (context && matchesCurrentLanguage(context)) return context;
+  return isRu()
+    ? "Новостной фон пока не даёт сильного подтверждения."
+    : "The news backdrop does not add strong confirmation yet.";
+}
+
+function renderNewsBadges(item) {
+  const level = newsLevel(item);
+  return `
+    <div class="news-badges">
+      <span class="news-badge news-badge--${escapeHtml(level)}">${escapeHtml(newsLevelLabel(item))}</span>
+      <span class="news-badge news-badge--source">${escapeHtml(newsSourceLabel(item))}</span>
+    </div>
+  `;
+}
+
+function renderNewsContextLine(item) {
+  return `<p class="news-context-line">${escapeHtml(newsContextLine(item))}</p>`;
+}
+
 function openExplain(item) {
   const normalized = normalizeMarket(item);
   state.lastExplained = normalized;
@@ -1917,9 +2015,12 @@ function openExplain(item) {
   const memoryIsWeak = isWeakMemoryText(memoryText);
   const rows = uniqueAnalysisRows([
     { label: t("quickTake"), value: localizedText(normalized.quick_take, normalized.why || shortReason(normalized)) },
+    { label: t("whyMovingNow"), value: newsContextLine(normalized) },
+    { label: t("latestImportantNews"), value: localizedText(normalized.what_changed_outside_market, "") },
     { label: t("whatThisMeans"), value: localizedText(normalized.what_this_means, indicatorSummary(normalized)) },
     { label: t("mainTension"), value: localizedText(normalized.main_tension, localizedText(normalized.attention_vs_conviction, indicatorSummary(normalized))) },
     { label: t("attentionVsConviction"), value: localizedText(normalized.attention_vs_conviction, "") },
+    { label: t("officialConfirmation"), value: localizedText(normalized.official_source_status, newsSourceLabel(normalized)) },
     { label: t("relatedTopics"), value: topics },
     { label: t("resolutionRules"), value: localizedText(normalized.resolution_note, t("resolutionRulesCopy")) },
   ]);
@@ -1928,6 +2029,10 @@ function openExplain(item) {
   body.innerHTML = `
     ${renderMarketCard(normalized, "analysis")}
     <div class="detail-list">
+      <div>
+        <span>${escapeHtml(t("newsContext"))}</span>
+        <strong>${escapeHtml(newsContextLine(normalized))}</strong>
+      </div>
       <div>
         <span>${escapeHtml(t("whatInfluences"))}</span>
         ${renderWhatToCheck(normalized)}
@@ -2060,6 +2165,13 @@ function renderDailySnapshot() {
   if (Array.isArray(state.todayMeta.what_changed)) {
     notes.push(...state.todayMeta.what_changed.filter((item) => matchesCurrentLanguage(item)));
   }
+  if (Array.isArray(state.todayMeta.news_themes)) {
+    notes.push(
+      ...state.todayMeta.news_themes
+        .slice(0, 2)
+        .map((theme) => `📰 ${theme.theme}: ${theme.latest_news || theme.why_it_matters || t("noStrongNews")}`),
+    );
+  }
   const moodCategories = rankedMoodCategories(allMarkets);
   notes.push(...moodCategories.slice(0, 2).map(([category, mood]) => editorialChange(category, mood.key)));
   if (state.radar[0]) {
@@ -2131,7 +2243,27 @@ function renderNarrative() {
     </div>
     <h3>${escapeHtml(t("marketToday"))}</h3>
     <p>${escapeHtml(todayMarketSummary(visibleToday, apiInterpretation || headline))}</p>
+    ${renderNewsThemeStrip()}
     ${todaySummaryStrip(visibleToday)}
+  `;
+}
+
+function renderNewsThemeStrip() {
+  const themes = Array.isArray(state.todayMeta.news_themes) ? state.todayMeta.news_themes.slice(0, 3) : [];
+  if (!themes.length) return "";
+  return `
+    <div class="news-theme-strip" aria-label="${escapeHtml(t("todayReactsTo"))}">
+      ${themes
+        .map(
+          (theme) => `
+            <span>
+              <em>${escapeHtml(theme.theme || t("newsContext"))}</em>
+              <strong>${escapeHtml(theme.confidence || "low")}</strong>
+            </span>
+          `,
+        )
+        .join("")}
+    </div>
   `;
 }
 
@@ -2145,6 +2277,7 @@ function renderToday(payload) {
     what_changed: Array.isArray(payload && payload.what_changed) ? payload.what_changed : [],
     changed_since_last_brief: Array.isArray(payload && payload.changed_since_last_brief) ? payload.changed_since_last_brief : [],
     category_summaries: (payload && payload.category_summaries) || {},
+    news_themes: Array.isArray(payload && payload.news_themes) ? payload.news_themes : [],
   };
   const hero = document.getElementById("today-hero");
   const secondary = document.getElementById("today-secondary");

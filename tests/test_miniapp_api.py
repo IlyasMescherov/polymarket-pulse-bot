@@ -145,6 +145,19 @@ async def test_miniapp_hot_api_shape() -> None:
     assert payload["data"][0]["resolution_note"]
     assert payload["data"][0]["category_voice"]
     assert isinstance(payload["data"][0]["related_topics"], list)
+    assert payload["data"][0]["news_context"]
+    assert "latest_relevant_news" in payload["data"][0]
+    assert "source_count" in payload["data"][0]
+    assert "credible_source_count" in payload["data"][0]
+    assert "social_heat" in payload["data"][0]
+    assert "telegram_heat" in payload["data"][0]
+    assert "x_heat" in payload["data"][0]
+    assert "official_source_signal" in payload["data"][0]
+    assert "news_urgency" in payload["data"][0]
+    assert payload["data"][0]["why_moving_now"]
+    assert payload["data"][0]["what_changed_outside_market"]
+    assert payload["data"][0]["confidence_from_news"]
+    assert payload["data"][0]["news_risk_note"]
     assert payload["data"][0]["url"].startswith("https://polymarket.com")
 
 
@@ -179,6 +192,8 @@ async def test_miniapp_today_api_shape() -> None:
     assert payload["what_changed"]
     assert payload["changed_since_last_brief"]
     assert isinstance(payload["category_summaries"], dict)
+    assert isinstance(payload["news_themes"], list)
+    assert "news_context" in payload["data"][0]
 
 
 @pytest.mark.asyncio
@@ -218,6 +233,7 @@ async def test_miniapp_smart_money_api_shape() -> None:
     assert active_payload["data"][0]["ai_verdict"]
     assert active_payload["data"][0]["dominant_side"]
     assert active_payload["data"][0]["side_verdict"]
+    assert active_payload["data"][0]["news_context"]
     assert traders_payload["data"][0]["wallet"] == "0x1111...1111"
     assert traders_payload["data"][0]["why_it_matters"]
     assert traders_payload["data"][0]["trader_score"] == 74

@@ -96,6 +96,127 @@ class MarketSnapshot(Base):
     )
 
 
+class ExternalSource(Base):
+    __tablename__ = "external_sources"
+    __table_args__ = (
+        UniqueConstraint("url", name="uq_external_sources_url"),
+        Index("ix_external_sources_type_active", "source_type", "is_active"),
+        Index("ix_external_sources_category_active", "category", "is_active"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    source_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    url: Mapped[str] = mapped_column(Text, nullable=False)
+    credibility_score: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+        default=60.0,
+        server_default=text("60"),
+    )
+    category: Mapped[str] = mapped_column(
+        String(64),
+        nullable=False,
+        default="global",
+        server_default=text("'global'"),
+        index=True,
+    )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default=text("true"),
+        index=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+
+class ExternalEvent(Base):
+    __tablename__ = "external_events"
+    __table_args__ = (
+        UniqueConstraint("source_id", "url", name="uq_external_events_source_url"),
+        Index("ix_external_events_category_published", "category", "published_at"),
+        Index("ix_external_events_source_published", "source_id", "published_at"),
+        Index("ix_external_events_created", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    source_id: Mapped[int] = mapped_column(
+        ForeignKey("external_sources.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    title: Mapped[str] = mapped_column(Text, nullable=False)
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    url: Mapped[str] = mapped_column(Text, nullable=False)
+    published_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        index=True,
+    )
+    category: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    entities: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    topics: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    sentiment: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    urgency_score: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+        default=0.0,
+        server_default=text("0"),
+    )
+    credibility_score: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+        default=0.0,
+        server_default=text("0"),
+    )
+    raw_payload: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        index=True,
+    )
+
+
+class MarketEventLink(Base):
+    __tablename__ = "market_event_links"
+    __table_args__ = (
+        UniqueConstraint(
+            "market_id",
+            "external_event_id",
+            name="uq_market_event_links_market_event",
+        ),
+        Index("ix_market_event_links_market_created", "market_id", "created_at"),
+        Index("ix_market_event_links_event_created", "external_event_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    market_id: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    external_event_id: Mapped[int] = mapped_column(
+        ForeignKey("external_events.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    relevance_score: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+        default=0.0,
+        server_default=text("0"),
+    )
+    match_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        index=True,
+    )
+
+
 class UserWatchlist(Base):
     __tablename__ = "user_watchlist"
     __table_args__ = (

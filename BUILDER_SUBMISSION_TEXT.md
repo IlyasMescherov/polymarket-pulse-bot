@@ -36,6 +36,8 @@ PulseMarket AI gives users a simple Telegram and Mini App interface for Morning 
 
 It also includes a Telegram Mini App dashboard for Today's Pulse, Activity Radar, hot markets, sharp moves, and search. The newest layer adds optional AI context that explains why people may care about a market, what public markets are reacting to today, how a market changed over time, and what to inspect next.
 
+The latest intelligence layer also matches markets with public RSS and official-source context, helping users see whether outside information supports a market narrative or whether more verification is needed.
+
 ## Current MVP
 
 - Hot markets
@@ -45,6 +47,7 @@ It also includes a Telegram Mini App dashboard for Today's Pulse, Activity Radar
 - Market Memory
 - Market Regimes
 - Outcome-aware market cards for YES / NO, moneyline, and custom markets
+- News Intelligence Layer for public RSS and official-source context
 - Today’s Narrative
 - Event categories
 - Human probability labels

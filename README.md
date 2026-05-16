@@ -49,6 +49,7 @@ Builder submission package:
 - AI market briefing: [docs/AI_MARKET_BRIEFING.md](docs/AI_MARKET_BRIEFING.md)
 - Market Memory: [docs/MARKET_MEMORY.md](docs/MARKET_MEMORY.md)
 - Market Regimes: [docs/MARKET_REGIMES.md](docs/MARKET_REGIMES.md)
+- News Intelligence Layer: [docs/NEWS_INTELLIGENCE_LAYER.md](docs/NEWS_INTELLIGENCE_LAYER.md)
 - YES / NO side analysis: [docs/YES_NO_SIDE_ANALYSIS.md](docs/YES_NO_SIDE_ANALYSIS.md)
 - Outcome display logic: [docs/OUTCOME_DISPLAY_LOGIC.md](docs/OUTCOME_DISPLAY_LOGIC.md)
 - Event category system: [docs/EVENT_CATEGORY_SYSTEM.md](docs/EVENT_CATEGORY_SYSTEM.md)
@@ -82,6 +83,7 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - Market Memory: compares current markets with stored snapshots so PulseMarket can say whether activity is holding, cooling, or newly visible.
 - Market Regimes: labels behavior such as Quiet market, Short-term attention, Near resolution, Sustained interest, Weak confirmation, and More confident move.
 - Outcome-aware market cards: shows true YES / NO, team-vs-team, moneyline, and custom outcomes instead of forcing every market into one format.
+- News Intelligence Layer: matches markets with public RSS and official-source context so cards can explain whether outside information supports the market read.
 - Today’s Narrative: explains what public markets are reacting to today without making predictions.
 - Event categories: All, Politics, Crypto, AI, Sports, Esports, Global, and Culture help users filter the daily briefing and Activity Radar.
 - Human probability language: unlikely, possible, likely, and highly likely labels make raw percentages easier to read.
@@ -170,6 +172,10 @@ When `OPENAI_API_KEY` is configured, the web API enriches market objects with sa
 - `probability_interpretation`
 - `category`
 - `category_label`
+- `news_context`
+- `latest_relevant_news`
+- `why_moving_now`
+- `confidence_from_news`
 
 If the key is not configured, deterministic fallback copy is used.
 

@@ -254,12 +254,19 @@ def test_unified_market_card_system_exists() -> None:
 def test_miniapp_supports_real_outcome_display_without_forced_yes_no() -> None:
     root = Path(__file__).resolve().parents[1]
     script_text = (root / "miniapp" / "app.js").read_text()
+    styles_text = (root / "miniapp" / "styles.css").read_text()
 
     assert "should_use_yes_no" in script_text
     assert "outcome_type" in script_text
     assert "display_outcomes" in script_text
     assert "dominant_outcome_label" in script_text
     assert "outcome_balance_summary" in script_text
+    assert "news_context" in script_text
+    assert "why_moving_now" in script_text
+    assert "renderNewsBadges" in script_text
+    assert "renderNewsThemeStrip" in script_text
+    assert "news-badge" in script_text
+    assert "news-theme-strip" in styles_text
     assert "Market outcomes" in script_text
     assert "Баланс вариантов" in script_text
     assert "outcome.short_label || outcome.label" in script_text

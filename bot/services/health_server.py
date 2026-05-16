@@ -10,7 +10,12 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from bot.database.db import ping_database
-from bot.database.repositories import get_latest_snapshots, get_recent_snapshots
+from bot.database.models import ExternalEvent
+from bot.database.repositories import (
+    get_latest_snapshots,
+    get_recent_external_events,
+    get_recent_snapshots,
+)
 from bot.services.ai_context_engine import AIContextEngine, MarketContext
 from bot.services.ai_insight_engine import generate_market_briefing
 from bot.services.event_categories import category_label, classify_market_category
@@ -19,9 +24,15 @@ from bot.services.market_health import calculate_market_health
 from bot.services.market_indicators import calculate_market_indicators
 from bot.services.market_mood import calculate_market_mood
 from bot.services.market_side_engine import analyze_market_side
+from bot.services.news_intelligence_engine import (
+    NewsContext,
+    NewsIntelligenceEngine,
+    build_news_context,
+)
 from bot.services.polymarket_client import Market
 from bot.services.pulse_score import calculate_pulse_score
 from bot.services.risk_flags import market_risk_flags
+from bot.services.source_adapters.base import ExternalNewsItem
 from bot.services.smart_money_analyzer import (
     MarketActivity,
     SmartMoneyAnalyzer,
@@ -73,6 +84,7 @@ def _market_to_api_object(
     market: Market,
     delta: float | None = None,
     context: MarketContext | None = None,
+    news_context: NewsContext | None = None,
 ) -> dict[str, Any]:
     pulse = calculate_pulse_score(market, delta=delta)
     health = calculate_market_health(market)
@@ -90,6 +102,11 @@ def _market_to_api_object(
         language="en",
     )
     category = context.category if context is not None else classify_market_category(market)
+    news_fields = (
+        news_context.as_dict()
+        if news_context is not None
+        else build_news_context(market, [], language="en").as_dict()
+    )
     return {
         "market_id": market.id,
         "title": market.question,
@@ -222,6 +239,7 @@ def _market_to_api_object(
         ),
         **side.as_dict(),
         **indicators.as_dict(),
+        **news_fields,
         "risk_flags": market_risk_flags(market, delta=delta),
         "url": market.url,
     }
@@ -256,6 +274,33 @@ def _today_item_to_api_object(item: TodayPulseItem) -> dict[str, Any]:
     result["why_it_matters"] = item.why_it_matters
     result["why_people_care"] = result["market_mood_reason"]
     return result
+
+
+def _external_event_to_news_item(event: ExternalEvent) -> ExternalNewsItem | None:
+    raw = event.raw_payload or {}
+    source_name = str(raw.get("source_name") or "External source")
+    source_type = str(raw.get("source_type") or "rss")
+    source_url = str(raw.get("source_url") or event.url)
+    if not event.title or not event.url:
+        return None
+    entities = event.entities.get("items", []) if isinstance(event.entities, dict) else []
+    topics = event.topics.get("items", []) if isinstance(event.topics, dict) else []
+    return ExternalNewsItem(
+        source_type=source_type,
+        source_name=source_name,
+        source_url=source_url,
+        title=event.title,
+        summary=event.summary or "",
+        url=event.url,
+        published_at=event.published_at,
+        category=event.category or "global",
+        entities=tuple(str(item) for item in entities),
+        topics=tuple(str(item) for item in topics),
+        sentiment=event.sentiment,
+        urgency_score=event.urgency_score,
+        credibility_score=event.credibility_score,
+        raw_payload=raw,
+    )
 
 
 def _market_movement_to_api_object(item: MarketMovement) -> dict[str, Any]:
@@ -336,6 +381,7 @@ def _smart_market_to_api_object(activity: MarketActivity) -> dict[str, Any]:
         "category_label": category_label(category, "en"),
         **side.as_dict(),
         **indicators.as_dict(),
+        **build_news_context({"title": activity.market_title, "category": category}, [], language="en").as_dict(),
     }
 
 
@@ -362,6 +408,7 @@ class HealthServer:
         market_analyzer: MarketAnalyzer | None = None,
         smart_money_analyzer: SmartMoneyAnalyzer | None = None,
         ai_context_engine: AIContextEngine | None = None,
+        news_intelligence_engine: NewsIntelligenceEngine | None = None,
         session_factory: async_sessionmaker[AsyncSession] | None = None,
     ) -> None:
         self._host = host
@@ -370,6 +417,10 @@ class HealthServer:
         self._market_analyzer = market_analyzer
         self._smart_money_analyzer = smart_money_analyzer
         self._ai_context_engine = ai_context_engine or AIContextEngine(None)
+        self._news_intelligence_engine = news_intelligence_engine or NewsIntelligenceEngine(
+            enable_rss=False,
+            enable_official_sources=False,
+        )
         self._session_factory = session_factory
         self._runner: web.AppRunner | None = None
 
@@ -471,6 +522,25 @@ class HealthServer:
             logger.debug("Could not load market memory for %s: %s", market_id, exc)
             return []
 
+    async def _external_news_events(self) -> list[ExternalNewsItem]:
+        if self._session_factory is None:
+            return list(self._news_intelligence_engine.events)
+        try:
+            async with self._session_factory() as session:
+                events = await get_recent_external_events(session, limit=250, since_hours=36)
+        except Exception as exc:
+            logger.debug("Could not load external news events: %s", exc)
+            return list(self._news_intelligence_engine.events)
+        converted = [_external_event_to_news_item(event) for event in events]
+        return [item for item in converted if item is not None] or list(self._news_intelligence_engine.events)
+
+    async def _market_news_context(self, market: Market) -> NewsContext:
+        return self._news_intelligence_engine.market_context(
+            market,
+            language="en",
+            events=await self._external_news_events(),
+        )
+
     async def _market_api_object(
         self,
         market: Market,
@@ -487,6 +557,7 @@ class HealthServer:
             history=await self._market_history(market.id),
         )
         result = _market_to_api_object(market, delta, context=context)
+        result.update((await self._market_news_context(market)).as_dict())
         result["why_it_matters"] = context.why_people_care
         return result
 
@@ -505,7 +576,13 @@ class HealthServer:
                 history=await self._market_history(item.market.id),
             )
             contexts.append(context)
-            result = _market_to_api_object(item.market, item.delta, context=context)
+            news_context = await self._market_news_context(item.market)
+            result = _market_to_api_object(
+                item.market,
+                item.delta,
+                context=context,
+                news_context=news_context,
+            )
             result["why_it_matters"] = context.why_people_care
             data.append(result)
 
@@ -526,6 +603,11 @@ class HealthServer:
                 if context.changed_since_last_seen
             ],
             "category_summaries": narrative.category_summaries,
+            "news_themes": self._news_intelligence_engine.today_themes(
+                [item.market for item in items],
+                language="en",
+                events=await self._external_news_events(),
+            ),
         }
 
     async def _api_today(self, request: web.Request) -> web.Response:

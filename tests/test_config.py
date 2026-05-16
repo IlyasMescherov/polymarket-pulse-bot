@@ -28,6 +28,11 @@ def test_smart_money_active_market_threshold_env(monkeypatch) -> None:
 def test_auto_publishing_config_defaults(monkeypatch) -> None:
     monkeypatch.delenv("AUTO_CHANNEL_POSTING_ENABLED", raising=False)
     monkeypatch.delenv("X_DRAFTS_ENABLED", raising=False)
+    monkeypatch.delenv("NEWS_REFRESH_MINUTES", raising=False)
+    monkeypatch.delenv("ENABLE_X_SOURCE", raising=False)
+    monkeypatch.delenv("ENABLE_TELEGRAM_SOURCE", raising=False)
+    monkeypatch.delenv("ENABLE_RSS_SOURCE", raising=False)
+    monkeypatch.delenv("ENABLE_OFFICIAL_SOURCES", raising=False)
     load_settings.cache_clear()
     try:
         settings = load_settings()
@@ -38,6 +43,11 @@ def test_auto_publishing_config_defaults(monkeypatch) -> None:
     assert settings.x_drafts_enabled is True
     assert settings.x_posting_mode == "draft"
     assert settings.openai_model == "gpt-4o-mini"
+    assert settings.news_refresh_minutes == 10
+    assert settings.enable_x_source is False
+    assert settings.enable_telegram_source is False
+    assert settings.enable_rss_source is True
+    assert settings.enable_official_sources is True
 
 
 def test_openai_model_env(monkeypatch) -> None:

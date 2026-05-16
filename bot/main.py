@@ -26,6 +26,7 @@ from bot.services.channel_publisher import ChannelPublisher
 from bot.services.content_publisher import ContentPublisher
 from bot.services.health_server import HealthServer
 from bot.services.market_analyzer import MarketAnalyzer
+from bot.services.news_intelligence_engine import NewsIntelligenceEngine, NewsRefreshJob
 from bot.services.notifier import Notifier
 from bot.services.polymarket_data_client import PolymarketDataClient
 from bot.services.polymarket_client import PolymarketClient
@@ -90,6 +91,7 @@ async def main() -> None:
         settings.openai_api_key,
         model=settings.openai_model,
     )
+    news_intelligence_engine = NewsIntelligenceEngine.from_settings(settings)
     notifier = Notifier(bot, session_factory, market_analyzer, ai_explainer)
     content_publisher = ContentPublisher(
         market_analyzer,
@@ -110,6 +112,11 @@ async def main() -> None:
         notifier,
         interval_seconds=settings.market_poll_interval_seconds,
         daily_publishing_job=daily_publishing_job,
+        news_refresh_job=NewsRefreshJob(
+            news_intelligence_engine,
+            session_factory,
+            refresh_minutes=settings.news_refresh_minutes,
+        ),
     )
     health_server = HealthServer(
         settings.app_host,
@@ -118,6 +125,7 @@ async def main() -> None:
         market_analyzer=market_analyzer,
         smart_money_analyzer=smart_money_analyzer,
         ai_context_engine=ai_context_engine,
+        news_intelligence_engine=news_intelligence_engine,
         session_factory=session_factory,
     )
 
@@ -138,6 +146,7 @@ async def main() -> None:
     dp["smart_money_analyzer"] = smart_money_analyzer
     dp["ai_explainer"] = ai_explainer
     dp["ai_context_engine"] = ai_context_engine
+    dp["news_intelligence_engine"] = news_intelligence_engine
     dp["content_publisher"] = content_publisher
     dp["channel_publisher"] = channel_publisher
     dp["x_publisher"] = x_publisher
@@ -157,6 +166,7 @@ async def main() -> None:
             pass
         await polymarket_client.close()
         await polymarket_data_client.close()
+        await news_intelligence_engine.close()
         await bot.session.close()
         await health_server.stop()
         await engine.dispose()

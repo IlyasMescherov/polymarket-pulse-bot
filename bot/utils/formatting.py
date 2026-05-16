@@ -145,6 +145,7 @@ def format_market_card(
     market_health: MarketHealth | None = None,
     risk_flags: list[str] | None = None,
     language: str | None = None,
+    news_context: str | None = None,
 ) -> str:
     indicators = calculate_market_indicators(
         market,
@@ -181,6 +182,14 @@ def format_market_card(
         _label("Короткий вывод:", "Quick read:", language),
         indicators.indicator_summary,
     ]
+    if news_context:
+        lines.extend(
+            [
+                "",
+                _label("Новостной фон:", "News context:", language),
+                news_context,
+            ]
+        )
     mood = calculate_market_mood(market, delta=movement_delta, language=language)
     lines.extend(
         [

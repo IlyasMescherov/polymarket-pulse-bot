@@ -93,6 +93,11 @@ class Settings:
     x_access_token: str | None = None
     x_access_token_secret: str | None = None
     openai_model: str = "gpt-4o-mini"
+    news_refresh_minutes: int = 10
+    enable_x_source: bool = False
+    enable_telegram_source: bool = False
+    enable_rss_source: bool = True
+    enable_official_sources: bool = True
 
 
 @lru_cache(maxsize=1)
@@ -154,4 +159,12 @@ def load_settings() -> Settings:
         x_access_token=_optional(os.getenv("X_ACCESS_TOKEN")),
         x_access_token_secret=_optional(os.getenv("X_ACCESS_TOKEN_SECRET")),
         openai_model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+        news_refresh_minutes=int(os.getenv("NEWS_REFRESH_MINUTES", "10")),
+        enable_x_source=_bool(os.getenv("ENABLE_X_SOURCE"), default=False),
+        enable_telegram_source=_bool(os.getenv("ENABLE_TELEGRAM_SOURCE"), default=False),
+        enable_rss_source=_bool(os.getenv("ENABLE_RSS_SOURCE"), default=True),
+        enable_official_sources=_bool(
+            os.getenv("ENABLE_OFFICIAL_SOURCES"),
+            default=True,
+        ),
     )

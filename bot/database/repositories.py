@@ -8,7 +8,10 @@ from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.database.models import (
+    ExternalEvent,
+    ExternalSource,
     MarketLinkClick,
+    MarketEventLink,
     MarketSnapshot,
     PublishedPost,
     SearchQuery,
@@ -21,6 +24,7 @@ from bot.database.models import (
     UserTopic,
     UserWatchlist,
 )
+from bot.services.source_adapters.base import ExternalNewsItem
 from bot.services.polymarket_client import Market
 
 
@@ -43,6 +47,14 @@ ALLOWED_LINK_SOURCES = {
     "share",
     "timeline",
     "explain",
+}
+ALLOWED_EXTERNAL_SOURCE_TYPES = {
+    "official",
+    "rss",
+    "mainstream",
+    "news_api",
+    "x",
+    "telegram",
 }
 
 
@@ -378,6 +390,156 @@ async def get_recent_snapshots(
         .limit(limit)
     )
     return list(reversed(result.scalars().all()))
+
+
+def normalize_external_source_type(source_type: str) -> str:
+    normalized = source_type.strip().lower()
+    return normalized if normalized in ALLOWED_EXTERNAL_SOURCE_TYPES else "rss"
+
+
+async def upsert_external_source(
+    session: AsyncSession,
+    *,
+    source_type: str,
+    name: str,
+    url: str,
+    credibility_score: float,
+    category: str,
+    is_active: bool = True,
+) -> ExternalSource:
+    normalized_url = url.strip()
+    result = await session.execute(
+        select(ExternalSource).where(ExternalSource.url == normalized_url)
+    )
+    source = result.scalar_one_or_none()
+    if source is None:
+        source = ExternalSource(
+            source_type=normalize_external_source_type(source_type),
+            name=name.strip()[:255],
+            url=normalized_url,
+            credibility_score=max(0.0, min(100.0, float(credibility_score))),
+            category=(category or "global").strip().lower()[:64],
+            is_active=is_active,
+        )
+        session.add(source)
+    else:
+        source.source_type = normalize_external_source_type(source_type)
+        source.name = name.strip()[:255]
+        source.credibility_score = max(0.0, min(100.0, float(credibility_score)))
+        source.category = (category or "global").strip().lower()[:64]
+        source.is_active = is_active
+    await session.flush()
+    return source
+
+
+async def upsert_external_event(
+    session: AsyncSession,
+    source: ExternalSource,
+    event: ExternalNewsItem,
+) -> ExternalEvent:
+    normalized_url = event.url.strip()
+    result = await session.execute(
+        select(ExternalEvent).where(
+            ExternalEvent.source_id == source.id,
+            ExternalEvent.url == normalized_url,
+        )
+    )
+    existing = result.scalar_one_or_none()
+    payload = {
+        "source_type": event.source_type,
+        "source_name": event.source_name,
+        "source_url": event.source_url,
+        **dict(event.raw_payload),
+    }
+    if existing is None:
+        existing = ExternalEvent(
+            source_id=source.id,
+            title=event.title[:1000],
+            summary=event.summary[:2000] if event.summary else None,
+            url=normalized_url,
+            published_at=event.published_at,
+            category=(event.category or source.category or "global").strip().lower()[:64],
+            entities={"items": list(event.entities)},
+            topics={"items": list(event.topics)},
+            sentiment=event.sentiment,
+            urgency_score=max(0.0, min(100.0, float(event.urgency_score))),
+            credibility_score=max(0.0, min(100.0, float(event.credibility_score))),
+            raw_payload=payload,
+        )
+        session.add(existing)
+    else:
+        existing.title = event.title[:1000]
+        existing.summary = event.summary[:2000] if event.summary else None
+        existing.published_at = event.published_at
+        existing.category = (event.category or source.category or "global").strip().lower()[:64]
+        existing.entities = {"items": list(event.entities)}
+        existing.topics = {"items": list(event.topics)}
+        existing.sentiment = event.sentiment
+        existing.urgency_score = max(0.0, min(100.0, float(event.urgency_score)))
+        existing.credibility_score = max(0.0, min(100.0, float(event.credibility_score)))
+        existing.raw_payload = payload
+    await session.flush()
+    return existing
+
+
+async def get_recent_external_events(
+    session: AsyncSession,
+    *,
+    limit: int = 200,
+    since_hours: int = 24,
+) -> list[ExternalEvent]:
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=since_hours)
+    result = await session.execute(
+        select(ExternalEvent)
+        .where(
+            (ExternalEvent.published_at.is_(None))
+            | (ExternalEvent.published_at >= cutoff)
+        )
+        .order_by(
+            desc(ExternalEvent.published_at),
+            desc(ExternalEvent.created_at),
+            desc(ExternalEvent.id),
+        )
+        .limit(limit)
+    )
+    return list(result.scalars().all())
+
+
+async def link_market_event(
+    session: AsyncSession,
+    *,
+    market_id: str,
+    event_url: str,
+    relevance_score: float,
+    match_reason: str,
+) -> MarketEventLink | None:
+    event_result = await session.execute(
+        select(ExternalEvent).where(ExternalEvent.url == event_url).limit(1)
+    )
+    event = event_result.scalar_one_or_none()
+    if event is None:
+        return None
+
+    link_result = await session.execute(
+        select(MarketEventLink).where(
+            MarketEventLink.market_id == market_id,
+            MarketEventLink.external_event_id == event.id,
+        )
+    )
+    link = link_result.scalar_one_or_none()
+    if link is None:
+        link = MarketEventLink(
+            market_id=market_id,
+            external_event_id=event.id,
+            relevance_score=max(0.0, min(100.0, float(relevance_score))),
+            match_reason=match_reason[:1000],
+        )
+        session.add(link)
+    else:
+        link.relevance_score = max(0.0, min(100.0, float(relevance_score)))
+        link.match_reason = match_reason[:1000]
+    await session.flush()
+    return link
 
 
 async def alert_sent_recently(

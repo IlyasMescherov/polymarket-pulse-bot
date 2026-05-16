@@ -41,6 +41,7 @@ from bot.services.market_mood import calculate_market_mood
 from bot.services.market_analyzer import CATEGORY_LABELS, MarketAnalyzer, MarketMovement
 from bot.services.market_health import calculate_market_health
 from bot.services.movement_explainer import explain_movement
+from bot.services.news_intelligence_engine import NewsIntelligenceEngine
 from bot.services.polymarket_client import Market, PolymarketAPIError
 from bot.services.pulse_score import calculate_pulse_score
 from bot.services.risk_flags import count_strong_snapshot_moves, market_risk_flags
@@ -123,6 +124,7 @@ async def _send_market_cards(
     ai_context_engine: AIContextEngine,
     language: str,
     session_factory: async_sessionmaker[AsyncSession],
+    news_intelligence_engine: NewsIntelligenceEngine | None = None,
     threshold: float = 0.10,
     heading: str = "🔥 Рынок:",
     source: str = "hot",
@@ -163,6 +165,7 @@ async def _send_market_cards(
             history=recent,
         )
         explanation = context.simple_read or await ai_explainer.explain_market(market)
+        news_line = _news_context_line(news_intelligence_engine, market, language)
         await message.answer(
             format_market_card(
                 market,
@@ -173,6 +176,7 @@ async def _send_market_cards(
                 market_health=market_health,
                 risk_flags=risk_flags,
                 language=language,
+                news_context=news_line,
             ),
             reply_markup=market_actions_keyboard(
                 market.url,
@@ -182,6 +186,19 @@ async def _send_market_cards(
             ),
             disable_web_page_preview=True,
         )
+
+
+def _news_context_line(
+    news_intelligence_engine: NewsIntelligenceEngine | None,
+    market: Market,
+    language: str,
+) -> str | None:
+    if news_intelligence_engine is None:
+        return None
+    context = news_intelligence_engine.market_context(market, language=language)
+    if context.source_count <= 0:
+        return None
+    return context.why_moving_now
 
 
 async def _send_movement_cards(
@@ -318,6 +335,7 @@ async def hot_markets(
     ai_explainer: AIExplainer,
     ai_context_engine: AIContextEngine,
     session_factory: async_sessionmaker[AsyncSession],
+    news_intelligence_engine: NewsIntelligenceEngine | None = None,
 ) -> None:
     log_callback_action(logger, callback, "hot_markets")
     language = await _language(session_factory, callback.from_user)
@@ -337,6 +355,7 @@ async def hot_markets(
         ai_context_engine,
         language,
         session_factory,
+        news_intelligence_engine=news_intelligence_engine,
         heading="🔥 Hot market" if language == "en" else "🔥 Горячий рынок",
         source="hot",
     )
@@ -349,6 +368,7 @@ async def hot_markets_command(
     ai_explainer: AIExplainer,
     ai_context_engine: AIContextEngine,
     session_factory: async_sessionmaker[AsyncSession],
+    news_intelligence_engine: NewsIntelligenceEngine | None = None,
 ) -> None:
     log_user_action(logger, message.from_user, "hot_markets")
     language = await _language(session_factory, message.from_user)
@@ -365,6 +385,7 @@ async def hot_markets_command(
         ai_context_engine,
         language,
         session_factory,
+        news_intelligence_engine=news_intelligence_engine,
         heading="🔥 Hot market" if language == "en" else "🔥 Горячий рынок",
         source="hot",
     )
@@ -454,6 +475,7 @@ async def new_markets(
     ai_explainer: AIExplainer,
     ai_context_engine: AIContextEngine,
     session_factory: async_sessionmaker[AsyncSession],
+    news_intelligence_engine: NewsIntelligenceEngine | None = None,
 ) -> None:
     log_callback_action(logger, callback, "new_markets")
     language = await _language(session_factory, callback.from_user)
@@ -473,6 +495,7 @@ async def new_markets(
         ai_context_engine,
         language,
         session_factory,
+        news_intelligence_engine=news_intelligence_engine,
         heading="🆕 New market" if language == "en" else "🆕 Новый рынок",
         source="new",
     )
@@ -485,6 +508,7 @@ async def new_markets_command(
     ai_explainer: AIExplainer,
     ai_context_engine: AIContextEngine,
     session_factory: async_sessionmaker[AsyncSession],
+    news_intelligence_engine: NewsIntelligenceEngine | None = None,
 ) -> None:
     log_user_action(logger, message.from_user, "new_markets")
     language = await _language(session_factory, message.from_user)
@@ -501,6 +525,7 @@ async def new_markets_command(
         ai_context_engine,
         language,
         session_factory,
+        news_intelligence_engine=news_intelligence_engine,
         heading="🆕 New market" if language == "en" else "🆕 Новый рынок",
         source="new",
     )
@@ -626,6 +651,7 @@ async def market_search_query(
     ai_explainer: AIExplainer,
     ai_context_engine: AIContextEngine,
     session_factory: async_sessionmaker[AsyncSession],
+    news_intelligence_engine: NewsIntelligenceEngine | None = None,
 ) -> None:
     query = (message.text or "").strip()
     log_user_action(logger, message.from_user, "search_query", query=query[:80])
@@ -673,6 +699,7 @@ async def market_search_query(
         ai_context_engine,
         language,
         session_factory,
+        news_intelligence_engine=news_intelligence_engine,
         heading="🔍 Found market" if language == "en" else "🔍 Найден рынок",
         source="search",
     )
@@ -700,6 +727,7 @@ async def category_selected(
     ai_explainer: AIExplainer,
     ai_context_engine: AIContextEngine,
     session_factory: async_sessionmaker[AsyncSession],
+    news_intelligence_engine: NewsIntelligenceEngine | None = None,
 ) -> None:
     category = (callback.data or "").removeprefix(CATEGORY_PREFIX)
     log_callback_action(logger, callback, "category_selected", category=category)
@@ -725,6 +753,7 @@ async def category_selected(
         ai_context_engine,
         language,
         session_factory,
+        news_intelligence_engine=news_intelligence_engine,
         heading=heading,
         source="category",
     )
