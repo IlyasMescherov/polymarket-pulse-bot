@@ -714,7 +714,9 @@ function probabilityNumber(item) {
 
 function sidePercent(value) {
   if (value === null || value === undefined || Number.isNaN(Number(value))) return "n/a";
-  return `${Math.max(0, Math.min(100, Math.round(Number(value))))}%`;
+  const bounded = Math.max(0, Math.min(100, Number(value)));
+  if (bounded > 0 && bounded < 1) return "<1%";
+  return `${Number.isInteger(bounded) ? bounded.toFixed(0) : bounded.toFixed(1)}%`;
 }
 
 function sideConfidenceLabel(item) {
@@ -765,6 +767,8 @@ function timingLine(item) {
 }
 
 function humanRead(item) {
+  const outcomeRead = localizedText(item && item.outcome_balance_summary, "");
+  if (outcomeRead && !isGenericReason(outcomeRead)) return outcomeRead;
   const direct = localizedText(item && item.side_verdict, "");
   if (direct && !isGenericReason(direct)) return direct;
   const summary = localizedText(item && item.indicator_summary, "");
@@ -782,6 +786,10 @@ function humanRead(item) {
   return side;
 }
 
+function shouldUseYesNo(item) {
+  return Boolean(item && item.should_use_yes_no !== false && String(item.outcome_type || "binary_yes_no") === "binary_yes_no");
+}
+
 function yesNoValues(item) {
   const yes = item && item.yes_probability !== undefined && item.yes_probability !== null
     ? Number(item.yes_probability)
@@ -792,6 +800,86 @@ function yesNoValues(item) {
     : 100 - safeYes;
   const safeNo = Number.isNaN(noValue) ? Math.max(0, 100 - safeYes) : Math.max(0, Math.min(100, noValue));
   return { yes: safeYes, no: safeNo };
+}
+
+function fallbackOutcomeList(item) {
+  const { yes, no } = yesNoValues(item);
+  return [
+    { label: "YES", short_label: "YES", probability: yes, color_role: "yes" },
+    { label: "NO", short_label: "NO", probability: no, color_role: "no" },
+  ];
+}
+
+function outcomeList(item) {
+  const raw = Array.isArray(item && item.display_outcomes) ? item.display_outcomes : [];
+  const outcomes = raw
+    .map((outcome, index) => ({
+      label: String(outcome.label || outcome.short_label || `Outcome ${index + 1}`),
+      short_label: String(outcome.short_label || outcome.label || `#${index + 1}`),
+      probability: outcome.probability,
+      price: outcome.price,
+      color_role: String(outcome.color_role || "neutral"),
+    }))
+    .filter((outcome) => outcome.label.trim());
+  if (outcomes.length) return outcomes;
+  if (shouldUseYesNo(item)) return fallbackOutcomeList(item);
+  return [
+    {
+      label: isRu() ? "Нет данных" : "No data",
+      short_label: "n/a",
+      probability: null,
+      color_role: "neutral",
+    },
+  ];
+}
+
+function visibleOutcomeList(item, limit = 3) {
+  const outcomes = outcomeList(item);
+  if (outcomes.length <= limit) return { outcomes, remaining: 0 };
+  return { outcomes: outcomes.slice(0, limit), remaining: outcomes.length - limit };
+}
+
+function outcomeRoleClass(outcome) {
+  const role = String((outcome && outcome.color_role) || "neutral");
+  if (role === "yes" || role === "dominant") return "yes";
+  if (role === "no") return "no";
+  if (role === "runner_up") return "runner";
+  return "neutral";
+}
+
+function outcomeBalanceLabel(item) {
+  if (shouldUseYesNo(item)) return t("yesNoBalance");
+  const type = String((item && item.outcome_type) || "");
+  if (type === "sports_moneyline") return isRu() ? "Варианты рынка" : "Market outcomes";
+  return isRu() ? "Баланс вариантов" : "Outcome balance";
+}
+
+function outcomeLeadLine(item) {
+  const summary = localizedText(item && item.outcome_balance_summary, "");
+  if (summary) return summary;
+  const dominant = String((item && item.dominant_outcome_label) || "").trim();
+  if (dominant) {
+    return isRu() ? `Рынок сильнее склоняется к ${dominant}.` : `Market leans ${dominant}.`;
+  }
+  return marketLeanLine(item);
+}
+
+function outcomeBarSegments(item) {
+  const outcomes = outcomeList(item);
+  if (!outcomes.length) return [];
+  const values = outcomes.map((outcome) => Number(outcome.probability));
+  const hasValues = values.some((value) => !Number.isNaN(value) && value > 0);
+  const total = hasValues
+    ? values.reduce((sum, value) => sum + (Number.isNaN(value) || value < 0 ? 0 : value), 0)
+    : outcomes.length;
+  return outcomes.map((outcome, index) => {
+    const raw = hasValues ? values[index] : 1;
+    const value = Number.isNaN(raw) || raw < 0 ? 0 : raw;
+    return {
+      width: total > 0 ? Math.max(2, (value / total) * 100) : 100 / outcomes.length,
+      role: outcomeRoleClass(outcome),
+    };
+  });
 }
 
 function marketHeatScore(item) {
@@ -1319,41 +1407,44 @@ function scorePills(item) {
 }
 
 function renderYesNoStrip(item) {
-  const { yes: safeYes, no: safeNo } = yesNoValues(item);
-  const side = dominantSide(item).toLowerCase();
+  const segments = outcomeBarSegments(item);
   return `
-    <div class="yes-no-strip yes-no-strip--${escapeHtml(side)}">
+    <div class="yes-no-strip">
       <div class="yes-no-strip__labels">
-        <strong>YES ${escapeHtml(sidePercent(safeYes))}</strong>
-        <strong>NO ${escapeHtml(sidePercent(safeNo))}</strong>
+        ${outcomeList(item)
+          .slice(0, 3)
+          .map((outcome) => `<strong>${escapeHtml(outcome.short_label || outcome.label)} ${escapeHtml(sidePercent(outcome.probability))}</strong>`)
+          .join("")}
       </div>
       <div class="side-split-bar" aria-hidden="true">
-        <span class="side-split-bar__yes" style="width: ${safeYes}%"></span>
-        <span class="side-split-bar__no" style="width: ${safeNo}%"></span>
+        ${segments.map((segment) => `<span class="side-split-bar__${escapeHtml(segment.role)}" style="width: ${segment.width}%"></span>`).join("")}
       </div>
-      <p class="side-read">${escapeHtml(sideBalanceText(item))}</p>
+      <p class="side-read">${escapeHtml(outcomeLeadLine(item))}</p>
     </div>
   `;
 }
 
 function renderYesNoDuel(item, options = {}) {
-  const { yes: safeYes, no: safeNo } = yesNoValues(item);
   const large = Boolean(options.large);
+  const { outcomes, remaining } = visibleOutcomeList(item, large ? 3 : 3);
+  const segments = outcomeBarSegments(item);
   return `
-    <div class="yes-no-duel${large ? " yes-no-duel--large" : ""}">
-      <div class="yes-no-duel__split" style="--yes-width: ${safeYes}%; --no-width: ${safeNo}%">
-        <div class="yes-no-duel__side yes-no-duel__side--yes">
-          <span>YES</span>
-          <strong>${escapeHtml(sidePercent(safeYes))}</strong>
-        </div>
-        <div class="yes-no-duel__side yes-no-duel__side--no">
-          <span>NO</span>
-          <strong>${escapeHtml(sidePercent(safeNo))}</strong>
-        </div>
+    <div class="yes-no-duel outcome-duel${large ? " yes-no-duel--large" : ""}${outcomes.length > 2 ? " outcome-duel--multi" : ""}">
+      <div class="yes-no-duel__split outcome-duel__split">
+        ${outcomes
+          .map(
+            (outcome) => `
+              <div class="yes-no-duel__side outcome-duel__side yes-no-duel__side--${escapeHtml(outcomeRoleClass(outcome))}">
+                <span>${escapeHtml(outcome.short_label || outcome.label)}</span>
+                <strong>${escapeHtml(sidePercent(outcome.probability))}</strong>
+              </div>
+            `,
+          )
+          .join("")}
+        ${remaining > 0 ? `<div class="yes-no-duel__side outcome-duel__side yes-no-duel__side--neutral"><span>${escapeHtml(isRu() ? "ещё" : "more")}</span><strong>${remaining}</strong></div>` : ""}
       </div>
       <div class="yes-no-duel__track" aria-hidden="true">
-        <span class="yes-no-duel__track-yes" style="width: ${safeYes}%"></span>
-        <span class="yes-no-duel__track-no" style="width: ${safeNo}%"></span>
+        ${segments.map((segment) => `<span class="yes-no-duel__track-${escapeHtml(segment.role)}" style="width: ${segment.width}%"></span>`).join("")}
       </div>
     </div>
   `;
@@ -1575,6 +1666,15 @@ function normalizeMarket(item) {
     opposite_interest: item && item.opposite_interest,
     side_verdict: item && item.side_verdict,
     side_risk_note: item && item.side_risk_note,
+    outcome_type: item && item.outcome_type,
+    display_outcomes: Array.isArray(item && item.display_outcomes) ? item.display_outcomes : [],
+    dominant_outcome_label: item && item.dominant_outcome_label,
+    dominant_outcome_probability: item && item.dominant_outcome_probability,
+    runner_up_label: item && item.runner_up_label,
+    runner_up_probability: item && item.runner_up_probability,
+    outcome_spread: item && item.outcome_spread,
+    outcome_balance_summary: item && item.outcome_balance_summary,
+    should_use_yes_no: item && item.should_use_yes_no,
     memory_pattern: item && item.memory_pattern,
     changed_since_last_seen: item && item.changed_since_last_seen,
     historical_context: item && item.historical_context,
@@ -1608,8 +1708,11 @@ function removeSaved(id) {
 }
 
 function marketText(item) {
-  const { yes, no } = yesNoValues(item);
-  return `${item.title || "Polymarket market"}\nYES: ${sidePercent(yes)}\nNO: ${sidePercent(no)}\n${marketLeanLine(item)}\n${humanRead(item)}\n${safeUrl(item.url)}`;
+  const outcomes = outcomeList(item);
+  const outcomeLines = outcomes.length
+    ? outcomes.slice(0, 5).map((outcome) => `${outcome.short_label || outcome.label}: ${sidePercent(outcome.probability)}`).join("\n")
+    : (isRu() ? "Данных по вариантам пока мало" : "Outcome data unavailable");
+  return `${item.title || "Polymarket market"}\n${outcomeLines}\n${outcomeLeadLine(item)}\n${humanRead(item)}\n${safeUrl(item.url)}`;
 }
 
 async function shareText(text) {
@@ -1654,18 +1757,19 @@ function buttonRow(item) {
 function renderMarketCard(item, variant = "compact", options = {}) {
   const normalized = normalizeMarket(item);
   const encoded = encodeURIComponent(JSON.stringify(normalized));
-  const { yes: safeYes, no: safeNo } = yesNoValues(item);
   const visual = getMarketVisual(item);
   const compact = variant === "compact" || variant === "list";
   const showActions = variant !== "list" || options.showActions;
   const removable = Boolean(options.removable);
   const titleLimit = variant === "hero" ? 86 : variant === "list" ? 72 : 78;
   const cardClass = `unified-market-card unified-market-card--${variant}`;
+  const { outcomes, remaining } = visibleOutcomeList(item, variant === "list" ? 3 : 3);
+  const segments = outcomeBarSegments(item);
   if (variant === "hero" || variant === "analysis") {
     return `
       <div class="${cardClass}" data-explain-market="${encoded}">
         <div class="unified-market-card__topline">
-          <span>${escapeHtml(variant === "hero" ? t("mainMarket") : t("yesNoBalance"))}</span>
+          <span>${escapeHtml(variant === "hero" ? t("mainMarket") : outcomeBalanceLabel(item))}</span>
           <span class="pill pill--time">${escapeHtml(timePressure(item))}</span>
         </div>
         <h3>${escapeHtml(compactTitle(item.title, titleLimit))}</h3>
@@ -1691,13 +1795,21 @@ function renderMarketCard(item, variant = "compact", options = {}) {
         <span>${escapeHtml(timePressure(item))}</span>
       </div>
       <div class="unified-market-card__odds">
-        <div class="market-side-buttons${compact ? " market-side-buttons--compact" : ""}">
-          <span><em>YES</em><strong>${escapeHtml(sidePercent(safeYes))}</strong></span>
-          <span><em>NO</em><strong>${escapeHtml(sidePercent(safeNo))}</strong></span>
+        <div class="market-side-buttons outcome-buttons${compact ? " market-side-buttons--compact" : ""}${outcomes.length > 2 ? " outcome-buttons--stack" : ""}">
+          ${outcomes
+            .map(
+              (outcome) => `
+                <span class="outcome-button outcome-button--${escapeHtml(outcomeRoleClass(outcome))}">
+                  <em>${escapeHtml(outcome.short_label || outcome.label)}</em>
+                  <strong>${escapeHtml(sidePercent(outcome.probability))}</strong>
+                </span>
+              `,
+            )
+            .join("")}
+          ${remaining > 0 ? `<span class="outcome-button outcome-button--neutral"><em>${escapeHtml(isRu() ? "ещё" : "more")}</em><strong>${remaining}</strong></span>` : ""}
         </div>
         <div class="mini-side-bar" aria-hidden="true">
-          <i class="mini-side-bar__yes" style="width: ${safeYes}%"></i>
-          <i class="mini-side-bar__no" style="width: ${safeNo}%"></i>
+          ${segments.map((segment) => `<i class="mini-side-bar__${escapeHtml(segment.role)}" style="width: ${segment.width}%"></i>`).join("")}
         </div>
       </div>
       <button class="bookmark-action" type="button" data-save-market="${encoded}" aria-label="${escapeHtml(t("save"))}">☆</button>
@@ -1775,18 +1887,18 @@ function renderSideAnalysisPanel(item) {
   return `
     <section class="side-panel">
       <div class="indicator-panel__head">
-        <span>${escapeHtml(t("yesNoBalance"))}</span>
-        <strong>${escapeHtml(dominantSide(item))}</strong>
+        <span>${escapeHtml(outcomeBalanceLabel(item))}</span>
+        <strong>${escapeHtml(item.dominant_outcome_label || dominantSide(item))}</strong>
       </div>
       ${renderYesNoStrip(item)}
       <div class="side-panel__grid">
-        <span>YES <strong>${escapeHtml(sidePercent(item.yes_probability))}</strong></span>
-        <span>NO <strong>${escapeHtml(sidePercent(item.no_probability))}</strong></span>
-        <span>${escapeHtml(t("marketLeans"))} <strong>${escapeHtml(dominantSide(item))}</strong></span>
-        <span>${escapeHtml(t("sideConfidence"))} <strong>${escapeHtml(sideConfidenceLabel(item))}</strong></span>
+        ${outcomeList(item)
+          .slice(0, 4)
+          .map((outcome) => `<span>${escapeHtml(outcome.short_label || outcome.label)} <strong>${escapeHtml(sidePercent(outcome.probability))}</strong></span>`)
+          .join("")}
       </div>
-      <p>${escapeHtml(localizedText(item.side_tension, sideBalanceText(item)))}</p>
-      <p>${escapeHtml(localizedText(item.side_verdict, localizedText(item.side_summary, sideBalanceText(item))))}</p>
+      <p>${escapeHtml(localizedText(item.side_tension, outcomeLeadLine(item)))}</p>
+      <p>${escapeHtml(localizedText(item.side_verdict, localizedText(item.side_summary, outcomeLeadLine(item))))}</p>
     </section>
   `;
 }

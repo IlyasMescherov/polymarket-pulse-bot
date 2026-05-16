@@ -129,6 +129,15 @@ async def test_miniapp_hot_api_shape() -> None:
     assert payload["data"][0]["opposite_interest"]
     assert payload["data"][0]["side_verdict"]
     assert payload["data"][0]["side_risk_note"]
+    assert payload["data"][0]["outcome_type"]
+    assert isinstance(payload["data"][0]["display_outcomes"], list)
+    assert payload["data"][0]["dominant_outcome_label"]
+    assert "dominant_outcome_probability" in payload["data"][0]
+    assert "runner_up_label" in payload["data"][0]
+    assert "runner_up_probability" in payload["data"][0]
+    assert "outcome_spread" in payload["data"][0]
+    assert payload["data"][0]["outcome_balance_summary"]
+    assert payload["data"][0]["should_use_yes_no"] is True
     assert payload["data"][0]["regime_reason"]
     assert payload["data"][0]["memory_pattern"]
     assert payload["data"][0]["changed_since_last_seen"]

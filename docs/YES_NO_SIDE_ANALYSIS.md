@@ -90,25 +90,37 @@ Side fields are added to:
 - `GET /api/search`
 - `GET /api/smart-money/active`
 
+## Outcome Display Update
+
+YES / NO analysis is now used only when Gamma outcomes are truly `Yes` and `No`.
+Grouped sports markets and custom-outcome markets use the real outcome labels through
+`bot/services/outcome_normalizer.py`.
+
+For full rules, see [OUTCOME_DISPLAY_LOGIC.md](OUTCOME_DISPLAY_LOGIC.md).
+
 ## Mini App UX
 
-Market cards now show a compact YES / NO strip:
+Binary market cards show a compact YES / NO strip:
 
 - `YES 4% | NO 96%`
 - horizontal split bar
 - side read such as `Market leans NO`
-- side and side confidence inside the score grid
 
-The Analysis screen includes a dedicated `YES / NO balance` block.
+Sports and custom markets show real labels instead:
+
+- `Frankfurt 2.5%`
+- `Draw 8%`
+- `Stuttgart 90%`
+
+The Analysis screen starts with either `YES / NO balance`, `Outcome balance`, or `Market outcomes`.
 
 ## Telegram Bot UX
 
-Market cards include:
+Market cards include the real visible outcomes:
 
-- `YES`
-- `NO`
-- `Market leans`
-- side read
+- `YES / NO` for binary markets
+- team/draw/custom labels for grouped markets
+- a short outcome read
 
 The language stays interpretive. It describes what the market appears to price, without telling the user what to do.
 

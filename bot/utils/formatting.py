@@ -39,12 +39,41 @@ def format_percentage_points(value: float | None, language: str | None = None) -
     return f"{value * 100:+.0f}%"
 
 
-def _format_side_percent(value: int | None) -> str:
-    return "n/a" if value is None else f"{value}%"
+def _format_outcome_percent(value: float | int | None) -> str:
+    if value is None:
+        return "n/a"
+    number = float(value)
+    if 0 < number < 1:
+        return "<1%"
+    return f"{number:.0f}%" if number.is_integer() else f"{number:.1f}%"
+
+
+def _outcome_balance_heading(market: Market, language: str | None = None, delta: float | None = None) -> str:
+    side = analyze_market_side(market, delta=delta, language=language)
+    if side.should_use_yes_no:
+        return _label("Баланс YES / NO:", "YES / NO balance:", language)
+    if side.outcome_type == "sports_moneyline":
+        return _label("Варианты рынка:", "Market outcomes:", language)
+    return _label("Баланс вариантов:", "Outcome balance:", language)
 
 
 def _side_lines(market: Market, language: str | None = None, delta: float | None = None) -> list[str]:
     side = analyze_market_side(market, delta=delta, language=language)
+    if not side.should_use_yes_no:
+        lines = [
+            f"{outcome.get('short_label') or outcome.get('label')}: {_format_outcome_percent(outcome.get('probability'))}"
+            for outcome in side.display_outcomes[:5]
+        ]
+        if len(side.display_outcomes) > 5:
+            lines.append(_label(f"ещё {len(side.display_outcomes) - 5}", f"+{len(side.display_outcomes) - 5} more", language))
+        lines.extend(
+            [
+                side.outcome_balance_summary,
+                f"{_label('Короткий вывод', 'Quick read', language)}: {side.side_verdict}",
+            ]
+        )
+        return lines
+
     if side.dominant_side == "YES":
         lean = _label("Рынок склоняется к YES.", "Market leans YES.", language)
     elif side.dominant_side == "NO":
@@ -54,8 +83,8 @@ def _side_lines(market: Market, language: str | None = None, delta: float | None
     else:
         lean = _label("Данных по сторонам пока мало.", "Not enough side data yet.", language)
     return [
-        f"YES: {_format_side_percent(side.yes_probability)}",
-        f"NO: {_format_side_percent(side.no_probability)}",
+        f"YES: {_format_outcome_percent(side.yes_probability)}",
+        f"NO: {_format_outcome_percent(side.no_probability)}",
         lean,
         f"{_label('Короткий вывод', 'Quick read', language)}: {side.side_verdict}",
     ]
@@ -132,7 +161,7 @@ def format_market_card(
         _label("Вероятность:", "Probability:", language),
         format_probability(market.yes_probability, language),
         "",
-        _label("Баланс YES / NO:", "YES / NO balance:", language),
+        _outcome_balance_heading(market, language=language, delta=movement_delta),
         *_side_lines(market, language=language, delta=movement_delta),
         "",
         _label("Движение:", "Movement:", language),
@@ -257,7 +286,7 @@ def format_movement_card(
         _label("До завершения:", "Time left:", language),
         format_time_until(movement.market.end_date, language=language),
         "",
-        _label("Баланс YES / NO:", "YES / NO balance:", language),
+        _outcome_balance_heading(movement.market, language=language, delta=movement.delta),
         *_side_lines(movement.market, language=language, delta=movement.delta),
         "",
         _label("Короткий вывод:", "Quick read:", language),
@@ -309,7 +338,7 @@ def format_today_pulse_card(
             "Probability:",
             format_probability(market.yes_probability, language),
             "",
-            "YES / NO balance:",
+            _outcome_balance_heading(market, language=language, delta=item.delta),
             *_side_lines(market, language=language, delta=item.delta),
             "",
             "Pulse Score:",
@@ -347,7 +376,7 @@ def format_today_pulse_card(
         "Вероятность:",
         format_probability(market.yes_probability, language),
         "",
-        "Баланс YES / NO:",
+        _outcome_balance_heading(market, language=language, delta=item.delta),
         *_side_lines(market, language=language, delta=item.delta),
         "",
         "Pulse Score:",
@@ -490,7 +519,7 @@ def format_beginner_explanation(
             "",
             f"Current probability: {format_probability(market.yes_probability, language)}",
             "",
-            "YES / NO balance:",
+            _outcome_balance_heading(market, language=language, delta=movement_delta),
             *_side_lines(market, language=language, delta=movement_delta),
             "",
             "Market indicators:",
@@ -516,7 +545,7 @@ def format_beginner_explanation(
         "",
         f"Текущая вероятность: {format_probability(market.yes_probability)}",
         "",
-        "Баланс YES / NO:",
+        _outcome_balance_heading(market, language=language, delta=movement_delta),
         *_side_lines(market, language=language, delta=movement_delta),
         "",
         "Индикаторы рынка:",

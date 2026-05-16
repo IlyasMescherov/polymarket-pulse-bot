@@ -181,6 +181,7 @@ PulseMarket AI now has an optional reasoning layer on top of ranking and filteri
 - Market Memory: [docs/MARKET_MEMORY.md](docs/MARKET_MEMORY.md)
 - Market Regimes: [docs/MARKET_REGIMES.md](docs/MARKET_REGIMES.md)
 - YES / NO Side Analysis: [docs/YES_NO_SIDE_ANALYSIS.md](docs/YES_NO_SIDE_ANALYSIS.md)
+- Outcome Display Logic: [docs/OUTCOME_DISPLAY_LOGIC.md](docs/OUTCOME_DISPLAY_LOGIC.md)
 - AI Market Briefing: [docs/AI_MARKET_BRIEFING.md](docs/AI_MARKET_BRIEFING.md)
 - Event Category System: [docs/EVENT_CATEGORY_SYSTEM.md](docs/EVENT_CATEGORY_SYSTEM.md)
 - Mini App Today tab includes Today’s Narrative and category-aware briefing copy.
@@ -188,7 +189,7 @@ PulseMarket AI now has an optional reasoning layer on top of ranking and filteri
 - Mini App category selector filters Today, Radar, and search suggestions.
 - Search API returns a short context summary.
 - All AI behavior has deterministic fallback when `OPENAI_API_KEY` is missing.
-- Market cards and APIs include YES / NO balance, dominant side, side confidence, and side verdict.
+- Market cards and APIs include real outcome labels for YES / NO, team-vs-team, moneyline, and custom markets.
 
 Telegram requires HTTPS for a real Mini App URL in BotFather. The current HTTP route is a browser preview until a domain and HTTPS are configured.
 

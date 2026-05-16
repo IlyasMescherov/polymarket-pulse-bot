@@ -30,8 +30,31 @@ def _title(text: str, limit: int = 100) -> str:
     return normalized[: limit - 1].rstrip() + "…"
 
 
-def _side_percent(value: int | None) -> str:
-    return "n/a" if value is None else f"{value}%"
+def _side_percent(value: float | int | None) -> str:
+    if value is None:
+        return "n/a"
+    number = float(value)
+    if 0 < number < 1:
+        return "<1%"
+    return f"{number:.0f}%" if number.is_integer() else f"{number:.1f}%"
+
+
+def _outcome_summary_line(side: object, *, compact: bool = False) -> str:
+    should_use_yes_no = bool(getattr(side, "should_use_yes_no", True))
+    if should_use_yes_no:
+        return f"YES / NO: {_side_percent(side.yes_probability)} / {_side_percent(side.no_probability)}"
+    outcomes = list(getattr(side, "display_outcomes", []) or [])
+    if not outcomes:
+        return "Outcome data unavailable"
+    visible = outcomes[:2] if compact else outcomes[:3]
+    parts = [
+        f"{outcome.get('short_label') or outcome.get('label')} {_side_percent(outcome.get('probability'))}"
+        for outcome in visible
+    ]
+    remaining = len(outcomes) - len(visible)
+    if remaining > 0:
+        parts.append(f"+{remaining} more")
+    return "Outcomes: " + " / ".join(parts)
 
 
 def format_today_pulse_channel_post(
@@ -53,8 +76,8 @@ def format_today_pulse_channel_post(
             [
                 f"{index}. {_title(item.market.question)}",
                 f"Probability: {format_probability(item.market.yes_probability, 'en')}",
-                f"YES / NO: {_side_percent(side.yes_probability)} / {_side_percent(side.no_probability)}",
-                f"Market leans: {side.dominant_side}",
+                _outcome_summary_line(side),
+                side.outcome_balance_summary,
                 f"Pulse Score: {item.pulse_score.value}/100",
                 f"Side read: {side.side_verdict}",
                 f"Why people care: {item.why_it_matters}",
@@ -101,7 +124,7 @@ def format_smart_money_channel_post(
             [
                 f"{index}. {_title(activity.market_title)}",
                 f"Public activity: {format_compact_usd(activity.amount_usd, 'en')}",
-                f"YES / NO: {_side_percent(side.yes_probability)} / {_side_percent(side.no_probability)}",
+                _outcome_summary_line(side),
                 f"Side read: {side.side_verdict}",
                 "Why people care: This market stands out in the attention layer.",
                 "",
@@ -133,8 +156,7 @@ def format_x_today_pulse_draft(
             side = analyze_market_side(item.market, language="en")
             lines.append(
                 f"{index}) {_title(item.market.question, 54)} · "
-                f"YES {_side_percent(side.yes_probability)} / "
-                f"NO {_side_percent(side.no_probability)}"
+                f"{_outcome_summary_line(side, compact=True).replace('Outcomes: ', '')}"
             )
         lines.extend(
             [
@@ -153,8 +175,7 @@ def format_x_today_pulse_draft(
     fallback = (
         "📰 Today’s Pulse\n\n"
         f"{_title(item.market.question, 72)} · "
-        f"YES {_side_percent(side.yes_probability)} / "
-        f"NO {_side_percent(side.no_probability)}\n"
+        f"{_outcome_summary_line(side, compact=True).replace('Outcomes: ', '')}\n"
         f"{side.side_verdict}\n\n"
         "Research only. No trading. No financial advice.\n\n"
         f"{bot_handle}"

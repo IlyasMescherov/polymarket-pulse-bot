@@ -50,6 +50,7 @@ Builder submission package:
 - Market Memory: [docs/MARKET_MEMORY.md](docs/MARKET_MEMORY.md)
 - Market Regimes: [docs/MARKET_REGIMES.md](docs/MARKET_REGIMES.md)
 - YES / NO side analysis: [docs/YES_NO_SIDE_ANALYSIS.md](docs/YES_NO_SIDE_ANALYSIS.md)
+- Outcome display logic: [docs/OUTCOME_DISPLAY_LOGIC.md](docs/OUTCOME_DISPLAY_LOGIC.md)
 - Event category system: [docs/EVENT_CATEGORY_SYSTEM.md](docs/EVENT_CATEGORY_SYSTEM.md)
 - Static landing page: [landing/](landing/)
 - Telegram Mini App preview: [miniapp/](miniapp/)
@@ -80,7 +81,7 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - AI Market Interpretation Layer: explains what activity means, separates attention from conviction, and labels how strong the market read looks.
 - Market Memory: compares current markets with stored snapshots so PulseMarket can say whether activity is holding, cooling, or newly visible.
 - Market Regimes: labels behavior such as Quiet market, Short-term attention, Near resolution, Sustained interest, Weak confirmation, and More confident move.
-- YES / NO Side Analysis: explains how confidence is distributed between the two market sides.
+- Outcome-aware market cards: shows true YES / NO, team-vs-team, moneyline, and custom outcomes instead of forcing every market into one format.
 - Today’s Narrative: explains what public markets are reacting to today without making predictions.
 - Event categories: All, Politics, Crypto, AI, Sports, Esports, Global, and Culture help users filter the daily briefing and Activity Radar.
 - Human probability language: unlikely, possible, likely, and highly likely labels make raw percentages easier to read.

@@ -40,7 +40,7 @@ def test_today_pulse_channel_post_is_english_first_and_safe() -> None:
     assert "Polymarket markets worth watching today" in text
     assert "Why people care:" in text
     assert "YES / NO:" in text
-    assert "Market leans:" in text
+    assert "Market leans" in text
     assert "Side read:" in text
     assert "No trading. No wallets. No financial advice." in text
     assert "@PulseMarketAIBot" in text
@@ -103,6 +103,52 @@ def test_x_today_pulse_draft_is_short_and_manual_safe() -> None:
     assert "NO" in draft
     assert "No trading" in draft
     assert "No financial advice" in draft
+
+
+def test_x_today_pulse_draft_uses_real_outcomes_for_sports_market() -> None:
+    market = _market("sports", "Will Chelsea FC win on 2026-05-16?", 0.185)
+    market = Market(
+        id=market.id,
+        question=market.question,
+        slug=market.slug,
+        yes_probability=market.yes_probability,
+        volume=market.volume,
+        end_date=market.end_date,
+        url=market.url,
+        raw={
+            "events": [
+                {
+                    "title": "Chelsea FC vs. Manchester City FC",
+                    "markets": [
+                        {
+                            "groupItemTitle": "Chelsea FC",
+                            "outcomes": '["Yes","No"]',
+                            "outcomePrices": '["0.185","0.815"]',
+                        },
+                        {
+                            "groupItemTitle": "Draw",
+                            "outcomes": '["Yes","No"]',
+                            "outcomePrices": '["0.345","0.655"]',
+                        },
+                        {
+                            "groupItemTitle": "Manchester City FC",
+                            "outcomes": '["Yes","No"]',
+                            "outcomePrices": '["0.475","0.525"]',
+                        },
+                    ],
+                }
+            ]
+        },
+    )
+    items = build_today_pulse_items([market], limit=1, language="en")
+
+    draft = format_x_today_pulse_draft(items)
+
+    assert draft is not None
+    assert len(draft) <= 280
+    assert "Chelsea FC 18.5%" in draft
+    assert "Draw 34.5%" in draft
+    assert "YES / NO" not in draft
 
 
 def test_content_hash_is_stable_for_same_text() -> None:

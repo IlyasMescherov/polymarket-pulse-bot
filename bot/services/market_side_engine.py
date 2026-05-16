@@ -4,6 +4,7 @@ import json
 from dataclasses import dataclass
 from typing import Any, Mapping
 
+from bot.services.outcome_normalizer import NormalizedOutcomes, normalize_market_outcomes
 from bot.utils.i18n import normalize_language
 
 
@@ -22,6 +23,15 @@ class MarketSideAnalysis:
     opposite_interest: str
     side_verdict: str
     side_risk_note: str
+    outcome_type: str
+    display_outcomes: list[dict[str, Any]]
+    dominant_outcome_label: str | None
+    dominant_outcome_probability: float | None
+    runner_up_label: str | None
+    runner_up_probability: float | None
+    outcome_spread: float | None
+    outcome_balance_summary: str
+    should_use_yes_no: bool
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -38,6 +48,15 @@ class MarketSideAnalysis:
             "opposite_interest": self.opposite_interest,
             "side_verdict": self.side_verdict,
             "side_risk_note": self.side_risk_note,
+            "outcome_type": self.outcome_type,
+            "display_outcomes": self.display_outcomes,
+            "dominant_outcome_label": self.dominant_outcome_label,
+            "dominant_outcome_probability": self.dominant_outcome_probability,
+            "runner_up_label": self.runner_up_label,
+            "runner_up_probability": self.runner_up_probability,
+            "outcome_spread": self.outcome_spread,
+            "outcome_balance_summary": self.outcome_balance_summary,
+            "should_use_yes_no": self.should_use_yes_no,
         }
 
 
@@ -48,9 +67,19 @@ def analyze_market_side(
     confirmation_level: str | None = None,
     language: str | None = "en",
 ) -> MarketSideAnalysis:
-    """Interpret the YES / NO balance without recommending an action."""
+    """Interpret the visible outcome balance without recommending an action."""
 
     lang = normalize_language(language)
+    normalized_outcomes = normalize_market_outcomes(market, language=lang)
+    if not normalized_outcomes.should_use_yes_no:
+        return _custom_outcome_result(
+            market,
+            normalized_outcomes,
+            delta=delta,
+            confirmation_level=confirmation_level,
+            lang=lang,
+        )
+
     yes_price, no_price, has_price_data = _extract_yes_no_prices(market)
     yes_probability = _price_to_percent(yes_price)
     no_probability = _price_to_percent(no_price)
@@ -124,6 +153,15 @@ def analyze_market_side(
         opposite_interest=opposite_interest,
         side_verdict=side_verdict,
         side_risk_note=side_risk_note,
+        outcome_type=normalized_outcomes.outcome_type,
+        display_outcomes=list(normalized_outcomes.display_outcomes),
+        dominant_outcome_label=normalized_outcomes.dominant_outcome_label,
+        dominant_outcome_probability=normalized_outcomes.dominant_outcome_probability,
+        runner_up_label=normalized_outcomes.runner_up_label,
+        runner_up_probability=normalized_outcomes.runner_up_probability,
+        outcome_spread=normalized_outcomes.outcome_spread,
+        outcome_balance_summary=normalized_outcomes.outcome_balance_summary,
+        should_use_yes_no=True,
     )
 
 
@@ -460,6 +498,197 @@ def _side_risk_note(
     )
 
 
+def _custom_outcome_result(
+    source: Mapping[str, Any] | Any,
+    outcomes: NormalizedOutcomes,
+    *,
+    delta: float | None,
+    confirmation_level: str | None,
+    lang: str,
+) -> MarketSideAnalysis:
+    volume = _volume(source)
+    movement = abs(_movement(delta, source))
+    confirmation_key = _confirmation_key(confirmation_level)
+    dominant = outcomes.dominant_outcome_label
+    runner = outcomes.runner_up_label
+    spread = outcomes.outcome_spread
+    if dominant is None:
+        return _unknown_result(lang)
+
+    side_confidence = _custom_confidence(volume, movement, confirmation_key, spread)
+    side_balance = outcomes.outcome_balance_summary
+    side_tension = _custom_tension(
+        dominant=dominant,
+        runner=runner,
+        spread=spread,
+        volume=volume,
+        movement=movement,
+        outcome_type=outcomes.outcome_type,
+        lang=lang,
+    )
+    side_verdict = _custom_verdict(
+        dominant=dominant,
+        runner=runner,
+        spread=spread,
+        side_confidence=side_confidence,
+        outcome_type=outcomes.outcome_type,
+        lang=lang,
+    )
+    side_risk_note = _custom_risk_note(
+        volume=volume,
+        side_confidence=side_confidence,
+        outcome_type=outcomes.outcome_type,
+        lang=lang,
+    )
+
+    return MarketSideAnalysis(
+        side_summary=side_verdict,
+        dominant_side="CUSTOM" if outcomes.outcome_type == "binary_custom" else "MULTI",
+        opposite_side="UNKNOWN",
+        yes_probability=None,
+        no_probability=None,
+        yes_price=None,
+        no_price=None,
+        side_balance=side_balance,
+        side_tension=side_tension,
+        side_confidence=side_confidence,
+        opposite_interest="medium" if spread is not None and spread <= 10 else "low",
+        side_verdict=side_verdict,
+        side_risk_note=side_risk_note,
+        outcome_type=outcomes.outcome_type,
+        display_outcomes=list(outcomes.display_outcomes),
+        dominant_outcome_label=outcomes.dominant_outcome_label,
+        dominant_outcome_probability=outcomes.dominant_outcome_probability,
+        runner_up_label=outcomes.runner_up_label,
+        runner_up_probability=outcomes.runner_up_probability,
+        outcome_spread=outcomes.outcome_spread,
+        outcome_balance_summary=outcomes.outcome_balance_summary,
+        should_use_yes_no=False,
+    )
+
+
+def _custom_confidence(
+    volume: float,
+    movement: float,
+    confirmation_key: str,
+    spread: float | None,
+) -> str:
+    if volume < 25_000:
+        return "low"
+    if spread is not None and spread >= 25 and volume >= 100_000 and confirmation_key in {"medium", "strong"}:
+        return "high"
+    if spread is not None and spread >= 10 and (volume >= 50_000 or movement >= 2):
+        return "medium"
+    return "low"
+
+
+def _custom_tension(
+    *,
+    dominant: str,
+    runner: str | None,
+    spread: float | None,
+    volume: float,
+    movement: float,
+    outcome_type: str,
+    lang: str,
+) -> str:
+    if volume < 25_000:
+        return (
+            f"{dominant} leads, but volume is limited."
+            if lang == "en"
+            else f"{dominant} лидирует, но объём низкий."
+        )
+    if spread is not None and spread <= 8 and runner:
+        return (
+            f"{dominant} is ahead, but {runner} remains close."
+            if lang == "en"
+            else f"{dominant} впереди, но {runner} остаётся рядом."
+        )
+    if outcome_type == "sports_moneyline" and runner:
+        return (
+            f"{dominant} leads the market, with {runner} as the next scenario."
+            if lang == "en"
+            else f"{dominant} лидирует, {runner} остаётся вторым сценарием."
+        )
+    if movement >= 3:
+        return (
+            f"{dominant} leads while the market is moving."
+            if lang == "en"
+            else f"{dominant} лидирует на фоне движения рынка."
+        )
+    return (
+        f"The market is leaning toward {dominant}."
+        if lang == "en"
+        else f"Рынок склоняется к {dominant}."
+    )
+
+
+def _custom_verdict(
+    *,
+    dominant: str,
+    runner: str | None,
+    spread: float | None,
+    side_confidence: str,
+    outcome_type: str,
+    lang: str,
+) -> str:
+    if spread is not None and spread <= 8 and runner:
+        return (
+            f"{dominant} leads narrowly; {runner} is still close."
+            if lang == "en"
+            else f"{dominant} лидирует с небольшим отрывом; {runner} близко."
+        )
+    if side_confidence == "high":
+        return (
+            f"The market leans strongly toward {dominant}."
+            if lang == "en"
+            else f"Рынок заметно склоняется к {dominant}."
+        )
+    if outcome_type == "multi_outcome" and runner:
+        return (
+            f"{dominant} is the leading outcome, with {runner} next."
+            if lang == "en"
+            else f"{dominant} выглядит главным вариантом, {runner} следующий."
+        )
+    return (
+        f"Market leans {dominant}, but the read still needs context."
+        if lang == "en"
+        else f"Рынок склоняется к {dominant}, но картину всё ещё нужно проверять."
+    )
+
+
+def _custom_risk_note(
+    *,
+    volume: float,
+    side_confidence: str,
+    outcome_type: str,
+    lang: str,
+) -> str:
+    if volume < 25_000:
+        return (
+            "Limited volume makes the outcome read less stable."
+            if lang == "en"
+            else "Низкий объём делает баланс вариантов менее устойчивым."
+        )
+    if outcome_type == "sports_moneyline":
+        return (
+            "Match timing and official rules matter for this market."
+            if lang == "en"
+            else "Для этого рынка важны время матча и официальные правила."
+        )
+    if side_confidence == "high":
+        return (
+            "The leading outcome is supported by clearer market data."
+            if lang == "en"
+            else "Ведущий вариант поддержан более ясными рыночными данными."
+        )
+    return (
+        "Outcome balance is useful, but context still matters."
+        if lang == "en"
+        else "Баланс вариантов полезен, но контекст всё ещё важен."
+    )
+
+
 def _unknown_result(lang: str) -> MarketSideAnalysis:
     text = "Not enough side data yet." if lang == "en" else "Данных по сторонам пока мало."
     return MarketSideAnalysis(
@@ -476,4 +705,13 @@ def _unknown_result(lang: str) -> MarketSideAnalysis:
         opposite_interest="unknown",
         side_verdict=text,
         side_risk_note=text,
+        outcome_type="unknown",
+        display_outcomes=[],
+        dominant_outcome_label=None,
+        dominant_outcome_probability=None,
+        runner_up_label=None,
+        runner_up_probability=None,
+        outcome_spread=None,
+        outcome_balance_summary=text,
+        should_use_yes_no=False,
     )

@@ -124,12 +124,18 @@ class PolymarketClient:
             timeout=httpx.Timeout(timeout),
             headers={"User-Agent": "PulseMarketBot/0.1"},
         )
+        self._event_cache: dict[str, list[Mapping[str, Any]]] = {}
 
     async def close(self) -> None:
         if self._owns_client:
             await self._client.aclose()
 
-    async def _get_markets(self, params: Mapping[str, Any]) -> list[Market]:
+    async def _get_markets(
+        self,
+        params: Mapping[str, Any],
+        *,
+        enrich_outcomes: bool = True,
+    ) -> list[Market]:
         try:
             response = await self._client.get("/markets", params=params)
             response.raise_for_status()
@@ -142,6 +148,8 @@ class PolymarketClient:
             return []
 
         markets = [market for item in payload if (market := parse_market(item))]
+        if enrich_outcomes:
+            markets = await self._enrich_grouped_outcomes(markets)
         return markets
 
     async def _get_payload(self, path: str, params: Mapping[str, Any] | None = None) -> Any:
@@ -210,7 +218,7 @@ class PolymarketClient:
                 continue
             markets = self._markets_from_payload(payload)
             if markets:
-                return markets[:limit]
+                return (await self._enrich_grouped_outcomes(markets[:limit]))[:limit]
         return []
 
     async def get_tags(self) -> list[Mapping[str, Any]]:
@@ -244,7 +252,7 @@ class PolymarketClient:
             payload = None
         markets = self._markets_from_payload(payload) if payload is not None else []
         if markets:
-            return markets[:limit]
+            return (await self._enrich_grouped_outcomes(markets[:limit]))[:limit]
         return await self._get_markets(
             {
                 "limit": limit,
@@ -303,6 +311,95 @@ class PolymarketClient:
                 "closed": "false",
                 "order": "volume24hr",
                 "ascending": "false",
-            }
+            },
+            enrich_outcomes=False,
         )
         return [market for market in markets if market.yes_probability is not None]
+
+    async def _enrich_grouped_outcomes(self, markets: list[Market], max_events: int = 8) -> list[Market]:
+        """Attach event sibling markets when Gamma exposes grouped outcome events."""
+
+        event_slugs: list[str] = []
+        for market in markets:
+            slug = _event_slug(market.raw)
+            if slug and slug not in event_slugs:
+                event_slugs.append(slug)
+            if len(event_slugs) >= max_events:
+                break
+
+        if not event_slugs:
+            return markets
+
+        for slug in event_slugs:
+            if slug not in self._event_cache:
+                self._event_cache[slug] = await self._fetch_event_markets(slug)
+
+        enriched: list[Market] = []
+        for market in markets:
+            slug = _event_slug(market.raw)
+            event_markets = self._event_cache.get(slug or "", [])
+            if not event_markets:
+                enriched.append(market)
+                continue
+            raw = dict(market.raw)
+            raw["eventSlug"] = slug
+            raw["eventTitle"] = _event_title(raw)
+            raw["eventMarkets"] = list(event_markets)
+            enriched.append(
+                Market(
+                    id=market.id,
+                    question=market.question,
+                    slug=market.slug,
+                    yes_probability=market.yes_probability,
+                    volume=market.volume,
+                    end_date=market.end_date,
+                    url=market.url,
+                    raw=raw,
+                )
+            )
+        return enriched
+
+    async def _fetch_event_markets(self, slug: str) -> list[Mapping[str, Any]]:
+        try:
+            payload = await self._get_payload("/events", {"slug": slug, "limit": 1})
+        except (httpx.HTTPError, ValueError):
+            logger.debug("Could not load Gamma event markets for slug=%s", slug)
+            return []
+
+        event: Mapping[str, Any] | None = None
+        if isinstance(payload, list) and payload and isinstance(payload[0], Mapping):
+            event = payload[0]
+        elif isinstance(payload, Mapping):
+            event = payload
+        if event is None:
+            return []
+        markets = event.get("markets")
+        if not isinstance(markets, list):
+            return []
+        return [market for market in markets if isinstance(market, Mapping)]
+
+
+def _event_slug(raw: Mapping[str, Any]) -> str | None:
+    direct = str(raw.get("eventSlug") or "").strip()
+    if direct:
+        return direct
+    events = raw.get("events")
+    if isinstance(events, list) and events:
+        first = events[0]
+        if isinstance(first, Mapping):
+            slug = str(first.get("slug") or "").strip()
+            return slug or None
+    return None
+
+
+def _event_title(raw: Mapping[str, Any]) -> str | None:
+    direct = str(raw.get("eventTitle") or "").strip()
+    if direct:
+        return direct
+    events = raw.get("events")
+    if isinstance(events, list) and events:
+        first = events[0]
+        if isinstance(first, Mapping):
+            title = str(first.get("title") or "").strip()
+            return title or None
+    return None

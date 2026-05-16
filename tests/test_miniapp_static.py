@@ -113,6 +113,8 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "unified-market-card--list",
         "unified-market-card--compact",
         "market-side-buttons",
+        "outcome-buttons",
+        "outcome-duel",
         "yes-no-duel",
         "yes-no-duel__split",
         "yes-no-duel__track",
@@ -210,6 +212,9 @@ def test_miniapp_settings_language_theme_and_saved_features_exist() -> None:
     assert "renderMarketScorecard" in script_text
     assert "renderYesNoStrip" in script_text
     assert "renderYesNoDuel" in script_text
+    assert "outcomeList" in script_text
+    assert "shouldUseYesNo" in script_text
+    assert "outcomeBalanceLabel" in script_text
     assert "renderMarketCard" in script_text
     assert "getMarketVisual" in script_text
     assert "sortByRealHeat" in script_text
@@ -231,6 +236,9 @@ def test_unified_market_card_system_exists() -> None:
     assert "getMarketVisual" in script_text
     assert "sortByRealHeat" in script_text
     assert "marketHeatScore" in script_text
+    assert "outcomeList" in script_text
+    assert "visibleOutcomeList" in script_text
+    assert "outcomeBarSegments" in script_text
     assert "unified-market-card--hero" in styles_text
     assert "unified-market-card--list" in styles_text
     assert "unified-market-card--compact" in styles_text
@@ -238,7 +246,23 @@ def test_unified_market_card_system_exists() -> None:
     assert "yes-no-duel__side--no" in styles_text
     assert "mini-side-bar__yes" in styles_text
     assert "mini-side-bar__no" in styles_text
+    assert "mini-side-bar__runner" in styles_text
+    assert "outcome-button--runner" in styles_text
     assert "green" not in "yes-no-duel__side--no"
+
+
+def test_miniapp_supports_real_outcome_display_without_forced_yes_no() -> None:
+    root = Path(__file__).resolve().parents[1]
+    script_text = (root / "miniapp" / "app.js").read_text()
+
+    assert "should_use_yes_no" in script_text
+    assert "outcome_type" in script_text
+    assert "display_outcomes" in script_text
+    assert "dominant_outcome_label" in script_text
+    assert "outcome_balance_summary" in script_text
+    assert "Market outcomes" in script_text
+    assert "Баланс вариантов" in script_text
+    assert "outcome.short_label || outcome.label" in script_text
 
 
 def test_miniapp_removes_raw_technical_indicator_labels() -> None:

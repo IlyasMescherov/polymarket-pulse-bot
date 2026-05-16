@@ -547,9 +547,22 @@ def generate_market_briefing(
                 ),
                 what_this_means,
             )
-        side_check = "YES / NO balance" if normalized == "en" else "баланс YES / NO"
-        if side_check not in checks:
-            checks = [side_check, *checks][:4]
+        else:
+            what_this_means = _safe(
+                f"{side.outcome_balance_summary}. {side.side_risk_note}",
+                what_this_means,
+            )
+        balance_check = (
+            "YES / NO balance"
+            if side.should_use_yes_no and normalized == "en"
+            else "баланс YES / NO"
+            if side.should_use_yes_no
+            else "outcome balance"
+            if normalized == "en"
+            else "баланс вариантов"
+        )
+        if balance_check not in checks:
+            checks = [balance_check, *checks][:4]
     return {
         "quick_take": quick_take,
         "what_happened": what_happened,

@@ -705,16 +705,28 @@ button {
 }
 
 .side-split-bar__yes,
-.side-split-bar__no {
+.side-split-bar__no,
+.side-split-bar__runner,
+.side-split-bar__neutral,
+.side-split-bar__field {
   min-width: 2px;
 }
 
 .side-split-bar__yes {
-  background: linear-gradient(90deg, #6aa0ff, #7fb7ff);
+  background: linear-gradient(90deg, #20f199, #65f5b2);
 }
 
 .side-split-bar__no {
-  background: linear-gradient(90deg, rgba(123, 214, 164, 0.42), rgba(123, 214, 164, 0.72));
+  background: linear-gradient(90deg, #ff465c, #ff6676);
+}
+
+.side-split-bar__runner {
+  background: linear-gradient(90deg, #638cff, #80a8ff);
+}
+
+.side-split-bar__neutral,
+.side-split-bar__field {
+  background: linear-gradient(90deg, rgba(178, 190, 204, 0.62), rgba(178, 190, 204, 0.36));
 }
 
 .side-read {
@@ -738,6 +750,10 @@ button {
   border: 1px solid rgba(148, 179, 209, 0.13);
   border-radius: 15px;
   background: rgba(255, 255, 255, 0.03);
+}
+
+.outcome-duel__split {
+  grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
 }
 
 .yes-no-duel--large .yes-no-duel__split {
@@ -785,6 +801,21 @@ button {
     linear-gradient(135deg, rgba(102, 31, 43, 0.72), rgba(187, 43, 57, 0.58));
 }
 
+.yes-no-duel__side--runner {
+  color: #a8bdff;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(99, 140, 255, 0.22), transparent 9rem),
+    linear-gradient(135deg, rgba(39, 61, 126, 0.55), rgba(24, 37, 76, 0.62));
+}
+
+.yes-no-duel__side--neutral,
+.yes-no-duel__side--field {
+  color: var(--text-soft);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.08), transparent 9rem),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.028));
+}
+
 .yes-no-duel__track,
 .mini-side-bar {
   display: flex;
@@ -804,6 +835,20 @@ button {
 .mini-side-bar__no {
   min-width: 3px;
   background: linear-gradient(90deg, #ff465c, #ff6676);
+}
+
+.yes-no-duel__track-runner,
+.mini-side-bar__runner {
+  min-width: 3px;
+  background: linear-gradient(90deg, #638cff, #80a8ff);
+}
+
+.yes-no-duel__track-neutral,
+.yes-no-duel__track-field,
+.mini-side-bar__neutral,
+.mini-side-bar__field {
+  min-width: 3px;
+  background: linear-gradient(90deg, rgba(178, 190, 204, 0.62), rgba(178, 190, 204, 0.36));
 }
 
 .hero-insight-row {
@@ -1394,6 +1439,44 @@ button {
 
 .market-side-buttons span:nth-child(2) {
   background: rgba(255, 75, 93, 0.1);
+}
+
+.outcome-buttons--stack {
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+
+.outcome-buttons--stack .outcome-button {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  text-align: left;
+}
+
+.market-side-buttons .outcome-button--yes,
+.market-side-buttons .outcome-button--dominant {
+  background: rgba(32, 241, 153, 0.08);
+}
+
+.market-side-buttons .outcome-button--no {
+  background: rgba(255, 75, 93, 0.1);
+}
+
+.market-side-buttons .outcome-button--runner {
+  background: rgba(99, 140, 255, 0.1);
+}
+
+.market-side-buttons .outcome-button--neutral,
+.market-side-buttons .outcome-button--field {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.market-side-buttons .outcome-button--runner em {
+  color: #87a9ff;
+}
+
+.market-side-buttons .outcome-button--neutral em,
+.market-side-buttons .outcome-button--field em {
+  color: var(--muted);
 }
 
 .unified-market-card__read {

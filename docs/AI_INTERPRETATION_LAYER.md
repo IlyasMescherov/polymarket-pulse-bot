@@ -83,17 +83,18 @@ PulseMarket separates attention from conviction:
 
 This is the main interpretation advantage over raw dashboards.
 
-## YES / NO Side Balance
+## Outcome Balance
 
-Polymarket markets usually have two sides. PulseMarket now interprets whether the market leans toward YES, NO, or remains balanced.
+Polymarket markets can be binary YES / NO, team-vs-team, sports moneyline, or custom multi-outcome markets.
+PulseMarket now interprets the real visible outcomes instead of forcing every market into YES / NO.
 
-The side layer explains:
+The outcome layer explains:
 
-- current YES and NO probabilities
-- which side is dominant
-- whether side confidence is low, medium, or high
-- whether the opposite side still has visible interest
-- what the side balance means for understanding the market
+- current displayed outcome probabilities
+- which outcome leads
+- whether the runner-up remains close
+- whether the market is binary, moneyline, or multi-outcome
+- what the balance means for understanding the market
 
 This is interpretation only. It does not tell the user what to do.
 

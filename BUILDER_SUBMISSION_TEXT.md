@@ -44,7 +44,7 @@ It also includes a Telegram Mini App dashboard for Today's Pulse, Activity Radar
 - AI Context Engine
 - Market Memory
 - Market Regimes
-- YES / NO Side Analysis
+- Outcome-aware market cards for YES / NO, moneyline, and custom markets
 - Today’s Narrative
 - Event categories
 - Human probability labels
