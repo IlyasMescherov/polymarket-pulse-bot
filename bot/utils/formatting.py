@@ -45,11 +45,19 @@ def _format_side_percent(value: int | None) -> str:
 
 def _side_lines(market: Market, language: str | None = None, delta: float | None = None) -> list[str]:
     side = analyze_market_side(market, delta=delta, language=language)
+    if side.dominant_side == "YES":
+        lean = _label("Рынок склоняется к YES.", "Market leans YES.", language)
+    elif side.dominant_side == "NO":
+        lean = _label("Рынок склоняется к NO.", "Market leans NO.", language)
+    elif side.dominant_side == "BALANCED":
+        lean = _label("Стороны почти равны.", "Both sides are close.", language)
+    else:
+        lean = _label("Данных по сторонам пока мало.", "Not enough side data yet.", language)
     return [
         f"YES: {_format_side_percent(side.yes_probability)}",
         f"NO: {_format_side_percent(side.no_probability)}",
-        f"{_label('Рынок склоняется', 'Market leans', language)}: {side.dominant_side}",
-        f"{_label('Баланс сторон', 'Side read', language)}: {side.side_verdict}",
+        lean,
+        f"{_label('Короткий вывод', 'Quick read', language)}: {side.side_verdict}",
     ]
 
 
@@ -141,14 +149,7 @@ def format_market_card(
         _label("До завершения:", "Time left:", language),
         format_time_until(market.end_date, language=language),
         "",
-        _label("Индикаторы:", "Indicators:", language),
-        f"{_label('Температура', 'Market heat', language)}: {indicators.market_heat}",
-        f"{_label('Подтверждение', 'Confirmation', language)}: {indicators.confirmation_level}",
-        f"{_label('Риск ошибки', 'Error risk', language)}: {indicators.error_risk}",
-        f"{_label('Давление времени', 'Time pressure', language)}: {indicators.time_pressure}",
-        f"{_label('Объём', 'Market depth', language)}: {indicators.market_depth}",
-        "",
-        _label("Вывод:", "Verdict:", language),
+        _label("Короткий вывод:", "Quick read:", language),
         indicators.indicator_summary,
     ]
     mood = calculate_market_mood(market, delta=movement_delta, language=language)
@@ -259,12 +260,7 @@ def format_movement_card(
         _label("Баланс YES / NO:", "YES / NO balance:", language),
         *_side_lines(movement.market, language=language, delta=movement.delta),
         "",
-        _label("Индикаторы:", "Indicators:", language),
-        f"{_label('Температура', 'Market heat', language)}: {indicators.market_heat}",
-        f"{_label('Подтверждение', 'Confirmation', language)}: {indicators.confirmation_level}",
-        f"{_label('Риск ошибки', 'Error risk', language)}: {indicators.error_risk}",
-        "",
-        _label("Вывод:", "Verdict:", language),
+        _label("Короткий вывод:", "Quick read:", language),
         indicators.indicator_summary,
     ]
     if pulse_score is not None:

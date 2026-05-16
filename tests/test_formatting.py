@@ -47,15 +47,11 @@ def test_market_card_contains_core_fields() -> None:
     assert "63%" in card
     assert "YES:" in card
     assert "NO:" in card
-    assert "Рынок склоняется:" in card
+    assert "Рынок склоняется к" in card
     assert "$120K" in card
     assert "До завершения:" in card
     assert "Настроение рынка:" in card
-    assert "Индикаторы:" in card
-    assert "Температура:" in card
-    assert "Подтверждение:" in card
-    assert "Риск ошибки:" in card
-    assert "Вывод:" in card
+    assert "Короткий вывод:" in card
 
 
 def test_market_card_supports_english_demo_labels() -> None:
@@ -77,13 +73,10 @@ def test_market_card_supports_english_demo_labels() -> None:
     assert "Title:" in card
     assert "Probability:" in card
     assert "YES / NO balance:" in card
-    assert "Market leans:" in card
+    assert "Market leans" in card
     assert "Time left:" in card
     assert "Market Mood:" in card
-    assert "Indicators:" in card
-    assert "Market heat:" in card
-    assert "Confirmation:" in card
-    assert "Error risk:" in card
+    assert "Quick read:" in card
     assert "Market indicators:" in beginner
     assert "YES / NO balance:" in beginner
     assert "🧠 Analysis" in beginner

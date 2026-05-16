@@ -35,16 +35,15 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "What this means",
         "Attention vs conviction",
         "Market memory",
-        "Market regime",
-        "Market scorecard",
+        "Market behavior",
         "YES / NO balance",
-        "Side confidence",
-        "Market heat",
-        "Confirmation",
-        "Error risk",
-        "Time pressure",
-        "Market depth",
-        "AI verdict",
+        "Side read",
+        "Market read",
+        "Read",
+        "Caution",
+        "Timing",
+        "Volume",
+        "AI read",
         "Strength of read",
         "Activity Radar",
         "Search",
@@ -109,31 +108,22 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "pill--regime",
         "pill--heat",
         "pill--time",
-        "market-scorecard",
-        "market-scorecard--duel",
-        "score-grid",
-        "score-item",
-        "score-label",
-        "score-value",
-        "yes-no-strip",
+        "unified-market-card",
+        "unified-market-card--hero",
+        "unified-market-card--list",
+        "unified-market-card--compact",
+        "market-side-buttons",
         "yes-no-duel",
         "yes-no-duel__split",
         "yes-no-duel__track",
         "market-row-list",
-        "market-row-card",
         "market-avatar",
-        "market-row-card__odds",
+        "unified-market-card__odds",
         "mini-side-bar",
         "hero-insight-row",
         "daily-brief-card__top",
         "updated-pill",
-        "side-split-bar",
-        "side-read",
-        "side-panel",
-        "indicator-panel",
         "verdict-line",
-        "probability-bar",
-        "confidence-bar",
         "today-dashboard",
         "dashboard-item",
         "pulse-subtle",
@@ -220,15 +210,53 @@ def test_miniapp_settings_language_theme_and_saved_features_exist() -> None:
     assert "renderMarketScorecard" in script_text
     assert "renderYesNoStrip" in script_text
     assert "renderYesNoDuel" in script_text
-    assert "hotMarketRow" in script_text
-    assert "marketVisual" in script_text
-    assert "renderScoreGrid" in script_text
-    assert "score-grid" in script_text
-    assert "probability-bar" in script_text
-    assert "confidence-bar" in script_text
+    assert "renderMarketCard" in script_text
+    assert "getMarketVisual" in script_text
+    assert "sortByRealHeat" in script_text
+    assert "hotMarketRow" not in script_text
     assert "todaySummaryStrip" in script_text
     assert "changed_since_last_brief" in script_text
     assert "related_topics" in script_text
+
+
+def test_unified_market_card_system_exists() -> None:
+    root = Path(__file__).resolve().parents[1]
+    script_text = (root / "miniapp" / "app.js").read_text()
+    styles_text = (root / "miniapp" / "styles.css").read_text()
+
+    assert "function renderMarketCard" in script_text
+    assert 'variant = "compact"' in script_text
+    assert 'variant === "hero"' in script_text
+    assert 'variant === "analysis"' in script_text
+    assert "getMarketVisual" in script_text
+    assert "sortByRealHeat" in script_text
+    assert "marketHeatScore" in script_text
+    assert "unified-market-card--hero" in styles_text
+    assert "unified-market-card--list" in styles_text
+    assert "unified-market-card--compact" in styles_text
+    assert "yes-no-duel__side--yes" in styles_text
+    assert "yes-no-duel__side--no" in styles_text
+    assert "mini-side-bar__yes" in styles_text
+    assert "mini-side-bar__no" in styles_text
+    assert "green" not in "yes-no-duel__side--no"
+
+
+def test_miniapp_removes_raw_technical_indicator_labels() -> None:
+    root = Path(__file__).resolve().parents[1]
+    visible_text = (root / "miniapp" / "index.html").read_text() + (root / "miniapp" / "app.js").read_text()
+
+    for phrase in (
+        "Подтверждение",
+        "Риск ошибки",
+        "Живость",
+        "Уверенность стороны",
+        "Market regime",
+        "Market scorecard",
+        "Side confidence",
+        "Error risk",
+        "Market depth",
+    ):
+        assert phrase not in visible_text
 
 
 def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
@@ -245,10 +273,11 @@ def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
     assert "no financial advice" in text
     assert "where public attention is rising" in text
     assert "market mood" in text
-    assert "market scorecard" in text
     assert "yes / no balance" in text
-    assert "confirmation" in text
-    assert "error risk" in text
+    assert "market scorecard" not in text
+    assert "error risk" not in text
+    assert "market regime" not in text
+    assert "side confidence" not in text
     assert "morning briefing" in text
     assert "what changed" in text
     assert "today’s narrative" in text

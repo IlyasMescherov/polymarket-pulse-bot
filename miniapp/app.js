@@ -207,7 +207,7 @@ const copy = {
     whatThisMeans: "What this means",
     attentionVsConviction: "Attention vs conviction",
     marketMemory: "Market memory",
-    marketRegime: "Market regime",
+    marketRegime: "Market behavior",
     howSerious: "Strength of read",
     whatInfluences: "What to check",
     confidenceLevel: "Confidence level",
@@ -218,19 +218,19 @@ const copy = {
     relatedTopics: "Related topics",
     resolutionRules: "Resolution rules",
     resolutionRulesCopy: "Open the market page and review the official resolution criteria.",
-    marketIndicators: "Market scorecard",
+    marketIndicators: "YES / NO balance",
     yesNoBalance: "YES / NO balance",
     side: "Side",
-    sideConfidence: "Side confidence",
+    sideConfidence: "Side read",
     marketLeans: "Market leans",
     sideRead: "Side read",
     marketHeat: "Market heat",
-    confirmation: "Confirmation",
-    confirmationShort: "Confirm.",
-    errorRisk: "Error risk",
-    riskShort: "Risk",
-    timePressure: "Time pressure",
-    marketDepth: "Market depth",
+    confirmation: "Read",
+    confirmationShort: "Read",
+    errorRisk: "Caution",
+    riskShort: "Caution",
+    timePressure: "Timing",
+    marketDepth: "Volume",
     depthShort: "Liveness",
     aiVerdict: "AI verdict",
     aiRead: "AI read",
@@ -239,7 +239,7 @@ const copy = {
     aiQuickTake: "AI quick take",
     hotCountLabel: "Hot markets",
     endingCountLabel: "Ending soon",
-    averageConfirmation: "Avg. confirmation",
+    averageConfirmation: "Market read",
     mainTheme: "Main theme",
     moodQuiet: "Quiet",
     moodActive: "Active",
@@ -271,7 +271,7 @@ const copy = {
     verdictNotConfident: "Not confident",
     hotMarketsCount: "hot markets",
     endingSoonCount: "ending soon",
-    weakConfirmationCount: "weak confirmation",
+    weakConfirmationCount: "limited confidence",
   },
   ru: {
     productLine: "Быстро понять, что важно на Polymarket.",
@@ -423,7 +423,7 @@ const copy = {
     whatThisMeans: "Что это значит",
     attentionVsConviction: "Внимание vs убеждённость",
     marketMemory: "Память рынка",
-    marketRegime: "Тип поведения",
+    marketRegime: "Поведение рынка",
     howSerious: "Сила вывода",
     whatInfluences: "Что проверить",
     confidenceLevel: "Уровень уверенности",
@@ -434,20 +434,20 @@ const copy = {
     relatedTopics: "Связанные темы",
     resolutionRules: "Правила разрешения",
     resolutionRulesCopy: "Открой страницу рынка и проверь официальные критерии разрешения.",
-    marketIndicators: "Скоринг рынка",
+    marketIndicators: "Баланс YES / NO",
     yesNoBalance: "Баланс YES / NO",
     side: "Сторона",
-    sideConfidence: "Уверенность стороны",
+    sideConfidence: "Чтение стороны",
     marketLeans: "Рынок склоняется",
     sideRead: "Баланс сторон",
     marketHeat: "Температура",
-    confirmation: "Подтверждение",
-    confirmationShort: "Подтвержд.",
-    errorRisk: "Риск ошибки",
-    riskShort: "Риск",
-    timePressure: "Давление времени",
+    confirmation: "Картина",
+    confirmationShort: "Картина",
+    errorRisk: "Осторожность",
+    riskShort: "Осторожно",
+    timePressure: "Срок",
     marketDepth: "Объём",
-    depthShort: "Живость",
+    depthShort: "Объём",
     aiVerdict: "AI вывод",
     aiRead: "AI вывод",
     todaySummary: "Сегодня",
@@ -455,7 +455,7 @@ const copy = {
     aiQuickTake: "AI краткий вывод",
     hotCountLabel: "Горячих рынков",
     endingCountLabel: "Скоро завершатся",
-    averageConfirmation: "Среднее подтверждение",
+    averageConfirmation: "Картина рынка",
     mainTheme: "Главная тема",
     moodQuiet: "Тихо",
     moodActive: "Активно",
@@ -477,9 +477,9 @@ const copy = {
     timeEndingSoon: "Скоро завершение",
     timeHasTime: "Есть время",
     timeLongMarket: "Долгий рынок",
-    depthLive: "Живой объём",
-    depthMedium: "Средний объём",
-    depthWeak: "Слабый объём",
+    depthLive: "Объём нормальный",
+    depthMedium: "Объём средний",
+    depthWeak: "Данных мало",
     verdictWorthWatching: "Заметен",
     verdictCaution: "Осторожно",
     verdictNotEnoughData: "Мало данных",
@@ -487,7 +487,7 @@ const copy = {
     verdictNotConfident: "Не выглядит уверенно",
     hotMarketsCount: "горячих рынка",
     endingSoonCount: "скоро завершатся",
-    weakConfirmationCount: "слабое подтверждение",
+    weakConfirmationCount: "уверенности мало",
   },
 };
 
@@ -743,6 +743,45 @@ function sideBalanceText(item) {
   return "Not enough side data";
 }
 
+function marketLeanLine(item) {
+  const side = dominantSide(item);
+  if (isRu()) {
+    if (side === "YES") return "Рынок больше верит в YES.";
+    if (side === "NO") return "Рынок больше верит в NO.";
+    if (side === "BALANCED") return "Стороны почти равны.";
+    return "Данных пока мало.";
+  }
+  if (side === "YES") return "Market leans YES.";
+  if (side === "NO") return "Market leans NO.";
+  if (side === "BALANCED") return "Both sides are close.";
+  return "Not enough data yet.";
+}
+
+function timingLine(item) {
+  const key = String((item && item.time_pressure_key) || "");
+  if (key === "ending_soon") return isRu() ? "До завершения мало времени." : "Close to resolution.";
+  if (key === "has_time") return isRu() ? "Есть время." : "Time remains.";
+  return isRu() ? "Долгий рынок." : "Longer market.";
+}
+
+function humanRead(item) {
+  const direct = localizedText(item && item.side_verdict, "");
+  if (direct && !isGenericReason(direct)) return direct;
+  const summary = localizedText(item && item.indicator_summary, "");
+  if (summary && !isGenericReason(summary)) return summary;
+  const side = marketLeanLine(item);
+  if (isRu()) {
+    if (String((item && item.confirmation_level_key) || "") === "weak") {
+      return `${side} Интерес есть, но уверенности мало.`;
+    }
+    return side;
+  }
+  if (String((item && item.confirmation_level_key) || "") === "weak") {
+    return `${side} Interest is there, confidence is limited.`;
+  }
+  return side;
+}
+
 function yesNoValues(item) {
   const yes = item && item.yes_probability !== undefined && item.yes_probability !== null
     ? Number(item.yes_probability)
@@ -755,20 +794,60 @@ function yesNoValues(item) {
   return { yes: safeYes, no: safeNo };
 }
 
-function marketVisual(item) {
+function marketHeatScore(item) {
+  const pulse = Number((item && item.pulse_score) || 0);
+  const volume = Math.log10(Math.max(1, Number((item && (item.volume || item.public_activity)) || 0))) * 7;
+  const movement = Math.min(30, Math.abs(Number((item && item.movement) || 0)) * 1.8);
+  const regime = String((item && item.market_regime_key) || "");
+  const heat = String((item && item.market_heat_key) || "");
+  const timing = String((item && item.time_pressure_key) || "");
+  return (
+    pulse +
+    volume +
+    movement +
+    (heat === "hot" ? 24 : heat === "warm" ? 12 : 0) +
+    (regime === "near_resolution" || timing === "ending_soon" ? 10 : 0)
+  );
+}
+
+function sortByRealHeat(items) {
+  return [...(Array.isArray(items) ? items : [])].sort((left, right) => marketHeatScore(right) - marketHeatScore(left));
+}
+
+function getMarketVisual(item) {
   const title = String((item && item.title) || "").toLowerCase();
   const category = categoryForItem(item || {});
-  if (/israel|syria|gaza|netanyahu|jerusalem|idf/.test(title)) return "🇮🇱";
-  if (/iran|trump|usa|u\\.s\\.|america|white house|congress|biden/.test(title)) return "🇺🇸";
-  if (/china|xi|beijing/.test(title)) return "🇨🇳";
-  if (/bitcoin|btc/.test(title)) return "₿";
-  if (/ethereum|eth/.test(title)) return "Ξ";
-  if (/ai|openai|nvidia|google|meta|apple/.test(title)) return "🧠";
-  if (category === "sports") return "🏟";
-  if (category === "esports") return "🎮";
-  if (category === "politics" || category === "global") return "🏛";
-  if (category === "crypto") return "₿";
-  return "P";
+  if (/israel|syria|gaza|netanyahu|jerusalem|idf/.test(title)) {
+    return { icon: "🇮🇱", emoji: "🇮🇱", label: "Israel", category };
+  }
+  if (/iran|trump|usa|u\\.s\\.|america|white house|congress|biden/.test(title)) {
+    return { icon: "🇺🇸", emoji: "🇺🇸", label: "US", category };
+  }
+  if (/china|xi|beijing/.test(title)) {
+    return { icon: "🇨🇳", emoji: "🇨🇳", label: "China", category };
+  }
+  if (/bitcoin|btc/.test(title)) {
+    return { icon: "₿", emoji: "₿", label: "Bitcoin", category };
+  }
+  if (/ethereum|eth/.test(title)) {
+    return { icon: "Ξ", emoji: "Ξ", label: "Ethereum", category };
+  }
+  if (/ai|openai|nvidia|google|meta|apple/.test(title)) {
+    return { icon: "🧠", emoji: "🧠", label: "AI", category };
+  }
+  const fallback = {
+    sports: { icon: "🏟", emoji: "🏟", label: "Sports", category },
+    esports: { icon: "🎮", emoji: "🎮", label: "Esports", category },
+    politics: { icon: "🏛", emoji: "🏛", label: "Politics", category },
+    global: { icon: "🌐", emoji: "🌐", label: "Global", category },
+    crypto: { icon: "₿", emoji: "₿", label: "Crypto", category },
+    culture: { icon: "◆", emoji: "◆", label: "Culture", category },
+  };
+  return fallback[category] || { icon: "P", emoji: "P", label: "PulseMarket", category };
+}
+
+function marketVisual(item) {
+  return getMarketVisual(item).icon;
 }
 
 function updatedTimeLabel() {
@@ -1009,14 +1088,14 @@ function insightStrength(item) {
   else if (activity >= 100000) key = "interest";
   else if (movement < 1 && activity < 100000) key = "weak";
   const en = {
-    weak: "Weak confirmation",
+    weak: "Move is weak",
     interest: "Interest is present",
     noticeable: "More noticeable than usual",
     strong: "Strong attention",
     convincing: "More convincing than usual",
   };
   const ru = {
-    weak: "Слабое подтверждение",
+    weak: "Движение слабое",
     interest: "Есть интерес",
     noticeable: "Рынок заметнее обычного",
     strong: "Сильный интерес",
@@ -1070,7 +1149,7 @@ function marketRegime(item) {
       news_reaction: "News-driven reaction",
       emotional: "Emotional reaction",
       sustained_interest: "Sustained interest",
-      weak_confirmation: "Weak confirmation",
+      weak_confirmation: "Confidence is limited",
       more_confident: "More confident move",
     },
     ru: {
@@ -1081,7 +1160,7 @@ function marketRegime(item) {
       news_reaction: "Новостная реакция",
       emotional: "Эмоциональная реакция",
       sustained_interest: "Устойчивый интерес",
-      weak_confirmation: "Слабое подтверждение",
+      weak_confirmation: "Уверенности мало",
       more_confident: "Более уверенное движение",
     },
   };
@@ -1164,13 +1243,13 @@ function indicatorSummary(item) {
   const confirmation = String((item && item.confirmation_level_key) || "weak");
   const risk = String((item && item.error_risk_key) || "medium");
   if (isRu()) {
-    if (risk === "high") return "Вывод требует осторожности: риск ошибки выше среднего.";
+    if (risk === "high") return "Нужна осторожность: данных для уверенного вывода мало.";
     if (confirmation === "strong") return "Вероятность и объём смотрятся согласованно.";
-    return "Интерес есть, но подтверждение пока ограниченное.";
+    return "Интерес есть, но уверенности мало.";
   }
-  if (risk === "high") return "The read needs caution because error risk is elevated.";
+  if (risk === "high") return "Caution is needed because data is limited.";
   if (confirmation === "strong") return "Probability and volume look aligned.";
-  return "Interest is present, but confirmation is still limited.";
+  return "Interest is there, confidence is limited.";
 }
 
 function confidenceValue(item) {
@@ -1320,6 +1399,34 @@ function dominantCategory(items) {
   return sorted[0] ? categoryLabel(sorted[0][0]) : categoryLabel("global");
 }
 
+function dominantSideAcross(items) {
+  const counts = { YES: 0, NO: 0, BALANCED: 0 };
+  for (const item of Array.isArray(items) ? items : []) {
+    const side = dominantSide(item);
+    if (counts[side] !== undefined) counts[side] += 1;
+  }
+  if (counts.YES > counts.NO && counts.YES > counts.BALANCED) return "YES";
+  if (counts.NO > counts.YES && counts.NO > counts.BALANCED) return "NO";
+  if (counts.BALANCED) return "BALANCED";
+  return "UNKNOWN";
+}
+
+function todayMarketSummary(items, fallback) {
+  const markets = Array.isArray(items) ? items : [];
+  const theme = dominantCategory(markets);
+  const side = dominantSideAcross(markets);
+  if (isRu()) {
+    if (side === "YES") return `${theme} активнее остальных тем. Большинство горячих рынков склоняются к YES.`;
+    if (side === "NO") return `${theme} активнее остальных тем. Большинство горячих рынков склоняются к NO.`;
+    if (side === "BALANCED") return `${theme} активнее остальных тем. Несколько сторон идут близко.`;
+    return fallback || `${theme} активнее остальных тем.`;
+  }
+  if (side === "YES") return `${theme} is the most active theme. Most hot markets lean YES.`;
+  if (side === "NO") return `${theme} is the most active theme. Most hot markets lean NO.`;
+  if (side === "BALANCED") return `${theme} is the most active theme. Several markets are close.`;
+  return fallback || `${theme} is the most active theme.`;
+}
+
 function averageConfirmation(items) {
   const markets = Array.isArray(items) ? items : [];
   const weights = { weak: 1, medium: 2, strong: 3 };
@@ -1348,11 +1455,6 @@ function todaySummaryStrip(items) {
         <span>${escapeHtml(t("endingCountLabel"))}</span>
         <strong>${endingCount}</strong>
       </div>
-      <div class="dashboard-item dashboard-item--confirmation">
-        <b aria-hidden="true">♢</b>
-        <span>${escapeHtml(t("averageConfirmation"))}</span>
-        <strong>${escapeHtml(averageConfirmation(markets))}</strong>
-      </div>
       <div class="dashboard-item dashboard-item--theme">
         <b aria-hidden="true">▦</b>
         <span>${escapeHtml(t("mainTheme"))}</span>
@@ -1378,7 +1480,7 @@ function moodReason(key) {
   if (isRu()) {
     return {
       quiet: "Сильного движения пока нет.",
-      active: "Интерес есть, но подтверждение пока ограниченное.",
+      active: "Интерес есть, но уверенности мало.",
       heating_up: "Тема стала заметнее, но вывод ещё нужно проверять.",
       volatile: "Вероятность заметно изменилась, поэтому рынок выделяется.",
       ending_soon: "Дедлайн близко; правила разрешения особенно важны.",
@@ -1386,7 +1488,7 @@ function moodReason(key) {
   }
   return {
     quiet: "No strong movement yet.",
-    active: "Interest is present, but confirmation is still limited.",
+    active: "Interest is there, confidence is limited.",
     heating_up: "The topic became more visible, but the read still needs review.",
     volatile: "Probability moved enough to make the market noticeable.",
     ending_soon: "The deadline is close; resolution rules matter more here.",
@@ -1506,8 +1608,8 @@ function removeSaved(id) {
 }
 
 function marketText(item) {
-  const mood = marketMood(item);
-  return `${item.title || "Polymarket market"}\n${t("probability")}: ${probability(item)}\n${t("marketMood")}: ${mood.label}\n${t("confirmation")}: ${confirmationLevel(item)}\n${t("errorRisk")}: ${errorRisk(item)}\n${t("aiVerdict")}: ${indicatorSummary(item)}\n${safeUrl(item.url)}`;
+  const { yes, no } = yesNoValues(item);
+  return `${item.title || "Polymarket market"}\nYES: ${sidePercent(yes)}\nNO: ${sidePercent(no)}\n${marketLeanLine(item)}\n${humanRead(item)}\n${safeUrl(item.url)}`;
 }
 
 async function shareText(text) {
@@ -1549,34 +1651,47 @@ function buttonRow(item) {
   `;
 }
 
-function marketCard(item, variant = "compact") {
-  const compactScorecard = variant === "hot";
-  return `
-    <article class="market-card market-card--${variant}">
-      <div class="market-card__main">
-        <div class="market-card__titleline">
-          <h3>${escapeHtml(compactTitle(item.title))}</h3>
-        </div>
-        <p>${escapeHtml(shortReason(item))}</p>
-      </div>
-      ${renderMarketScorecard(item, { compact: compactScorecard })}
-      ${buttonRow(item)}
-    </article>
-  `;
-}
-
-function hotMarketRow(item) {
-  const encoded = encodeURIComponent(JSON.stringify(normalizeMarket(item)));
+function renderMarketCard(item, variant = "compact", options = {}) {
+  const normalized = normalizeMarket(item);
+  const encoded = encodeURIComponent(JSON.stringify(normalized));
   const { yes: safeYes, no: safeNo } = yesNoValues(item);
+  const visual = getMarketVisual(item);
+  const compact = variant === "compact" || variant === "list";
+  const showActions = variant !== "list" || options.showActions;
+  const removable = Boolean(options.removable);
+  const titleLimit = variant === "hero" ? 86 : variant === "list" ? 72 : 78;
+  const cardClass = `unified-market-card unified-market-card--${variant}`;
+  if (variant === "hero" || variant === "analysis") {
+    return `
+      <div class="${cardClass}" data-explain-market="${encoded}">
+        <div class="unified-market-card__topline">
+          <span>${escapeHtml(variant === "hero" ? t("mainMarket") : t("yesNoBalance"))}</span>
+          <span class="pill pill--time">${escapeHtml(timePressure(item))}</span>
+        </div>
+        <h3>${escapeHtml(compactTitle(item.title, titleLimit))}</h3>
+        ${renderYesNoDuel(item, { large: variant === "hero" })}
+        <p class="unified-read">${escapeHtml(humanRead(item))}</p>
+        ${
+          variant === "analysis"
+            ? ""
+            : `<button class="hero-insight-row" type="button" data-explain-market="${encoded}">
+                <span>${escapeHtml(t("aiQuickTake"))}: ${escapeHtml(humanRead(item))}</span>
+                <strong aria-hidden="true">›</strong>
+              </button>`
+        }
+      </div>
+    `;
+  }
+
   return `
-    <article class="market-row-card">
-      <div class="market-avatar" aria-hidden="true">${escapeHtml(marketVisual(item))}</div>
-      <div class="market-row-card__main">
-        <h3>${escapeHtml(compactTitle(item.title, 72))}</h3>
+    <article class="${cardClass}" data-explain-market="${encoded}">
+      <div class="market-avatar" aria-hidden="true" title="${escapeHtml(visual.label)}">${escapeHtml(visual.icon)}</div>
+      <div class="unified-market-card__main">
+        <h3>${escapeHtml(compactTitle(item.title, titleLimit))}</h3>
         <span>${escapeHtml(timePressure(item))}</span>
       </div>
-      <div class="market-row-card__odds">
-        <div class="market-row-card__numbers">
+      <div class="unified-market-card__odds">
+        <div class="market-side-buttons${compact ? " market-side-buttons--compact" : ""}">
           <span><em>YES</em><strong>${escapeHtml(sidePercent(safeYes))}</strong></span>
           <span><em>NO</em><strong>${escapeHtml(sidePercent(safeNo))}</strong></span>
         </div>
@@ -1586,31 +1701,25 @@ function hotMarketRow(item) {
         </div>
       </div>
       <button class="bookmark-action" type="button" data-save-market="${encoded}" aria-label="${escapeHtml(t("save"))}">☆</button>
+      ${showActions ? `<div class="unified-market-card__read">${escapeHtml(humanRead(item))}</div>` : ""}
+      ${
+        showActions
+          ? `<div class="action-row action-row--compact">
+              <a class="primary-action" href="${escapeHtml(safeUrl(item && item.url))}" target="_blank" rel="noreferrer" data-open-market="${encoded}">${escapeHtml(t("open"))}</a>
+              ${
+                removable
+                  ? `<button type="button" class="soft-action" data-remove-market="${escapeHtml(normalized.id)}">${escapeHtml(t("remove"))}</button>`
+                  : `<button type="button" class="soft-action" data-explain-market="${encoded}">${escapeHtml(t("explain"))}</button>`
+              }
+            </div>`
+          : ""
+      }
     </article>
   `;
 }
 
 function savedCard(item, removable = false) {
-  const encoded = encodeURIComponent(JSON.stringify(item));
-  return `
-    <article class="market-card market-card--saved">
-      <div class="market-card__main">
-        <div class="market-card__titleline">
-          <h3>${escapeHtml(compactTitle(item.title))}</h3>
-        </div>
-        <p>${escapeHtml(item.why || t("selectedToday"))}</p>
-      </div>
-      ${renderMarketScorecard(item)}
-      <div class="action-row">
-        <a class="primary-action" href="${escapeHtml(safeUrl(item.url))}" target="_blank" rel="noreferrer" data-open-market="${encoded}">${escapeHtml(t("open"))}</a>
-        ${
-          removable
-            ? `<button type="button" class="soft-action" data-remove-market="${escapeHtml(item.id)}">${escapeHtml(t("remove"))}</button>`
-            : `<button type="button" class="soft-action" data-explain-market="${encoded}">${escapeHtml(t("explain"))}</button>`
-        }
-      </div>
-    </article>
-  `;
+  return renderMarketCard(item, "compact", { showActions: true, removable });
 }
 
 function normalizedSentence(value) {
@@ -1705,14 +1814,7 @@ function openExplain(item) {
 
   title.textContent = normalized.title;
   body.innerHTML = `
-    <section class="indicator-panel">
-      <div class="indicator-panel__head">
-        <span>${escapeHtml(t("marketIndicators"))}</span>
-        <strong>${escapeHtml(aiVerdict(normalized))}</strong>
-      </div>
-      ${renderMarketScorecard(normalized)}
-    </section>
-    ${renderSideAnalysisPanel(normalized)}
+    ${renderMarketCard(normalized, "analysis")}
     <div class="detail-list">
       <div>
         <span>${escapeHtml(t("whatInfluences"))}</span>
@@ -1916,7 +2018,7 @@ function renderNarrative() {
       <span class="updated-pill">${escapeHtml(t("updatedAt"))} ${escapeHtml(updatedTimeLabel())} ↻</span>
     </div>
     <h3>${escapeHtml(t("marketToday"))}</h3>
-    <p>${escapeHtml(apiInterpretation || headline)}</p>
+    <p>${escapeHtml(todayMarketSummary(visibleToday, apiInterpretation || headline))}</p>
     ${todaySummaryStrip(visibleToday)}
   `;
 }
@@ -1949,22 +2051,8 @@ function renderToday(payload) {
     return;
   }
 
-  const top = visibleToday[0];
-  const encodedTop = encodeURIComponent(JSON.stringify(normalizeMarket(top)));
-  hero.innerHTML = `
-    <div class="story-card__topline">
-      <span>${escapeHtml(t("mainMarket"))}</span>
-      <span class="pill pill--time">${escapeHtml(timePressure(top))}</span>
-    </div>
-    <h3>${escapeHtml(compactTitle(top.title, 86))}</h3>
-    ${renderMarketScorecard(top, { visual: "duel" })}
-    <button class="hero-insight-row" type="button" data-explain-market="${encodedTop}">
-      <span>${escapeHtml(t("aiQuickTake"))}: ${escapeHtml(indicatorSummary(top))}</span>
-      <strong aria-hidden="true">›</strong>
-    </button>
-  `;
-
-  secondary.innerHTML = visibleToday.slice(1, 4).map((item) => marketCard(item, "secondary")).join("");
+  hero.innerHTML = renderMarketCard(visibleToday[0], "hero");
+  secondary.innerHTML = "";
 }
 
 function renderRadar(payload) {
@@ -1986,40 +2074,13 @@ function renderRadar(payload) {
     return;
   }
 
-  const top = visibleRadar[0];
-  hero.innerHTML = `
-    <div class="story-card__topline">
-      <span>${escapeHtml(t("radarTitle"))}</span>
-      <span>${escapeHtml(compactUsd(top.public_activity))}</span>
-    </div>
-    <h3>${escapeHtml(compactTitle(top.title || "Public market activity", 82))}</h3>
-    <p>${escapeHtml(shortReason(top))}</p>
-    ${renderMarketScorecard(top, { compact: true })}
-    ${buttonRow({ ...top, pulse_score: top.pulse_score || 0, probability: top.probability })}
-  `;
+  hero.innerHTML = renderMarketCard(visibleRadar[0], "compact", { showActions: true });
 
   const rest = visibleRadar.slice(1, 5);
   if (rest.length) {
     list.innerHTML = `
       <h3 class="list-title">${escapeHtml(t("radarListTitle"))}</h3>
-      ${rest
-        .map(
-          (item) => `
-            <article class="activity-row">
-              <div>
-                <h4>${escapeHtml(item.title || "Public market activity")}</h4>
-                <p>${escapeHtml(shortReason(item))}</p>
-              </div>
-              <div class="activity-row__side">
-                <strong>${compactUsd(item.public_activity)}</strong>
-                <a href="${escapeHtml(safeUrl(item.url))}" target="_blank" rel="noreferrer" data-open-market="${encodeURIComponent(
-                  JSON.stringify(normalizeMarket(item)),
-                )}">${escapeHtml(t("open"))}</a>
-              </div>
-            </article>
-          `,
-        )
-        .join("")}
+      ${rest.map((item) => renderMarketCard(item, "list")).join("")}
     `;
   }
 }
@@ -2052,7 +2113,7 @@ function renderSearch(payload) {
     ? `<div class="search-summary"><span>${escapeHtml(t("searchContextSummary"))}</span><strong>${escapeHtml(localizedSummary)}</strong></div>`
     : "";
   target.innerHTML = state.searchResults.length
-    ? summary + state.searchResults.slice(0, 5).map((item) => marketCard(item, "search")).join("")
+    ? summary + state.searchResults.slice(0, 5).map((item) => renderMarketCard(item, "compact", { showActions: true })).join("")
     : emptyState(payload.message || t("searchNoResults"), true);
 }
 
@@ -2067,12 +2128,12 @@ function renderTodayExtras() {
   }
 
   const mainTodayId = marketId(filterBySelectedCategory(state.today)[0] || {});
-  const hotCards = filterBySelectedCategory(state.hot)
+  const hotCards = sortByRealHeat(filterBySelectedCategory(state.hot))
     .filter((item) => marketId(item) !== mainTodayId)
     .slice(0, 5)
-    .map((item) => hotMarketRow(item))
+    .map((item) => renderMarketCard(item, "list"))
     .join("");
-  const movesCards = filterBySelectedCategory(state.moves).slice(0, 3).map((item) => marketCard(item, "compact")).join("");
+  const movesCards = sortByRealHeat(filterBySelectedCategory(state.moves)).slice(0, 3).map((item) => renderMarketCard(item, "list")).join("");
   const hotBody = state.loading.hot
     ? `<div class="market-row-list">${[skeletonMarketCard(), skeletonMarketCard()].join("")}</div>`
     : state.errors.hot
