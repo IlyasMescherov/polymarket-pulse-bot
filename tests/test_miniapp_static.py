@@ -110,11 +110,23 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "pill--heat",
         "pill--time",
         "market-scorecard",
+        "market-scorecard--duel",
         "score-grid",
         "score-item",
         "score-label",
         "score-value",
         "yes-no-strip",
+        "yes-no-duel",
+        "yes-no-duel__split",
+        "yes-no-duel__track",
+        "market-row-list",
+        "market-row-card",
+        "market-avatar",
+        "market-row-card__odds",
+        "mini-side-bar",
+        "hero-insight-row",
+        "daily-brief-card__top",
+        "updated-pill",
         "side-split-bar",
         "side-read",
         "side-panel",
@@ -207,6 +219,9 @@ def test_miniapp_settings_language_theme_and_saved_features_exist() -> None:
     assert "side_verdict" in script_text
     assert "renderMarketScorecard" in script_text
     assert "renderYesNoStrip" in script_text
+    assert "renderYesNoDuel" in script_text
+    assert "hotMarketRow" in script_text
+    assert "marketVisual" in script_text
     assert "renderScoreGrid" in script_text
     assert "score-grid" in script_text
     assert "probability-bar" in script_text

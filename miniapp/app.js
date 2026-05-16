@@ -29,7 +29,7 @@ const browserLanguage =
 const state = {
   activeTab: "today",
   languageSetting: readStorage("language", "auto"),
-  themeSetting: readStorage("theme", "system"),
+  themeSetting: readStorage("theme", "dark"),
   toggles: readJsonStorage("toggles", {
     todayNotifications: false,
     activityNotifications: false,
@@ -83,6 +83,9 @@ const copy = {
     mainReason: "Daily briefing",
     todayTitle: "Morning Briefing",
     todaySubtitle: "Your quick read of what matters today.",
+    pulseKicker: "Daily pulse",
+    marketToday: "Market today",
+    updatedAt: "Updated",
     narrativeKicker: "Today’s Narrative",
     narrativeTitle: "What markets are reacting to today.",
     aiBriefingLabel: "AI briefing",
@@ -161,6 +164,7 @@ const copy = {
     todayEmpty: "PulseMarket is preparing today’s intelligence.",
     hotTitle: "Hot markets",
     hotSubtitle: "Markets with strong current activity.",
+    viewAll: "View all",
     hotEmpty: "No hot markets available yet.",
     movesTitle: "Sharp moves",
     movesSubtitle: "Markets where probability changed.",
@@ -232,6 +236,7 @@ const copy = {
     aiRead: "AI read",
     todaySummary: "Today",
     mainMarket: "Main market today",
+    aiQuickTake: "AI quick take",
     hotCountLabel: "Hot markets",
     endingCountLabel: "Ending soon",
     averageConfirmation: "Avg. confirmation",
@@ -294,6 +299,9 @@ const copy = {
     mainReason: "Утренний обзор",
     todayTitle: "Пульс дня",
     todaySubtitle: "Короткая картина дня.",
+    pulseKicker: "Пульс дня",
+    marketToday: "Рынок сегодня",
+    updatedAt: "Обновлено",
     narrativeKicker: "Нарратив дня",
     narrativeTitle: "На что сегодня реагируют рынки.",
     aiBriefingLabel: "AI обзор",
@@ -372,6 +380,7 @@ const copy = {
     todayEmpty: "Пока собираю картину дня.",
     hotTitle: "Горячие рынки",
     hotSubtitle: "Рынки с сильной текущей активностью.",
+    viewAll: "Смотреть все",
     hotEmpty: "Пока нет горячих рынков.",
     movesTitle: "Резкие движения",
     movesSubtitle: "Рынки, где изменилась вероятность.",
@@ -443,6 +452,7 @@ const copy = {
     aiRead: "AI вывод",
     todaySummary: "Сегодня",
     mainMarket: "Главный рынок дня",
+    aiQuickTake: "AI краткий вывод",
     hotCountLabel: "Горячих рынков",
     endingCountLabel: "Скоро завершатся",
     averageConfirmation: "Среднее подтверждение",
@@ -731,6 +741,46 @@ function sideBalanceText(item) {
   if (side === "NO") return "Market leans NO";
   if (side === "BALANCED") return "Both sides are close";
   return "Not enough side data";
+}
+
+function yesNoValues(item) {
+  const yes = item && item.yes_probability !== undefined && item.yes_probability !== null
+    ? Number(item.yes_probability)
+    : Number(item && item.probability);
+  const safeYes = Number.isNaN(yes) ? 0 : Math.max(0, Math.min(100, yes));
+  const noValue = item && item.no_probability !== undefined && item.no_probability !== null
+    ? Number(item.no_probability)
+    : 100 - safeYes;
+  const safeNo = Number.isNaN(noValue) ? Math.max(0, 100 - safeYes) : Math.max(0, Math.min(100, noValue));
+  return { yes: safeYes, no: safeNo };
+}
+
+function marketVisual(item) {
+  const title = String((item && item.title) || "").toLowerCase();
+  const category = categoryForItem(item || {});
+  if (/israel|syria|gaza|netanyahu|jerusalem|idf/.test(title)) return "🇮🇱";
+  if (/iran|trump|usa|u\\.s\\.|america|white house|congress|biden/.test(title)) return "🇺🇸";
+  if (/china|xi|beijing/.test(title)) return "🇨🇳";
+  if (/bitcoin|btc/.test(title)) return "₿";
+  if (/ethereum|eth/.test(title)) return "Ξ";
+  if (/ai|openai|nvidia|google|meta|apple/.test(title)) return "🧠";
+  if (category === "sports") return "🏟";
+  if (category === "esports") return "🎮";
+  if (category === "politics" || category === "global") return "🏛";
+  if (category === "crypto") return "₿";
+  return "P";
+}
+
+function updatedTimeLabel() {
+  try {
+    return new Intl.DateTimeFormat(isRu() ? "ru-RU" : "en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(new Date());
+  } catch (_error) {
+    return "";
+  }
 }
 
 function probabilityMeaning(item) {
@@ -1190,12 +1240,7 @@ function scorePills(item) {
 }
 
 function renderYesNoStrip(item) {
-  const yes = item && item.yes_probability !== undefined ? Number(item.yes_probability) : Number(item && item.probability);
-  const safeYes = Number.isNaN(yes) ? 0 : Math.max(0, Math.min(100, yes));
-  const noValue = item && item.no_probability !== undefined && item.no_probability !== null
-    ? Number(item.no_probability)
-    : 100 - safeYes;
-  const safeNo = Number.isNaN(noValue) ? Math.max(0, 100 - safeYes) : Math.max(0, Math.min(100, noValue));
+  const { yes: safeYes, no: safeNo } = yesNoValues(item);
   const side = dominantSide(item).toLowerCase();
   return `
     <div class="yes-no-strip yes-no-strip--${escapeHtml(side)}">
@@ -1212,6 +1257,29 @@ function renderYesNoStrip(item) {
   `;
 }
 
+function renderYesNoDuel(item, options = {}) {
+  const { yes: safeYes, no: safeNo } = yesNoValues(item);
+  const large = Boolean(options.large);
+  return `
+    <div class="yes-no-duel${large ? " yes-no-duel--large" : ""}">
+      <div class="yes-no-duel__split" style="--yes-width: ${safeYes}%; --no-width: ${safeNo}%">
+        <div class="yes-no-duel__side yes-no-duel__side--yes">
+          <span>YES</span>
+          <strong>${escapeHtml(sidePercent(safeYes))}</strong>
+        </div>
+        <div class="yes-no-duel__side yes-no-duel__side--no">
+          <span>NO</span>
+          <strong>${escapeHtml(sidePercent(safeNo))}</strong>
+        </div>
+      </div>
+      <div class="yes-no-duel__track" aria-hidden="true">
+        <span class="yes-no-duel__track-yes" style="width: ${safeYes}%"></span>
+        <span class="yes-no-duel__track-no" style="width: ${safeNo}%"></span>
+      </div>
+    </div>
+  `;
+}
+
 function verdictLine(item) {
   return `
     <div class="verdict-line verdict-line--scorecard">
@@ -1222,6 +1290,14 @@ function verdictLine(item) {
 
 function renderMarketScorecard(item, options = {}) {
   const compact = Boolean(options.compact);
+  const visual = options.visual || "scorecard";
+  if (visual === "duel") {
+    return `
+      <div class="market-scorecard market-scorecard--duel${compact ? " market-scorecard--compact" : ""}">
+        ${renderYesNoDuel(item, { large: !compact })}
+      </div>
+    `;
+  }
   return `
     <div class="market-scorecard${compact ? " market-scorecard--compact" : ""}">
       ${renderYesNoStrip(item)}
@@ -1262,19 +1338,23 @@ function todaySummaryStrip(items) {
   const endingCount = markets.filter((item) => String(item.time_pressure_key || "") === "ending_soon").length;
   return `
     <div class="today-dashboard">
-      <div class="dashboard-item">
+      <div class="dashboard-item dashboard-item--hot">
+        <b aria-hidden="true">🔥</b>
         <span>${escapeHtml(t("hotCountLabel"))}</span>
         <strong>${hotCount}</strong>
       </div>
-      <div class="dashboard-item">
+      <div class="dashboard-item dashboard-item--time">
+        <b aria-hidden="true">◷</b>
         <span>${escapeHtml(t("endingCountLabel"))}</span>
         <strong>${endingCount}</strong>
       </div>
-      <div class="dashboard-item">
+      <div class="dashboard-item dashboard-item--confirmation">
+        <b aria-hidden="true">♢</b>
         <span>${escapeHtml(t("averageConfirmation"))}</span>
         <strong>${escapeHtml(averageConfirmation(markets))}</strong>
       </div>
-      <div class="dashboard-item">
+      <div class="dashboard-item dashboard-item--theme">
+        <b aria-hidden="true">▦</b>
         <span>${escapeHtml(t("mainTheme"))}</span>
         <strong>${escapeHtml(dominantCategory(markets))}</strong>
       </div>
@@ -1481,6 +1561,31 @@ function marketCard(item, variant = "compact") {
       </div>
       ${renderMarketScorecard(item, { compact: compactScorecard })}
       ${buttonRow(item)}
+    </article>
+  `;
+}
+
+function hotMarketRow(item) {
+  const encoded = encodeURIComponent(JSON.stringify(normalizeMarket(item)));
+  const { yes: safeYes, no: safeNo } = yesNoValues(item);
+  return `
+    <article class="market-row-card">
+      <div class="market-avatar" aria-hidden="true">${escapeHtml(marketVisual(item))}</div>
+      <div class="market-row-card__main">
+        <h3>${escapeHtml(compactTitle(item.title, 72))}</h3>
+        <span>${escapeHtml(timePressure(item))}</span>
+      </div>
+      <div class="market-row-card__odds">
+        <div class="market-row-card__numbers">
+          <span><em>YES</em><strong>${escapeHtml(sidePercent(safeYes))}</strong></span>
+          <span><em>NO</em><strong>${escapeHtml(sidePercent(safeNo))}</strong></span>
+        </div>
+        <div class="mini-side-bar" aria-hidden="true">
+          <i class="mini-side-bar__yes" style="width: ${safeYes}%"></i>
+          <i class="mini-side-bar__no" style="width: ${safeNo}%"></i>
+        </div>
+      </div>
+      <button class="bookmark-action" type="button" data-save-market="${encoded}" aria-label="${escapeHtml(t("save"))}">☆</button>
     </article>
   `;
 }
@@ -1803,16 +1908,16 @@ function renderNarrative() {
   const changes = moodCategories
     .slice(0, 3)
     .map(([itemCategory, mood]) => editorialChange(itemCategory, mood.key));
+  const visibleToday = filterBySelectedCategory(state.today);
 
   target.innerHTML = `
-    <p class="section-kicker">${escapeHtml(t("aiBriefingLabel"))}</p>
-    <h3>${escapeHtml(headline)}</h3>
-    ${apiInterpretation ? `<p>${escapeHtml(apiInterpretation)}</p>` : ""}
-    ${
-      changes.length
-        ? `<div class="narrative-points">${changes.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>`
-        : ""
-    }
+    <div class="daily-brief-card__top">
+      <span class="section-kicker">${escapeHtml(t("pulseKicker"))}</span>
+      <span class="updated-pill">${escapeHtml(t("updatedAt"))} ${escapeHtml(updatedTimeLabel())} ↻</span>
+    </div>
+    <h3>${escapeHtml(t("marketToday"))}</h3>
+    <p>${escapeHtml(apiInterpretation || headline)}</p>
+    ${todaySummaryStrip(visibleToday)}
   `;
 }
 
@@ -1845,16 +1950,18 @@ function renderToday(payload) {
   }
 
   const top = visibleToday[0];
+  const encodedTop = encodeURIComponent(JSON.stringify(normalizeMarket(top)));
   hero.innerHTML = `
     <div class="story-card__topline">
-      <span>${escapeHtml(t("todaySummary"))}</span>
-      <span>${escapeHtml(aiVerdict(top))}</span>
+      <span>${escapeHtml(t("mainMarket"))}</span>
+      <span class="pill pill--time">${escapeHtml(timePressure(top))}</span>
     </div>
-    ${todaySummaryStrip(visibleToday)}
-    <p class="hero-market-label">${escapeHtml(t("mainMarket"))}</p>
     <h3>${escapeHtml(compactTitle(top.title, 86))}</h3>
-    ${renderMarketScorecard(top)}
-    ${buttonRow(top)}
+    ${renderMarketScorecard(top, { visual: "duel" })}
+    <button class="hero-insight-row" type="button" data-explain-market="${encodedTop}">
+      <span>${escapeHtml(t("aiQuickTake"))}: ${escapeHtml(indicatorSummary(top))}</span>
+      <strong aria-hidden="true">›</strong>
+    </button>
   `;
 
   secondary.innerHTML = visibleToday.slice(1, 4).map((item) => marketCard(item, "secondary")).join("");
@@ -1959,13 +2066,18 @@ function renderTodayExtras() {
     todayScreen.appendChild(existing);
   }
 
-  const hotCards = filterBySelectedCategory(state.hot).slice(0, 5).map((item) => marketCard(item, "hot")).join("");
+  const mainTodayId = marketId(filterBySelectedCategory(state.today)[0] || {});
+  const hotCards = filterBySelectedCategory(state.hot)
+    .filter((item) => marketId(item) !== mainTodayId)
+    .slice(0, 5)
+    .map((item) => hotMarketRow(item))
+    .join("");
   const movesCards = filterBySelectedCategory(state.moves).slice(0, 3).map((item) => marketCard(item, "compact")).join("");
   const hotBody = state.loading.hot
-    ? `<div class="horizontal-strip">${[skeletonMarketCard(), skeletonMarketCard()].join("")}</div>`
+    ? `<div class="market-row-list">${[skeletonMarketCard(), skeletonMarketCard()].join("")}</div>`
     : state.errors.hot
       ? errorState(t("apiErrorCopy"), true)
-      : `<div class="horizontal-strip">${hotCards || emptyState(t("hotEmpty"), true)}</div>`;
+      : `<div class="market-row-list">${hotCards || emptyState(t("hotEmpty"), true)}</div>`;
   const movesBody = state.loading.moves
     ? `<div class="compact-list">${skeletonMarketCard()}</div>`
     : state.errors.moves
@@ -1975,7 +2087,7 @@ function renderTodayExtras() {
   existing.innerHTML = `
     <div class="subsection-heading">
       <h3>${escapeHtml(t("hotTitle"))}</h3>
-      <span>${escapeHtml(t("hotSubtitle"))}</span>
+      <span>${escapeHtml(t("viewAll"))}</span>
     </div>
     ${hotBody}
     <div class="subsection-heading subsection-heading--spaced">
@@ -2166,31 +2278,36 @@ function setupEvents() {
       return;
     }
 
-    const savePayload = target.getAttribute("data-save-market");
+    const saveElement = target.closest("[data-save-market]");
+    const savePayload = saveElement instanceof HTMLElement ? saveElement.getAttribute("data-save-market") : null;
     if (savePayload) {
       saveMarket(JSON.parse(decodeURIComponent(savePayload)));
       return;
     }
 
-    const removeId = target.getAttribute("data-remove-market");
+    const removeElement = target.closest("[data-remove-market]");
+    const removeId = removeElement instanceof HTMLElement ? removeElement.getAttribute("data-remove-market") : null;
     if (removeId) {
       removeSaved(removeId);
       return;
     }
 
-    const openPayload = target.getAttribute("data-open-market");
+    const openElement = target.closest("[data-open-market]");
+    const openPayload = openElement instanceof HTMLElement ? openElement.getAttribute("data-open-market") : null;
     if (openPayload) {
       addRecentMarket(JSON.parse(decodeURIComponent(openPayload)));
       return;
     }
 
-    const explainPayload = target.getAttribute("data-explain-market");
+    const explainElement = target.closest("[data-explain-market]");
+    const explainPayload = explainElement instanceof HTMLElement ? explainElement.getAttribute("data-explain-market") : null;
     if (explainPayload) {
       openExplain(JSON.parse(decodeURIComponent(explainPayload)));
       return;
     }
 
-    const sharePayload = target.getAttribute("data-share-market");
+    const shareElement = target.closest("[data-share-market]");
+    const sharePayload = shareElement instanceof HTMLElement ? shareElement.getAttribute("data-share-market") : null;
     if (sharePayload) {
       await shareText(marketText(JSON.parse(decodeURIComponent(sharePayload))));
       target.textContent = t("copied");
