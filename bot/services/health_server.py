@@ -883,6 +883,15 @@ class HealthServer:
         timings["ai_fallback_count"] = int(stats.get("ai_fallback_count", 0))
         timings["ai_parse_error_count"] = int(stats.get("ai_parse_error_count", 0))
 
+    @staticmethod
+    def _set_cached_quality_timing(
+        payload: dict[str, Any],
+        timings: dict[str, int | bool],
+    ) -> None:
+        quality = payload.get("ai_quality_avg")
+        if isinstance(quality, int):
+            timings["ai_quality_avg"] = quality
+
     def _cache_fresh(self, item: BriefingCache, now: datetime | None = None) -> bool:
         current = now or _utcnow()
         expires_at = _aware(item.expires_at)
@@ -1036,6 +1045,7 @@ class HealthServer:
                             is_stale=False,
                             refresh_status="fresh",
                         )
+                        self._set_cached_quality_timing(payload, timings)
                         timings["serialize_ms"] = _duration_ms(serialize_start)
                         timings["cache_hit"] = True
                         timings["total_ms"] = _duration_ms(request_start)
@@ -1052,6 +1062,7 @@ class HealthServer:
                             is_stale=True,
                             refresh_status="updating",
                         )
+                        self._set_cached_quality_timing(payload, timings)
                         timings["serialize_ms"] = _duration_ms(serialize_start)
                         timings["cache_hit"] = True
                         timings["total_ms"] = _duration_ms(request_start)
@@ -1089,6 +1100,7 @@ class HealthServer:
                             is_stale=True,
                             refresh_status="last_good",
                         )
+                        self._set_cached_quality_timing(payload, timings)
                         timings["cache_hit"] = True
                         timings["total_ms"] = _duration_ms(request_start)
                         self._log_today_timing(timings)
