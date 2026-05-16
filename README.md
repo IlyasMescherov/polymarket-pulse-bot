@@ -50,6 +50,9 @@ Builder submission package:
 - Market Memory: [docs/MARKET_MEMORY.md](docs/MARKET_MEMORY.md)
 - Market Regimes: [docs/MARKET_REGIMES.md](docs/MARKET_REGIMES.md)
 - News Intelligence Layer: [docs/NEWS_INTELLIGENCE_LAYER.md](docs/NEWS_INTELLIGENCE_LAYER.md)
+- Event Graph Model: [docs/EVENT_GRAPH_MODEL.md](docs/EVENT_GRAPH_MODEL.md)
+- News Impact Engine: [docs/NEWS_IMPACT_ENGINE.md](docs/NEWS_IMPACT_ENGINE.md)
+- Mini App Information Architecture: [docs/MINI_APP_INFORMATION_ARCHITECTURE.md](docs/MINI_APP_INFORMATION_ARCHITECTURE.md)
 - YES / NO side analysis: [docs/YES_NO_SIDE_ANALYSIS.md](docs/YES_NO_SIDE_ANALYSIS.md)
 - Outcome display logic: [docs/OUTCOME_DISPLAY_LOGIC.md](docs/OUTCOME_DISPLAY_LOGIC.md)
 - Event category system: [docs/EVENT_CATEGORY_SYSTEM.md](docs/EVENT_CATEGORY_SYSTEM.md)
@@ -61,7 +64,7 @@ Recommended public channel username: `@PulseMarketAI`. If unavailable, use `@Pul
 
 ## What is PulseMarket Bot
 
-PulseMarket Bot is a lightweight daily companion for Polymarket. It watches public Polymarket markets, highlights what matters, and turns market data into a short read of the day.
+PulseMarket Bot is a lightweight event intelligence desk for Polymarket. It watches public Polymarket markets, groups related markets into stories, highlights what matters, and turns market data into a short read of the day.
 
 The bot is designed for users who want a simple way to follow Polymarket without opening multiple dashboards or learning advanced trading terminology.
 
@@ -84,6 +87,8 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - Market Regimes: labels behavior such as Quiet market, Short-term attention, Near resolution, Sustained interest, Weak confirmation, and More confident move.
 - Outcome-aware market cards: shows true YES / NO, team-vs-team, moneyline, and custom outcomes instead of forcing every market into one format.
 - News Intelligence Layer: matches markets with public RSS and official-source context so cards can explain whether outside information supports the market read.
+- Event Story Layer: groups related markets into story clusters so Today can explain the event behind multiple markets instead of showing a raw list.
+- News Impact Engine: classifies outside context as official-source, multi-source, social-only, stale, weak, or market movement without strong external context.
 - Today’s Narrative: explains what public markets are reacting to today without making predictions.
 - Event categories: All, Politics, Crypto, AI, Sports, Esports, Global, and Culture help users filter the daily briefing and Activity Radar.
 - Human probability language: unlikely, possible, likely, and highly likely labels make raw percentages easier to read.
@@ -176,6 +181,13 @@ When `OPENAI_API_KEY` is configured, the web API enriches market objects with sa
 - `latest_relevant_news`
 - `why_moving_now`
 - `confidence_from_news`
+- `top_story`
+- `story_clusters`
+- `story_title`
+- `story_context`
+- `news_impact_type`
+- `news_impact_label`
+- `what_changed_in_story`
 
 If the key is not configured, deterministic fallback copy is used.
 

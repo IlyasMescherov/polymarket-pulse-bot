@@ -407,6 +407,7 @@ button {
 }
 
 .story-card,
+.story-brief-card,
 .market-card,
 .insight-card,
 .narrative-card,
@@ -423,6 +424,7 @@ button {
 }
 
 .story-card,
+.story-brief-card,
 .insight-card,
 .narrative-card,
 .settings-card {
@@ -534,6 +536,7 @@ button {
 }
 
 .story-card p,
+.story-brief-card p,
 .insight-card p,
 .market-card p,
 .learn-grid p,
@@ -544,10 +547,114 @@ button {
 }
 
 .story-card p,
+.story-brief-card p,
 .insight-card p {
   margin: 7px 0 0;
   font-size: 0.82rem;
   line-height: 1.28;
+}
+
+.story-brief-card {
+  display: grid;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 9px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(95, 155, 255, 0.12), transparent 12rem),
+    linear-gradient(160deg, rgba(7, 16, 28, 0.62), rgba(13, 27, 45, 0.96)),
+    var(--card);
+}
+
+.story-brief-card--hero {
+  padding: 13px;
+}
+
+.story-brief-card__top {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.story-brief-card__top em {
+  display: block;
+  color: var(--green-soft);
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 950;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.story-brief-card__top h3 {
+  margin: 3px 0 0;
+  color: var(--text);
+  font-size: 1.02rem;
+  line-height: 1.14;
+}
+
+.story-brief-card--hero .story-brief-card__top h3 {
+  font-size: 1.14rem;
+}
+
+.story-metadata-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.story-metadata-row span {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 5px 8px;
+  color: var(--text-soft);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.story-linked-list {
+  display: grid;
+  gap: 6px;
+}
+
+.story-linked-market {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.032);
+}
+
+.story-linked-market span {
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1.22;
+}
+
+.story-linked-market strong {
+  color: var(--text-soft);
+  font-size: 0.72rem;
+  line-height: 1.26;
+}
+
+.story-main-market {
+  display: grid;
+  gap: 7px;
+  border-top: 1px solid var(--line);
+  padding-top: 9px;
+}
+
+.story-main-market > span {
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .metric-line {
@@ -1122,6 +1229,41 @@ button {
   color: var(--text-soft);
   font-size: 0.82rem;
   line-height: 1.35;
+}
+
+.story-context-panel {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 11px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(95, 155, 255, 0.1), transparent 10rem),
+    rgba(255, 255, 255, 0.032);
+}
+
+.story-context-panel > strong {
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.story-context-panel p {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
+.story-context-panel p span {
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .pulse-subtle {

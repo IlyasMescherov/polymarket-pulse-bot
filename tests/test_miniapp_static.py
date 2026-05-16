@@ -265,11 +265,34 @@ def test_miniapp_supports_real_outcome_display_without_forced_yes_no() -> None:
     assert "why_moving_now" in script_text
     assert "renderNewsBadges" in script_text
     assert "renderNewsThemeStrip" in script_text
+    assert "renderStoryCard" in script_text
+    assert "hasStrongStory" in script_text
+    assert "renderStoryContextPanel" in script_text
+    assert "story_clusters" in script_text
+    assert "top_story" in script_text
+    assert "story_context" in script_text
+    assert "news_impact_type" in script_text
+    assert "what_changed_in_story" in script_text
     assert "news-badge" in script_text
     assert "news-theme-strip" in styles_text
+    assert "story-brief-card" in styles_text
+    assert "story-context-panel" in styles_text
     assert "Market outcomes" in script_text
     assert "Баланс вариантов" in script_text
     assert "outcome.short_label || outcome.label" in script_text
+
+
+def test_story_layer_is_additive_and_has_market_fallback() -> None:
+    root = Path(__file__).resolve().parents[1]
+    script_text = (root / "miniapp" / "app.js").read_text()
+
+    assert "state.todayMeta.top_story" in script_text
+    assert "state.todayMeta.story_clusters" in script_text
+    assert "hero.innerHTML = renderStoryCard(state.todayMeta.top_story, \"hero\")" in script_text
+    assert "hero.innerHTML = renderMarketCard(visibleToday[0], \"hero\")" in script_text
+    assert "if (!hasMarketStory(item)) return \"\";" in script_text
+    assert "Hot markets" in script_text
+    assert "state.hot = dataFrom(payload)" in script_text
 
 
 def test_miniapp_removes_raw_technical_indicator_labels() -> None:

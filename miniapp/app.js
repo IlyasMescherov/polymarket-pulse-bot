@@ -83,6 +83,16 @@ const copy = {
     mainReason: "Daily briefing",
     todayTitle: "Morning Briefing",
     todaySubtitle: "Your quick read of what matters today.",
+    eventDesk: "Event intelligence desk",
+    topStory: "Top story",
+    storyContext: "Story context",
+    storyFrontPage: "Today’s market stories",
+    openStory: "Open story",
+    linkedMarkets: "Linked markets",
+    storyConfidence: "Confidence",
+    storySources: "Sources",
+    storyChanged: "What changed in this story",
+    storyFallback: "No strong connected story yet. PulseMarket is watching related markets.",
     pulseKicker: "Daily pulse",
     marketToday: "Market today",
     updatedAt: "Updated",
@@ -312,6 +322,16 @@ const copy = {
     mainReason: "Утренний обзор",
     todayTitle: "Пульс дня",
     todaySubtitle: "Короткая картина дня.",
+    eventDesk: "Event intelligence desk",
+    topStory: "Главная история",
+    storyContext: "Контекст истории",
+    storyFrontPage: "Истории рынка сегодня",
+    openStory: "Открыть историю",
+    linkedMarkets: "Связанные рынки",
+    storyConfidence: "Уверенность",
+    storySources: "Источники",
+    storyChanged: "Что изменилось в истории",
+    storyFallback: "Сильной связанной истории пока нет. PulseMarket следит за близкими рынками.",
     pulseKicker: "Пульс дня",
     marketToday: "Рынок сегодня",
     updatedAt: "Обновлено",
@@ -1722,6 +1742,13 @@ function normalizeMarket(item) {
     news_count_24h: Number((item && item.news_count_24h) || 0),
     top_news_reason: item && item.top_news_reason,
     source_mix: (item && item.source_mix) || {},
+    market_story_id: item && item.market_story_id,
+    story_title: item && item.story_title,
+    story_context: item && item.story_context,
+    news_impact_type: item && item.news_impact_type,
+    news_impact_label: item && item.news_impact_label,
+    what_changed_in_story: item && item.what_changed_in_story,
+    related_markets_count: Number((item && item.related_markets_count) || 0),
     related_topics: Array.isArray(item && item.related_topics) ? item.related_topics : [],
     category: categoryForItem(item || {}),
     category_label: item && item.category_label,
@@ -2001,6 +2028,151 @@ function renderNewsContextLine(item) {
   return `<p class="news-context-line">${escapeHtml(newsContextLine(item))}</p>`;
 }
 
+function hasStrongStory(story) {
+  if (!story) return false;
+  if (story.is_story_qualified === false) return false;
+  const linked = Number(story.related_markets_count || (Array.isArray(story.related_market_ids) ? story.related_market_ids.length : 0));
+  if (linked >= 2) return true;
+  if (story.official_source_signal) return true;
+  const impact = String(story.news_impact_type || "").toLowerCase();
+  return impact === "official_confirmed" || (impact === "multiple_sources" && Number(story.source_count || 0) >= 2);
+}
+
+function storyLinkedMarkets(story) {
+  return Array.isArray(story && story.linked_markets) ? story.linked_markets.map(normalizeMarket) : [];
+}
+
+function storySourceBadge(story) {
+  if (!story) return t("noStrongNews");
+  if (story.official_source_signal) return t("officialSource");
+  if (Number(story.source_count || 0) >= 2) return t("storySources");
+  return storyImpactLabel(story);
+}
+
+function storyImpactLabel(story) {
+  const direct = localizedText(story && story.news_impact_label, "");
+  if (direct) return direct;
+  const type = String((story && story.news_impact_type) || "").toLowerCase();
+  if (type === "official_confirmed") return t("officialSource");
+  if (type === "multiple_sources") return t("newsMedium");
+  if (type === "social_only") return t("socialBuzz");
+  return t("noStrongNews");
+}
+
+function storySummaryLine(story) {
+  if (!story) return t("storyFallback");
+  const direct = localizedText(story.why_it_matters, "");
+  if (direct) return direct;
+  const linked = Number(story.related_markets_count || (Array.isArray(story.related_market_ids) ? story.related_market_ids.length : 0));
+  if (isRu()) {
+    if (linked >= 2) return `История объединяет ${linked} рынков. ${storyImpactLabel(story)}.`;
+    if (story.official_source_signal) return "Одиночный рынок, но есть официальный источник.";
+    return t("storyFallback");
+  }
+  if (linked >= 2) return `This story links ${linked} markets. ${storyImpactLabel(story)}.`;
+  if (story.official_source_signal) return "Single-market story with official-source context.";
+  return t("storyFallback");
+}
+
+function storyChangedLine(story) {
+  const direct = localizedText(story && story.what_changed_in_story, "");
+  if (direct) return direct;
+  const linked = Number(story && story.related_markets_count || 0);
+  if (isRu()) {
+    if (story && story.official_source_signal) return "Появился официальный контекст по истории.";
+    if (linked >= 2) return "Несколько связанных рынков попали в одну историю.";
+    return "История пока формируется.";
+  }
+  if (story && story.official_source_signal) return "Official context entered the story.";
+  if (linked >= 2) return "Several related markets now sit inside one story.";
+  return "The story is still forming.";
+}
+
+function renderStoryCard(story, variant = "compact") {
+  if (!hasStrongStory(story)) return "";
+  const markets = storyLinkedMarkets(story);
+  const mainMarket = markets[0];
+  const encoded = mainMarket ? encodeURIComponent(JSON.stringify(mainMarket)) : "";
+  const visual = getMarketVisual(mainMarket || { category: story.primary_category, title: story.story_title });
+  const linkedCount = Number(story.related_markets_count || markets.length || 0);
+  const cardClass = `story-brief-card story-brief-card--${variant}`;
+  const preview = markets
+    .slice(0, variant === "hero" ? 3 : 2)
+    .map(
+      (market) => `
+        <div class="story-linked-market" data-explain-market="${encodeURIComponent(JSON.stringify(market))}">
+          <span>${escapeHtml(compactTitle(market.title, 58))}</span>
+          <strong>${escapeHtml(outcomeLeadLine(market))}</strong>
+        </div>
+      `,
+    )
+    .join("");
+  return `
+    <article class="${cardClass}" ${encoded ? `data-explain-market="${encoded}"` : ""}>
+      <div class="story-brief-card__top">
+        <span class="market-avatar" aria-hidden="true">${escapeHtml(visual.icon)}</span>
+        <div>
+          <em>${escapeHtml(variant === "hero" ? t("topStory") : categoryLabel(story.primary_category))}</em>
+          <h3>${escapeHtml(story.story_title || t("storyFrontPage"))}</h3>
+        </div>
+      </div>
+      <p>${escapeHtml(storySummaryLine(story))}</p>
+      <div class="story-metadata-row">
+        <span>${escapeHtml(storySourceBadge(story))}</span>
+        <span>${escapeHtml(linkedCount)} ${escapeHtml(t("linkedMarkets"))}</span>
+        <span>${escapeHtml(story.confidence_level || "low")}</span>
+      </div>
+      ${preview ? `<div class="story-linked-list">${preview}</div>` : ""}
+      ${
+        variant === "hero" && mainMarket
+          ? `<div class="story-main-market">
+              <span>${escapeHtml(t("mainMarket"))}</span>
+              ${renderYesNoDuel(mainMarket, { large: true })}
+              <p>${escapeHtml(humanRead(mainMarket))}</p>
+            </div>`
+          : ""
+      }
+      ${
+        mainMarket
+          ? `<button class="hero-insight-row" type="button" data-explain-market="${encoded}">
+              <span>${escapeHtml(t("openStory"))}</span>
+              <strong aria-hidden="true">›</strong>
+            </button>`
+          : ""
+      }
+    </article>
+  `;
+}
+
+function hasMarketStory(item) {
+  const normalized = item || {};
+  const linked = Number(normalized.related_markets_count || 0);
+  const impact = String(normalized.news_impact_type || "").toLowerCase();
+  return Boolean(
+    normalized.story_title &&
+    (linked >= 2 || normalized.official_source_signal || impact === "official_confirmed" || impact === "multiple_sources"),
+  );
+}
+
+function renderStoryContextPanel(item) {
+  if (!hasMarketStory(item)) return "";
+  const rows = uniqueAnalysisRows([
+    { label: t("storyChanged"), value: storyChangedLine(item) },
+    { label: t("newsContext"), value: storySummaryLine(item) },
+    { label: t("officialConfirmation"), value: localizedText(item.official_source_status, newsSourceLabel(item)) },
+    { label: t("linkedMarkets"), value: `${item.related_markets_count || 1}` },
+  ]);
+  return `
+    <section class="story-context-panel">
+      <div class="mini-panel__header">
+        <h3>${escapeHtml(t("storyContext"))}</h3>
+      </div>
+      <strong>${escapeHtml(item.story_title)}</strong>
+      ${rows.map((row) => `<p><span>${escapeHtml(row.label)}</span>${escapeHtml(row.value)}</p>`).join("")}
+    </section>
+  `;
+}
+
 function openExplain(item) {
   const normalized = normalizeMarket(item);
   state.lastExplained = normalized;
@@ -2028,6 +2200,7 @@ function openExplain(item) {
   title.textContent = normalized.title;
   body.innerHTML = `
     ${renderMarketCard(normalized, "analysis")}
+    ${renderStoryContextPanel(normalized)}
     <div class="detail-list">
       <div>
         <span>${escapeHtml(t("newsContext"))}</span>
@@ -2230,6 +2403,7 @@ function renderNarrative() {
   const topCategory = category !== "all" ? category : (moodCategories[0] && moodCategories[0][0]) || "other";
   const apiHeadline = localizedText(state.todayMeta.narrative, "");
   const apiInterpretation = localizedText(state.todayMeta.interpretation, "");
+  const topStory = hasStrongStory(state.todayMeta.top_story) ? state.todayMeta.top_story : null;
   const headline = apiHeadline || editorialHeadline(topCategory);
   const changes = moodCategories
     .slice(0, 3)
@@ -2238,11 +2412,11 @@ function renderNarrative() {
 
   target.innerHTML = `
     <div class="daily-brief-card__top">
-      <span class="section-kicker">${escapeHtml(t("pulseKicker"))}</span>
+      <span class="section-kicker">${escapeHtml(topStory ? t("eventDesk") : t("pulseKicker"))}</span>
       <span class="updated-pill">${escapeHtml(t("updatedAt"))} ${escapeHtml(updatedTimeLabel())} ↻</span>
     </div>
-    <h3>${escapeHtml(t("marketToday"))}</h3>
-    <p>${escapeHtml(todayMarketSummary(visibleToday, apiInterpretation || headline))}</p>
+    <h3>${escapeHtml(topStory ? topStory.story_title : t("marketToday"))}</h3>
+    <p>${escapeHtml(topStory ? storySummaryLine(topStory) : todayMarketSummary(visibleToday, apiInterpretation || headline))}</p>
     ${renderNewsThemeStrip()}
     ${todaySummaryStrip(visibleToday)}
   `;
@@ -2278,6 +2452,10 @@ function renderToday(payload) {
     changed_since_last_brief: Array.isArray(payload && payload.changed_since_last_brief) ? payload.changed_since_last_brief : [],
     category_summaries: (payload && payload.category_summaries) || {},
     news_themes: Array.isArray(payload && payload.news_themes) ? payload.news_themes : [],
+    top_story: hasStrongStory(payload && payload.top_story) ? payload.top_story : null,
+    story_clusters: Array.isArray(payload && payload.story_clusters)
+      ? payload.story_clusters.filter(hasStrongStory)
+      : [],
   };
   const hero = document.getElementById("today-hero");
   const secondary = document.getElementById("today-secondary");
@@ -2296,8 +2474,17 @@ function renderToday(payload) {
     return;
   }
 
-  hero.innerHTML = renderMarketCard(visibleToday[0], "hero");
-  secondary.innerHTML = "";
+  if (state.todayMeta.top_story) {
+    hero.innerHTML = renderStoryCard(state.todayMeta.top_story, "hero");
+    secondary.innerHTML = state.todayMeta.story_clusters
+      .filter((story) => story.story_cluster_id !== state.todayMeta.top_story.story_cluster_id)
+      .slice(0, 2)
+      .map((story) => renderStoryCard(story, "compact"))
+      .join("");
+  } else {
+    hero.innerHTML = renderMarketCard(visibleToday[0], "hero");
+    secondary.innerHTML = "";
+  }
 }
 
 function renderRadar(payload) {

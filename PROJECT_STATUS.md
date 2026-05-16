@@ -192,6 +192,9 @@ PulseMarket AI now has an optional reasoning layer on top of ranking and filteri
 - Market cards and APIs include real outcome labels for YES / NO, team-vs-team, moneyline, and custom markets.
 - External News Intelligence matches public RSS and official sources to markets, with X, Telegram, and News API adapters prepared as disabled stubs.
 - Mini App market cards and Analysis now show a compact outside-context read when relevant news is available.
+- Event Story Layer groups related markets into qualified story clusters, adds Top Story to `/api/today`, and keeps market-based fallback when stories are weak.
+- News Impact Engine classifies whether outside context is official-source, multi-source, social-only, stale, weak, or weaker than the market reaction.
+- Mini App Today now behaves more like an event intelligence front page while keeping Hot Markets, Search, Saved, and outcome cards additive.
 
 Telegram requires HTTPS for a real Mini App URL in BotFather. The current HTTP route is a browser preview until a domain and HTTPS are configured.
 

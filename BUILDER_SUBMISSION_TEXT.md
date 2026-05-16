@@ -24,7 +24,7 @@ Mini App preview:
 
 ## Short Description
 
-PulseMarket AI is a daily market intelligence companion for Polymarket. It helps users understand what matters today, why specific markets deserve attention, where public attention is rising, and what to inspect next.
+PulseMarket AI is an event intelligence desk for Polymarket. It helps users understand which stories matter today, which markets are connected to those stories, what changed, and what to inspect next.
 
 ## Problem
 
@@ -36,7 +36,7 @@ PulseMarket AI gives users a simple Telegram and Mini App interface for Morning 
 
 It also includes a Telegram Mini App dashboard for Today's Pulse, Activity Radar, hot markets, sharp moves, and search. The newest layer adds optional AI context that explains why people may care about a market, what public markets are reacting to today, how a market changed over time, and what to inspect next.
 
-The latest intelligence layer also matches markets with public RSS and official-source context, helping users see whether outside information supports a market narrative or whether more verification is needed.
+The latest intelligence layer also matches markets with public RSS and official-source context, groups related markets into story clusters, and helps users see whether outside information supports a market narrative or whether more verification is needed.
 
 ## Current MVP
 
@@ -48,6 +48,8 @@ The latest intelligence layer also matches markets with public RSS and official-
 - Market Regimes
 - Outcome-aware market cards for YES / NO, moneyline, and custom markets
 - News Intelligence Layer for public RSS and official-source context
+- Event Story Layer for grouping related markets into daily stories
+- News Impact Engine for classifying outside context
 - Today’s Narrative
 - Event categories
 - Human probability labels
@@ -97,7 +99,7 @@ Builder code is prepared for future official trading integration, but the curren
 
 ## Ecosystem Value
 
-PulseMarket AI helps new users discover Polymarket markets, understand probabilities in simple language, see why people care about specific markets, identify where public attention is rising, understand how markets change over time, and open market pages on Polymarket. It adds a daily market briefing layer that turns public market data into calm context instead of raw dashboards. It also tracks engagement metrics such as searches, feedback, saved markets, digest activity, Activity Radar interactions, and market opens.
+PulseMarket AI helps new users discover Polymarket markets, understand probabilities in simple language, see why people care about specific markets, identify where public attention is rising, understand how markets change over time, and open market pages on Polymarket. It adds an event intelligence layer that turns public market data and external context into calm daily stories instead of raw dashboards. It also tracks engagement metrics such as searches, feedback, saved markets, digest activity, Activity Radar interactions, and market opens.
 
 ## Future Roadmap
 

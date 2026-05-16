@@ -19,6 +19,11 @@ from bot.database.repositories import (
 from bot.services.ai_context_engine import AIContextEngine, MarketContext
 from bot.services.ai_insight_engine import generate_market_briefing
 from bot.services.event_categories import category_label, classify_market_category
+from bot.services.event_story_engine import (
+    EventStoryEngine,
+    enrich_markets_with_stories,
+    select_top_story,
+)
 from bot.services.market_analyzer import MarketAnalyzer, MarketMovement
 from bot.services.market_health import calculate_market_health
 from bot.services.market_indicators import calculate_market_indicators
@@ -421,6 +426,7 @@ class HealthServer:
             enable_rss=False,
             enable_official_sources=False,
         )
+        self._event_story_engine = EventStoryEngine()
         self._session_factory = session_factory
         self._runner: web.AppRunner | None = None
 
@@ -564,6 +570,8 @@ class HealthServer:
     async def _today_api_payload(self, items: list[TodayPulseItem]) -> dict[str, Any]:
         data: list[dict[str, Any]] = []
         contexts: list[MarketContext] = []
+        markets = [item.market for item in items]
+        external_events = await self._external_news_events()
         for item in items:
             pulse = item.pulse_score
             mood = calculate_market_mood(item.market, delta=item.delta, language="en")
@@ -576,7 +584,11 @@ class HealthServer:
                 history=await self._market_history(item.market.id),
             )
             contexts.append(context)
-            news_context = await self._market_news_context(item.market)
+            news_context = self._news_intelligence_engine.market_context(
+                item.market,
+                language="en",
+                events=external_events,
+            )
             result = _market_to_api_object(
                 item.market,
                 item.delta,
@@ -586,6 +598,13 @@ class HealthServer:
             result["why_it_matters"] = context.why_people_care
             data.append(result)
 
+        stories = self._event_story_engine.build_stories(
+            markets,
+            market_api_objects=data,
+            events=external_events,
+            language="en",
+        )
+        data = enrich_markets_with_stories(data, stories)
         narrative = await self._ai_context_engine.daily_narrative(
             [item.market for item in items],
             contexts,
@@ -606,8 +625,10 @@ class HealthServer:
             "news_themes": self._news_intelligence_engine.today_themes(
                 [item.market for item in items],
                 language="en",
-                events=await self._external_news_events(),
+                events=external_events,
             ),
+            "top_story": select_top_story(stories),
+            "story_clusters": [story.as_dict() for story in stories],
         }
 
     async def _api_today(self, request: web.Request) -> web.Response:

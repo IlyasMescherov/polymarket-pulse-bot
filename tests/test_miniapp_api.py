@@ -24,6 +24,19 @@ def _market(market_id: str = "1") -> Market:
     )
 
 
+def _custom_market(market_id: str, question: str, raw: dict | None = None) -> Market:
+    return Market(
+        id=market_id,
+        question=question,
+        slug=question.lower().replace(" ", "-").replace("?", "")[:60],
+        yes_probability=0.42,
+        volume=40_000,
+        end_date=datetime(2026, 12, 31, tzinfo=timezone.utc),
+        url="https://polymarket.com/market/example",
+        raw=raw or {},
+    )
+
+
 class FakeMarketAnalyzer:
     async def get_hot_markets(self, limit: int = 5) -> list[Market]:
         return [_market("hot")]
@@ -33,6 +46,14 @@ class FakeMarketAnalyzer:
 
     async def search_markets(self, query: str, limit: int = 5) -> list[Market]:
         return [_market("search")]
+
+
+class FakeNoStoryMarketAnalyzer:
+    async def get_hot_markets(self, limit: int = 5) -> list[Market]:
+        return [_custom_market("hot", "Will a local music award happen?", {"category": "Culture"})]
+
+    async def get_new_markets(self, limit: int = 5) -> list[Market]:
+        return [_custom_market("new", "Will a football match go to extra time?", {"category": "Sports"})]
 
 
 class FakeSmartMoneyAnalyzer:
@@ -193,7 +214,32 @@ async def test_miniapp_today_api_shape() -> None:
     assert payload["changed_since_last_brief"]
     assert isinstance(payload["category_summaries"], dict)
     assert isinstance(payload["news_themes"], list)
+    assert isinstance(payload["story_clusters"], list)
+    assert payload["top_story"]
+    assert "story_title" in payload["top_story"]
+    assert "market_story_id" in payload["data"][0]
+    assert "news_impact_type" in payload["data"][0]
     assert "news_context" in payload["data"][0]
+
+
+@pytest.mark.asyncio
+async def test_today_api_falls_back_when_story_clusters_are_weak() -> None:
+    server = HealthServer(
+        "127.0.0.1",
+        0,
+        engine=object(),
+        market_analyzer=FakeNoStoryMarketAnalyzer(),
+    )
+
+    response = await server._api_today(make_mocked_request("GET", "/api/today"))
+    payload = _payload(response)
+
+    assert payload["message"] == "ok"
+    assert payload["data"]
+    assert payload["story_clusters"] == []
+    assert payload["top_story"] is None
+    assert "story_title" not in payload["data"][0]
+    assert payload["data"][0]["title"]
 
 
 @pytest.mark.asyncio
