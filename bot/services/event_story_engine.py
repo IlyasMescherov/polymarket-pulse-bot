@@ -40,6 +40,15 @@ class StoryCluster:
     confidence_level: str
     news_impact_type: str
     news_impact_label: str
+    catalyst_type: str
+    catalyst_label: str
+    what_happened: str
+    affected_markets: tuple[str, ...]
+    movement_timing: str
+    likely_catalyst: str
+    catalyst_evidence: str
+    price_probability_context: str
+    what_to_verify_next: tuple[str, ...]
     freshness_score: float
     story_quality_score: float
     is_story_qualified: bool
@@ -65,6 +74,15 @@ class StoryCluster:
             "confidence_level": self.confidence_level,
             "news_impact_type": self.news_impact_type,
             "news_impact_label": self.news_impact_label,
+            "catalyst_type": self.catalyst_type,
+            "catalyst_label": self.catalyst_label,
+            "what_happened": self.what_happened,
+            "affected_markets": list(self.affected_markets),
+            "movement_timing": self.movement_timing,
+            "likely_catalyst": self.likely_catalyst,
+            "catalyst_evidence": self.catalyst_evidence,
+            "price_probability_context": self.price_probability_context,
+            "what_to_verify_next": list(self.what_to_verify_next),
             "freshness_score": self.freshness_score,
             "story_quality_score": self.story_quality_score,
             "is_story_qualified": self.is_story_qualified,
@@ -171,6 +189,15 @@ def enrich_markets_with_stories(
                     "story_context": story.story_summary,
                     "news_impact_type": story.news_impact_type,
                     "news_impact_label": story.news_impact_label,
+                    "catalyst_type": story.catalyst_type,
+                    "catalyst_label": story.catalyst_label,
+                    "story_what_happened": story.what_happened,
+                    "story_affected_markets": list(story.affected_markets),
+                    "movement_timing": story.movement_timing,
+                    "likely_catalyst": story.likely_catalyst,
+                    "catalyst_evidence": story.catalyst_evidence,
+                    "price_probability_context": story.price_probability_context,
+                    "what_to_verify_next": list(story.what_to_verify_next),
                     "what_changed_in_story": story.what_changed,
                     "related_markets_count": len(story.related_market_ids),
                 }
@@ -208,6 +235,7 @@ def _build_cluster(
     official = any(match.event.source_type == "official" for match in matches)
     urgency_score = max((match.event.urgency_score for match in matches), default=0)
     reaction = round(sum(_market_reaction_score(item) for item in linked) / max(1, len(linked)), 2)
+    max_movement = max(abs(_number(item.get("movement")) or 0) for item in linked)
     confidence = _story_confidence(impact, linked_count=len(linked), reaction_score=reaction)
     freshness = _freshness_score(matches)
     quality = _story_quality_score(
@@ -254,6 +282,26 @@ def _build_cluster(
         confidence_level=confidence,
         news_impact_type=impact.impact_type,
         news_impact_label=impact.impact_label,
+        catalyst_type=impact.catalyst_type,
+        catalyst_label=impact.catalyst_label,
+        what_happened=_what_happened(
+            story_title,
+            linked_count=len(linked),
+            impact=impact,
+            reaction_score=reaction,
+            lang=lang,
+        ),
+        affected_markets=tuple(str(item.get("title") or "") for item in linked[:3] if item.get("title")),
+        movement_timing=_movement_timing(matches, linked, lang),
+        likely_catalyst=_likely_catalyst(impact, matches, lang),
+        catalyst_evidence=impact.evidence_strength,
+        price_probability_context=_price_probability_context(
+            linked,
+            max_movement=max_movement,
+            reaction_score=reaction,
+            lang=lang,
+        ),
+        what_to_verify_next=impact.what_to_verify_next,
         freshness_score=freshness,
         story_quality_score=quality,
         is_story_qualified=qualified,
@@ -263,7 +311,7 @@ def _build_cluster(
 def _story_key_and_title(market: Any, events: Sequence[ExternalNewsItem]) -> tuple[str, str]:
     raw = _raw(market)
     slug = str(raw.get("eventSlug") or "").strip()
-    title = str(raw.get("eventTitle") or "").strip()
+    title = str(raw.get("eventTitle") or raw.get("groupItemTitle") or "").strip()
     if not slug and isinstance(raw.get("events"), list) and raw["events"]:
         first = raw["events"][0]
         if isinstance(first, Mapping):
@@ -271,6 +319,8 @@ def _story_key_and_title(market: Any, events: Sequence[ExternalNewsItem]) -> tup
             title = title or str(first.get("title") or "").strip()
     if slug:
         return f"event:{slug}", title or _market_title(market)
+    if title:
+        return f"event_title:{_slugify(title)}", title
 
     terms = extract_market_terms(market)
     entities = sorted(terms.get("entities", set()))
@@ -279,6 +329,11 @@ def _story_key_and_title(market: Any, events: Sequence[ExternalNewsItem]) -> tup
             entities = sorted(str(entity) for entity in match.event.entities[:3])
             if entities:
                 break
+            topics = [str(topic) for topic in match.event.topics[:2] if str(topic).strip()]
+            if topics:
+                return f"news_topic:{_slugify('-'.join(topics))}", _entity_story_title(topics)
+            if match.event.url:
+                return f"news_event:{_story_id(match.event.url)}", match.event.title
     if entities:
         key_entities = _story_entities(entities)
         return f"entities:{'-'.join(key_entities)}", _entity_story_title(entities[:3])
@@ -435,6 +490,31 @@ def _story_summary(title: str, *, linked_count: int, impact: NewsImpact, lang: s
     return f"Single-market story: {title}. {impact.impact_label}."
 
 
+def _what_happened(
+    title: str,
+    *,
+    linked_count: int,
+    impact: NewsImpact,
+    reaction_score: float,
+    lang: str,
+) -> str:
+    if lang == "ru":
+        if impact.catalyst_type == "confirmed_catalyst":
+            return f"{title}: появился проверяемый внешний контекст, и рынок отреагировал заметнее обычного."
+        if linked_count >= 2:
+            return f"{title}: несколько связанных рынков стали частью одной истории."
+        if reaction_score >= 65:
+            return f"{title}: рынок выделился сильнее найденного внешнего фона."
+        return f"{title}: история пока формируется вокруг одного рынка."
+    if impact.catalyst_type == "confirmed_catalyst":
+        return f"{title}: verifiable outside context appeared and the market reaction became more visible."
+    if linked_count >= 2:
+        return f"{title}: several related markets now sit inside the same story."
+    if reaction_score >= 65:
+        return f"{title}: the market reaction is stronger than the matched outside context."
+    return f"{title}: the story is still forming around one market."
+
+
 def _what_changed(impact: NewsImpact, *, linked_count: int, reaction_score: float, lang: str) -> str:
     if lang == "ru":
         if impact.impact_type == "official_confirmed":
@@ -451,6 +531,82 @@ def _what_changed(impact: NewsImpact, *, linked_count: int, reaction_score: floa
     if impact.impact_type == "market_moved_without_news" or reaction_score >= 70:
         return "Market reaction is stronger than the matched outside context."
     return "The story is still forming."
+
+
+def _movement_timing(
+    matches: Sequence[MarketEventMatch],
+    linked: Sequence[Mapping[str, Any]],
+    lang: str,
+) -> str:
+    freshness = _freshness_score(matches)
+    ending_soon = sum(
+        1
+        for item in linked
+        if str(item.get("time_pressure_key") or "").lower() == "ending_soon"
+        or "ending" in str(item.get("market_mood") or "").lower()
+    )
+    if lang == "ru":
+        if ending_soon:
+            return "Часть рынков близка к завершению, поэтому реакция может быть краткосрочной."
+        if freshness >= 8:
+            return "Свежий внешний контекст совпал с текущим рыночным движением."
+        return "Движение не выглядит привязанным к очень свежему источнику."
+    if ending_soon:
+        return "Some linked markets are near resolution, so the reaction may be short-term."
+    if freshness >= 8:
+        return "Fresh outside context lines up with the current market move."
+    return "The move is not clearly tied to a very fresh source."
+
+
+def _likely_catalyst(impact: NewsImpact, matches: Sequence[MarketEventMatch], lang: str) -> str:
+    if matches:
+        top = matches[0].event
+        source = top.source_name or top.source_type
+        if lang == "ru":
+            if impact.catalyst_type == "confirmed_catalyst":
+                return f"Главный кандидат: {source}, официальный или первичный источник."
+            if impact.catalyst_type == "possible_catalyst":
+                return f"Возможный катализатор: несколько источников, включая {source}."
+            if impact.catalyst_type == "background_context":
+                return f"Фон: {source}, но реакция рынка ограничена."
+            return f"Проверить источник: {source}."
+        if impact.catalyst_type == "confirmed_catalyst":
+            return f"Likely catalyst: {source}, a primary or official source."
+        if impact.catalyst_type == "possible_catalyst":
+            return f"Possible catalyst: multiple sources, including {source}."
+        if impact.catalyst_type == "background_context":
+            return f"Background source: {source}, with limited market reaction."
+        return f"Source to verify: {source}."
+    return (
+        "Ясного внешнего катализатора пока не найдено."
+        if lang == "ru"
+        else "No clear outside catalyst has been matched yet."
+    )
+
+
+def _price_probability_context(
+    linked: Sequence[Mapping[str, Any]],
+    *,
+    max_movement: float,
+    reaction_score: float,
+    lang: str,
+) -> str:
+    strong_volume = any((_number(item.get("volume")) or 0) >= 250_000 for item in linked)
+    if lang == "ru":
+        if max_movement >= 5 and strong_volume:
+            return "Вероятность и объём двигаются вместе, поэтому реакция выглядит сильнее."
+        if max_movement >= 5:
+            return "Вероятность сдвинулась, но объём нужно проверить отдельно."
+        if reaction_score >= 65:
+            return "Рынки заметны по активности, но вероятность меняется умеренно."
+        return "Вероятности пока не показывают резкой переоценки."
+    if max_movement >= 5 and strong_volume:
+        return "Probability and volume are moving together, which makes the reaction stronger."
+    if max_movement >= 5:
+        return "Probability moved, but volume still needs a separate check."
+    if reaction_score >= 65:
+        return "Markets are visible through activity, while probability movement is moderate."
+    return "Probabilities do not show a sharp repricing yet."
 
 
 def _why_it_matters(title: str, category: str, impact: NewsImpact, lang: str) -> str:
@@ -526,6 +682,11 @@ def _urgency_label(score: float) -> str:
 def _story_id(value: str) -> str:
     digest = hashlib.sha1(value.encode("utf-8")).hexdigest()[:12]
     return f"story_{digest}"
+
+
+def _slugify(value: str) -> str:
+    text = re.sub(r"[^a-zA-Z0-9]+", "-", str(value).lower()).strip("-")
+    return text or "story"
 
 
 def _clean_story_title(value: str) -> str:

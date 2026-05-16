@@ -92,6 +92,12 @@ const copy = {
     storyConfidence: "Confidence",
     storySources: "Sources",
     storyChanged: "What changed in this story",
+    storyWhatHappened: "What happened",
+    likelyCatalyst: "Likely catalyst",
+    catalystEvidence: "Evidence",
+    movementTiming: "Movement timing",
+    priceProbabilityContext: "Price context",
+    affectedMarkets: "Affected markets",
     storyFallback: "No strong connected story yet. PulseMarket is watching related markets.",
     pulseKicker: "Daily pulse",
     marketToday: "Market today",
@@ -333,6 +339,12 @@ const copy = {
     storyConfidence: "Уверенность",
     storySources: "Источники",
     storyChanged: "Что изменилось в истории",
+    storyWhatHappened: "Что произошло",
+    likelyCatalyst: "Вероятный катализатор",
+    catalystEvidence: "Сила доказательств",
+    movementTiming: "Тайминг движения",
+    priceProbabilityContext: "Контекст цены",
+    affectedMarkets: "Затронутые рынки",
     storyFallback: "Сильной связанной истории пока нет. PulseMarket следит за близкими рынками.",
     pulseKicker: "Пульс дня",
     marketToday: "Рынок сегодня",
@@ -1764,6 +1776,15 @@ function normalizeMarket(item) {
     story_context: item && item.story_context,
     news_impact_type: item && item.news_impact_type,
     news_impact_label: item && item.news_impact_label,
+    catalyst_type: item && item.catalyst_type,
+    catalyst_label: item && item.catalyst_label,
+    story_what_happened: item && item.story_what_happened,
+    story_affected_markets: Array.isArray(item && item.story_affected_markets) ? item.story_affected_markets : [],
+    movement_timing: item && item.movement_timing,
+    likely_catalyst: item && item.likely_catalyst,
+    catalyst_evidence: item && item.catalyst_evidence,
+    price_probability_context: item && item.price_probability_context,
+    what_to_verify_next: Array.isArray(item && item.what_to_verify_next) ? item.what_to_verify_next : [],
     what_changed_in_story: item && item.what_changed_in_story,
     related_markets_count: Number((item && item.related_markets_count) || 0),
     related_topics: Array.isArray(item && item.related_topics) ? item.related_topics : [],
@@ -2067,6 +2088,8 @@ function storySourceBadge(story) {
 }
 
 function storyImpactLabel(story) {
+  const catalyst = localizedText(story && story.catalyst_label, "");
+  if (catalyst) return catalyst;
   const direct = localizedText(story && story.news_impact_label, "");
   if (direct) return direct;
   const type = String((story && story.news_impact_type) || "").toLowerCase();
@@ -2078,6 +2101,8 @@ function storyImpactLabel(story) {
 
 function storySummaryLine(story) {
   if (!story) return t("storyFallback");
+  const happened = localizedText(story.story_what_happened || story.what_happened, "");
+  if (happened) return happened;
   const direct = localizedText(story.why_it_matters, "");
   if (direct) return direct;
   const linked = Number(story.related_markets_count || (Array.isArray(story.related_market_ids) ? story.related_market_ids.length : 0));
@@ -2103,6 +2128,16 @@ function storyChangedLine(story) {
   if (story && story.official_source_signal) return "Official context entered the story.";
   if (linked >= 2) return "Several related markets now sit inside one story.";
   return "The story is still forming.";
+}
+
+function storyVerifyLine(story) {
+  const items = Array.isArray(story && story.what_to_verify_next) && story.what_to_verify_next.length
+    ? story.what_to_verify_next
+    : story && story.what_to_verify;
+  if (Array.isArray(items) && items.length) {
+    return items.map((item) => String(item).trim()).filter(Boolean).slice(0, 4).join(" · ");
+  }
+  return t("whatToVerify");
 }
 
 function renderStoryCard(story, variant = "compact") {
@@ -2137,8 +2172,13 @@ function renderStoryCard(story, variant = "compact") {
       <div class="story-metadata-row">
         <span>${escapeHtml(storySourceBadge(story))}</span>
         <span>${escapeHtml(linkedCount)} ${escapeHtml(t("linkedMarkets"))}</span>
-        <span>${escapeHtml(story.confidence_level || "low")}</span>
+        <span>${escapeHtml(story.catalyst_evidence || story.confidence_level || "low")}</span>
       </div>
+      ${
+        variant === "hero" && story.likely_catalyst
+          ? `<p>${escapeHtml(localizedText(story.likely_catalyst, storyImpactLabel(story)))}</p>`
+          : ""
+      }
       ${preview ? `<div class="story-linked-list">${preview}</div>` : ""}
       ${
         variant === "hero" && mainMarket
@@ -2173,11 +2213,21 @@ function hasMarketStory(item) {
 
 function renderStoryContextPanel(item) {
   if (!hasMarketStory(item)) return "";
+  const affectedMarkets = Array.isArray(item.story_affected_markets)
+    ? item.story_affected_markets.map((title) => compactTitle(String(title), 52)).filter(Boolean).slice(0, 3).join(" · ")
+    : "";
   const rows = uniqueAnalysisRows([
+    { label: t("storyWhatHappened"), value: localizedText(item.story_what_happened, "") },
     { label: t("storyChanged"), value: storyChangedLine(item) },
+    { label: t("likelyCatalyst"), value: localizedText(item.likely_catalyst, "") },
+    { label: t("catalystEvidence"), value: localizedText(item.catalyst_evidence, localizedText(item.catalyst_label, "")) },
+    { label: t("movementTiming"), value: localizedText(item.movement_timing, "") },
+    { label: t("priceProbabilityContext"), value: localizedText(item.price_probability_context, "") },
+    { label: t("affectedMarkets"), value: affectedMarkets },
     { label: t("newsContext"), value: storySummaryLine(item) },
     { label: t("officialConfirmation"), value: localizedText(item.official_source_status, newsSourceLabel(item)) },
     { label: t("linkedMarkets"), value: `${item.related_markets_count || 1}` },
+    { label: t("whatToVerify"), value: storyVerifyLine(item) },
   ]);
   return `
     <section class="story-context-panel">

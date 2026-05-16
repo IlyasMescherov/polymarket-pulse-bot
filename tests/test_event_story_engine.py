@@ -100,6 +100,44 @@ def test_markets_with_shared_entities_grouped_together() -> None:
     assert stories[0].story_title in {"Iran / Trump", "Iran / US diplomacy"}
 
 
+def test_markets_with_same_event_title_grouped_without_slug() -> None:
+    markets = [
+        _market("1", "Will Frankfurt win?", event_title="Eintracht Frankfurt vs VfB Stuttgart", category="sports"),
+        _market("2", "Will Stuttgart win?", event_title="Eintracht Frankfurt vs VfB Stuttgart", category="sports"),
+    ]
+
+    stories = build_event_stories(markets, market_api_objects=[_api_object(item) for item in markets], events=[])
+
+    assert len(stories) == 1
+    assert stories[0].story_title == "Eintracht Frankfurt vs VfB Stuttgart"
+
+
+def test_markets_with_shared_news_topic_grouped() -> None:
+    news = ExternalNewsItem(
+        source_type="rss",
+        source_name="Reuters",
+        source_url="https://example.com/feed",
+        title="Playoff injury update",
+        summary="Two markets reference a lineup update before the match.",
+        url="https://example.com/playoff",
+        published_at=datetime(2026, 5, 16, tzinfo=timezone.utc),
+        category="sports",
+        entities=(),
+        topics=("playoff lineup",),
+        urgency_score=70,
+        credibility_score=82,
+    )
+    markets = [
+        _market("1", "Will Team A win after lineup update?", category="sports", pulse_score=72, volume=120_000),
+        _market("2", "Will Team B cover after lineup update?", category="sports", pulse_score=70, volume=110_000),
+    ]
+
+    stories = build_event_stories(markets, market_api_objects=[_api_object(item) for item in markets], events=[news])
+
+    assert stories
+    assert stories[0].related_market_ids == ("1", "2")
+
+
 def test_unrelated_single_markets_do_not_create_artificial_stories() -> None:
     markets = [
         _market("1", "Will Bitcoin hit a new high?", category="crypto"),
@@ -120,6 +158,13 @@ def test_single_market_with_official_source_can_be_top_story() -> None:
     assert stories
     assert stories[0].official_source_signal is True
     assert select_top_story(stories)["story_title"]
+    assert stories[0].catalyst_type == "confirmed_catalyst"
+    assert stories[0].what_happened
+    assert stories[0].movement_timing
+    assert stories[0].likely_catalyst
+    assert stories[0].catalyst_evidence
+    assert stories[0].price_probability_context
+    assert stories[0].what_to_verify_next
 
 
 def test_weak_story_does_not_become_top_story() -> None:
@@ -164,6 +209,10 @@ def test_enrich_markets_only_adds_story_fields_for_qualified_story() -> None:
 
     assert enriched[0]["story_title"] == "Iran / US diplomacy"
     assert enriched[1]["related_markets_count"] == 2
+    assert enriched[0]["story_what_happened"]
+    assert enriched[0]["likely_catalyst"]
+    assert enriched[0]["catalyst_evidence"]
+    assert enriched[0]["price_probability_context"]
     assert "story_title" not in enriched[2]
 
 

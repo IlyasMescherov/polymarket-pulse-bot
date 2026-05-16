@@ -36,6 +36,23 @@ IMPACT_LABELS: dict[str, dict[str, str]] = {
     },
 }
 
+CATALYST_LABELS: dict[str, dict[str, str]] = {
+    "en": {
+        "confirmed_catalyst": "Confirmed catalyst",
+        "possible_catalyst": "Possible catalyst",
+        "background_context": "Background context",
+        "weak_signal": "Weak evidence",
+        "no_clear_signal": "No clear catalyst",
+    },
+    "ru": {
+        "confirmed_catalyst": "Подтверждённый катализатор",
+        "possible_catalyst": "Возможный катализатор",
+        "background_context": "Фоновый контекст",
+        "weak_signal": "Слабое подтверждение",
+        "no_clear_signal": "Ясного катализатора нет",
+    },
+}
+
 
 @dataclass(frozen=True, slots=True)
 class NewsImpact:
@@ -45,6 +62,11 @@ class NewsImpact:
     source_count: int
     official_source_signal: bool
     reason: str
+    catalyst_type: str
+    catalyst_label: str
+    evidence_strength: str
+    movement_explanation: str
+    what_to_verify_next: tuple[str, ...]
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -54,6 +76,11 @@ class NewsImpact:
             "news_impact_source_count": self.source_count,
             "news_impact_official_source": self.official_source_signal,
             "news_impact_reason": self.reason,
+            "catalyst_type": self.catalyst_type,
+            "catalyst_label": self.catalyst_label,
+            "evidence_strength": self.evidence_strength,
+            "movement_explanation": self.movement_explanation,
+            "what_to_verify_next": list(self.what_to_verify_next),
         }
 
 
@@ -129,6 +156,15 @@ def classify_news_impact_from_matches(
         impact_type = "news_without_market_reaction"
     else:
         impact_type = "weak_external_context"
+    catalyst_type = _catalyst_type(
+        impact_type,
+        matches,
+        reaction_score=reaction_score,
+        official=official,
+        source_count=source_count,
+        social_only=social_only,
+        stale=stale,
+    )
 
     return NewsImpact(
         impact_type=impact_type,
@@ -137,6 +173,16 @@ def classify_news_impact_from_matches(
         source_count=source_count,
         official_source_signal=official,
         reason=_impact_reason(impact_type, lang),
+        catalyst_type=catalyst_type,
+        catalyst_label=CATALYST_LABELS[lang][catalyst_type],
+        evidence_strength=_evidence_strength(catalyst_type, reaction_score, lang),
+        movement_explanation=_movement_explanation(
+            catalyst_type,
+            impact_type,
+            reaction_score,
+            lang,
+        ),
+        what_to_verify_next=_what_to_verify_next(catalyst_type, lang),
     )
 
 
@@ -186,6 +232,97 @@ def _impact_reason(impact_type: str, lang: str) -> str:
         "weak_external_context": "Внешний контекст есть, но он слабый для твёрдого вывода.",
     }
     return (ru if lang == "ru" else en)[impact_type]
+
+
+def _catalyst_type(
+    impact_type: str,
+    matches: Sequence[MarketEventMatch],
+    *,
+    reaction_score: float,
+    official: bool,
+    source_count: int,
+    social_only: bool,
+    stale: bool,
+) -> str:
+    strongest_match = max((match.relevance_score for match in matches), default=0)
+    if official and not stale and reaction_score >= 40 and strongest_match >= 45:
+        return "confirmed_catalyst"
+    if impact_type == "multiple_sources" and source_count >= 2 and reaction_score >= 40 and not stale:
+        return "possible_catalyst"
+    if impact_type == "news_without_market_reaction" or (matches and reaction_score < 30):
+        return "background_context"
+    if social_only or impact_type in {"social_only", "market_moved_without_news"}:
+        return "weak_signal"
+    if not matches:
+        return "no_clear_signal"
+    if stale:
+        return "background_context"
+    return "weak_signal"
+
+
+def _evidence_strength(catalyst_type: str, reaction_score: float, lang: str) -> str:
+    if lang == "ru":
+        if catalyst_type == "confirmed_catalyst":
+            return "Сильное подтверждение"
+        if catalyst_type == "possible_catalyst":
+            return "Среднее подтверждение"
+        if catalyst_type == "background_context":
+            return "Фоновое подтверждение"
+        if reaction_score >= 55:
+            return "Рынок движется сильнее источников"
+        return "Слабое подтверждение"
+    if catalyst_type == "confirmed_catalyst":
+        return "Strong evidence"
+    if catalyst_type == "possible_catalyst":
+        return "Medium evidence"
+    if catalyst_type == "background_context":
+        return "Background evidence"
+    if reaction_score >= 55:
+        return "Market moved more than sources explain"
+    return "Weak evidence"
+
+
+def _movement_explanation(
+    catalyst_type: str,
+    impact_type: str,
+    reaction_score: float,
+    lang: str,
+) -> str:
+    if lang == "ru":
+        if catalyst_type == "confirmed_catalyst":
+            return "Движение связано с проверяемым внешним событием."
+        if catalyst_type == "possible_catalyst":
+            return "Движение совпало с несколькими источниками, но требует проверки."
+        if catalyst_type == "background_context":
+            return "Новостной фон есть, но рынок не показывает сильной реакции."
+        if impact_type == "market_moved_without_news" or reaction_score >= 55:
+            return "Рынок движется сильнее найденного внешнего фона."
+        return "Ясной внешней причины пока не видно."
+    if catalyst_type == "confirmed_catalyst":
+        return "The move is tied to a verifiable outside event."
+    if catalyst_type == "possible_catalyst":
+        return "The move lines up with multiple sources, but still needs verification."
+    if catalyst_type == "background_context":
+        return "News context exists, but the market reaction is limited."
+    if impact_type == "market_moved_without_news" or reaction_score >= 55:
+        return "The market is moving more than the matched outside context explains."
+    return "There is no clear outside catalyst yet."
+
+
+def _what_to_verify_next(catalyst_type: str, lang: str) -> tuple[str, ...]:
+    if lang == "ru":
+        base = ["правила разрешения", "время до завершения"]
+        if catalyst_type != "confirmed_catalyst":
+            base.insert(0, "официальные источники")
+        if catalyst_type in {"weak_signal", "no_clear_signal"}:
+            base.append("связанные рынки")
+        return tuple(base[:4])
+    base = ["resolution rules", "time to resolution"]
+    if catalyst_type != "confirmed_catalyst":
+        base.insert(0, "official sources")
+    if catalyst_type in {"weak_signal", "no_clear_signal"}:
+        base.append("related markets")
+    return tuple(base[:4])
 
 
 def _is_stale(event: ExternalNewsItem) -> bool:

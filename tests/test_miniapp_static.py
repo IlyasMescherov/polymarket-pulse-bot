@@ -272,6 +272,12 @@ def test_miniapp_supports_real_outcome_display_without_forced_yes_no() -> None:
     assert "top_story" in script_text
     assert "story_context" in script_text
     assert "news_impact_type" in script_text
+    assert "catalyst_type" in script_text
+    assert "likely_catalyst" in script_text
+    assert "catalyst_evidence" in script_text
+    assert "movement_timing" in script_text
+    assert "price_probability_context" in script_text
+    assert "what_to_verify_next" in script_text
     assert "what_changed_in_story" in script_text
     assert "news-badge" in script_text
     assert "news-theme-strip" in styles_text

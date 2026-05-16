@@ -217,7 +217,15 @@ async def test_miniapp_today_api_shape() -> None:
     assert isinstance(payload["story_clusters"], list)
     assert payload["top_story"]
     assert "story_title" in payload["top_story"]
+    assert payload["top_story"]["what_happened"]
+    assert payload["top_story"]["likely_catalyst"]
+    assert payload["top_story"]["catalyst_evidence"]
+    assert payload["top_story"]["price_probability_context"]
+    assert payload["top_story"]["what_to_verify_next"]
     assert "market_story_id" in payload["data"][0]
+    assert payload["data"][0]["story_what_happened"]
+    assert payload["data"][0]["likely_catalyst"]
+    assert payload["data"][0]["catalyst_evidence"]
     assert "news_impact_type" in payload["data"][0]
     assert "news_context" in payload["data"][0]
 
