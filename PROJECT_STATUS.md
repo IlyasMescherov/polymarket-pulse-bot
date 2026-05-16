@@ -196,6 +196,7 @@ PulseMarket AI now has an optional reasoning layer on top of ranking and filteri
 - News Impact Engine classifies whether outside context is official-source, multi-source, social-only, stale, weak, or weaker than the market reaction.
 - Mini App Today now behaves more like an event intelligence front page while keeping Hot Markets, Search, Saved, and outcome cards additive.
 - `/api/today` now uses a PostgreSQL-backed last-good briefing cache with background refresh so Mini App opens do not wait on market/news/story/OpenAI generation.
+- AI output reliability now uses strict schemas, JSON extraction/repair, one retry on malformed model output, quality scoring, and deterministic fallback before data is saved into Today cache.
 
 Telegram requires HTTPS for a real Mini App URL in BotFather. The current HTTP route is a browser preview until a domain and HTTPS are configured.
 

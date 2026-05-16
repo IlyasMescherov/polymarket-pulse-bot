@@ -24,6 +24,8 @@ from bot.database.repositories import (
 )
 from bot.services.ai_context_engine import AIContextEngine, MarketContext
 from bot.services.ai_insight_engine import generate_market_briefing
+from bot.services.ai_output_schema import market_insight_schema
+from bot.services.ai_quality_engine import score_ai_output
 from bot.services.event_categories import category_label, classify_market_category
 from bot.services.event_story_engine import (
     EventStoryEngine,
@@ -111,6 +113,9 @@ def _empty_today_timings() -> dict[str, int | bool]:
         "ai_ms": 0,
         "serialize_ms": 0,
         "cache_hit": False,
+        "ai_quality_avg": 0,
+        "ai_fallback_count": 0,
+        "ai_parse_error_count": 0,
     }
 
 
@@ -161,7 +166,7 @@ def _market_to_api_object(
         if news_context is not None
         else build_news_context(market, [], language="en").as_dict()
     )
-    return {
+    result = {
         "market_id": market.id,
         "title": market.question,
         "probability": _percent(market.yes_probability),
@@ -297,6 +302,32 @@ def _market_to_api_object(
         "risk_flags": market_risk_flags(market, delta=delta),
         "url": market.url,
     }
+    quality = score_ai_output(
+        {
+            key: result.get(key)
+            for key in (
+                "quick_take",
+                "why_people_care",
+                "what_happened",
+                "main_tension",
+                "what_this_means",
+                "attention_vs_conviction",
+                "insight_strength",
+                "resolution_note",
+                "category_voice",
+            )
+        },
+        schema=market_insight_schema,
+        context={
+            "title": market.question,
+            "category": category,
+            "dominant_outcome": result.get("dominant_outcome_label")
+            or result.get("dominant_side"),
+        },
+    )
+    result["ai_quality_score"] = quality.score
+    result["ai_quality_flags"] = list(quality.flags)
+    return result
 
 
 def _category_from_title(title: str) -> str:
@@ -813,6 +844,13 @@ class HealthServer:
             "top_story": select_top_story(stories),
             "story_clusters": [story.as_dict() for story in stories],
         }
+        quality_scores = [
+            int(item["ai_quality_score"])
+            for item in data
+            if isinstance(item.get("ai_quality_score"), int)
+        ]
+        if quality_scores:
+            payload["ai_quality_avg"] = round(sum(quality_scores) / len(quality_scores))
         timings["serialize_ms"] = int(timings.get("serialize_ms", 0)) + _duration_ms(serialize_start)
         return payload
 
@@ -821,8 +859,29 @@ class HealthServer:
         timings: dict[str, int | bool] | None = None,
     ) -> dict[str, Any]:
         timings = timings if timings is not None else _empty_today_timings()
+        if hasattr(self._ai_context_engine, "reset_quality_stats"):
+            self._ai_context_engine.reset_quality_stats()
         items = await self._today_items(timings)
-        return await self._today_api_payload(items, timings=timings)
+        payload = await self._today_api_payload(items, timings=timings)
+        self._merge_ai_quality_stats(payload, timings)
+        return payload
+
+    def _merge_ai_quality_stats(
+        self,
+        payload: dict[str, Any],
+        timings: dict[str, int | bool],
+    ) -> None:
+        stats = (
+            self._ai_context_engine.quality_stats()
+            if hasattr(self._ai_context_engine, "quality_stats")
+            else {}
+        )
+        payload_quality = payload.get("ai_quality_avg")
+        timings["ai_quality_avg"] = int(
+            payload_quality if isinstance(payload_quality, int) else stats.get("ai_quality_avg", 0)
+        )
+        timings["ai_fallback_count"] = int(stats.get("ai_fallback_count", 0))
+        timings["ai_parse_error_count"] = int(stats.get("ai_parse_error_count", 0))
 
     def _cache_fresh(self, item: BriefingCache, now: datetime | None = None) -> bool:
         current = now or _utcnow()
@@ -878,7 +937,8 @@ class HealthServer:
         logger.info(
             "today_perf today.total_ms=%s today.fetch_markets_ms=%s "
             "today.news_ms=%s today.story_ms=%s today.ai_ms=%s "
-            "today.serialize_ms=%s today.cache_hit=%s",
+            "today.serialize_ms=%s today.cache_hit=%s today.ai_quality_avg=%s "
+            "today.ai_fallback_count=%s today.ai_parse_error_count=%s",
             timings.get("total_ms", 0),
             timings.get("fetch_markets_ms", 0),
             timings.get("news_ms", 0),
@@ -886,6 +946,9 @@ class HealthServer:
             timings.get("ai_ms", 0),
             timings.get("serialize_ms", 0),
             str(bool(timings.get("cache_hit", False))).lower(),
+            timings.get("ai_quality_avg", 0),
+            timings.get("ai_fallback_count", 0),
+            timings.get("ai_parse_error_count", 0),
         )
 
     async def _save_today_cache(

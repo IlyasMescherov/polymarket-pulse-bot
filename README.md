@@ -46,6 +46,7 @@ Builder submission package:
 - Market Mood: [docs/MARKET_MOOD.md](docs/MARKET_MOOD.md)
 - AI reasoning layer: [docs/AI_REASONING_LAYER.md](docs/AI_REASONING_LAYER.md)
 - AI interpretation layer: [docs/AI_INTERPRETATION_LAYER.md](docs/AI_INTERPRETATION_LAYER.md)
+- AI output reliability: [docs/AI_OUTPUT_RELIABILITY.md](docs/AI_OUTPUT_RELIABILITY.md)
 - AI market briefing: [docs/AI_MARKET_BRIEFING.md](docs/AI_MARKET_BRIEFING.md)
 - Market Memory: [docs/MARKET_MEMORY.md](docs/MARKET_MEMORY.md)
 - Market Regimes: [docs/MARKET_REGIMES.md](docs/MARKET_REGIMES.md)
@@ -83,6 +84,7 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - Morning Briefing / Today's Pulse: shows a short daily selection of notable markets with why people care and what to watch.
 - AI Context Engine: optionally adds short market context, topic narratives, and what-changed summaries when `OPENAI_API_KEY` is configured.
 - AI Market Interpretation Layer: explains what activity means, separates attention from conviction, and labels how strong the market read looks.
+- AI Output Reliability: validates model JSON with schemas, one repair retry, quality scoring, and deterministic fallback before cached briefings are saved.
 - Market Memory: compares current markets with stored snapshots so PulseMarket can say whether activity is holding, cooling, or newly visible.
 - Market Regimes: labels behavior such as Quiet market, Short-term attention, Near resolution, Sustained interest, Weak confirmation, and More confident move.
 - Outcome-aware market cards: shows true YES / NO, team-vs-team, moneyline, and custom outcomes instead of forcing every market into one format.

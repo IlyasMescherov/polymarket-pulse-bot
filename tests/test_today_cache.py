@@ -86,6 +86,14 @@ class ExplodingAIContextEngine(AIContextEngine):
         raise TimeoutError("OpenAI timeout")
 
 
+class InvalidJSONAIContextEngine(AIContextEngine):
+    def __init__(self) -> None:
+        super().__init__("test-key")
+
+    async def _openai_chat_content(self, payload):  # type: ignore[no-untyped-def]
+        return "{invalid json"
+
+
 @pytest_asyncio.fixture()
 async def session_factory():
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
@@ -252,6 +260,30 @@ async def test_openai_failure_does_not_break_today(session_factory) -> None:
     assert payload["message"] == "ok"
     assert payload["data"]
     assert payload["narrative"]
+
+
+@pytest.mark.asyncio
+async def test_today_refresh_does_not_save_broken_ai_text_as_fresh(session_factory) -> None:
+    server = HealthServer(
+        "127.0.0.1",
+        0,
+        engine=object(),
+        market_analyzer=CountingMarketAnalyzer(),
+        ai_context_engine=InvalidJSONAIContextEngine(),
+        session_factory=session_factory,
+        enable_today_background_refresh=False,
+    )
+
+    payload = await server.refresh_today_cache(reason="test_invalid_ai")
+
+    assert payload is not None
+    assert payload["data"]
+    assert payload["data"][0]["quick_take"]
+    assert "{invalid json" not in json.dumps(payload)
+    async with session_factory() as session:
+        cached = await get_briefing_cache(session, "today:global:en")
+    assert cached is not None
+    assert "{invalid json" not in json.dumps(cached.payload_json)
 
 
 def test_today_cache_payload_has_no_financial_advice_language() -> None:

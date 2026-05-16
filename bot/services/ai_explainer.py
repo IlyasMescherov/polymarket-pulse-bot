@@ -4,6 +4,8 @@ import logging
 
 import httpx
 
+from bot.services.ai_output_parser import detect_generic_phrases
+from bot.services.ai_prompts import validate_ai_output
 from bot.services.polymarket_client import Market
 
 logger = logging.getLogger(__name__)
@@ -76,7 +78,7 @@ class AIExplainer:
             logger.warning("Unexpected OpenAI response shape")
             return None
 
-        return content or None
+        return self._safe_output(content)
 
     async def explain_resolution(self, market: Market) -> str | None:
         if not self._api_key:
@@ -130,4 +132,14 @@ class AIExplainer:
             logger.warning("Unexpected OpenAI response shape for resolution")
             return None
 
-        return content or None
+        return self._safe_output(content)
+
+    @staticmethod
+    def _safe_output(text: str) -> str | None:
+        cleaned = str(text or "").strip()
+        if not cleaned:
+            return None
+        if validate_ai_output(cleaned) or detect_generic_phrases(cleaned):
+            logger.warning("OpenAI explanation filtered by safety or generic-language checks")
+            return None
+        return cleaned

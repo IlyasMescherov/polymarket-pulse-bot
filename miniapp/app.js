@@ -537,7 +537,7 @@ const copy = {
     verdictNotConfident: "Не выглядит уверенно",
     hotMarketsCount: "горячих рынка",
     endingSoonCount: "скоро завершатся",
-    weakConfirmationCount: "уверенности мало",
+    weakConfirmationCount: "слабое подтверждение",
   },
 };
 
@@ -826,12 +826,12 @@ function humanRead(item) {
   const side = marketLeanLine(item);
   if (isRu()) {
     if (String((item && item.confirmation_level_key) || "") === "weak") {
-      return `${side} Интерес есть, но уверенности мало.`;
+      return `${side} Рынок виден, но сильного подтверждения нет.`;
     }
     return side;
   }
   if (String((item && item.confirmation_level_key) || "") === "weak") {
-    return `${side} Interest is there, confidence is limited.`;
+    return `${side} The market is visible, but not strongly confirmed.`;
   }
   return side;
 }
@@ -1396,11 +1396,11 @@ function indicatorSummary(item) {
   if (isRu()) {
     if (risk === "high") return "Нужна осторожность: данных для уверенного вывода мало.";
     if (confirmation === "strong") return "Вероятность и объём смотрятся согласованно.";
-    return "Интерес есть, но уверенности мало.";
+    return "Рынок виден, но сильного подтверждения нет.";
   }
   if (risk === "high") return "Caution is needed because data is limited.";
   if (confirmation === "strong") return "Probability and volume look aligned.";
-  return "Interest is there, confidence is limited.";
+  return "The market is visible, but not strongly confirmed.";
 }
 
 function confidenceValue(item) {
@@ -1634,7 +1634,7 @@ function moodReason(key) {
   if (isRu()) {
     return {
       quiet: "Сильного движения пока нет.",
-      active: "Интерес есть, но уверенности мало.",
+      active: "Рынок виден, но сильного подтверждения нет.",
       heating_up: "Тема стала заметнее, но вывод ещё нужно проверять.",
       volatile: "Вероятность заметно изменилась, поэтому рынок выделяется.",
       ending_soon: "Дедлайн близко; правила разрешения особенно важны.",
@@ -1642,7 +1642,7 @@ function moodReason(key) {
   }
   return {
     quiet: "No strong movement yet.",
-    active: "Interest is there, confidence is limited.",
+    active: "The market is visible, but not strongly confirmed.",
     heating_up: "The topic became more visible, but the read still needs review.",
     volatile: "Probability moved enough to make the market noticeable.",
     ending_soon: "The deadline is close; resolution rules matter more here.",

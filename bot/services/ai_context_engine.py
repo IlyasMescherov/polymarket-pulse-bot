@@ -10,7 +10,16 @@ import httpx
 
 from bot.services.event_categories import category_label, classify_market_category
 from bot.services.ai_insight_engine import generate_market_briefing
+from bot.services.ai_output_parser import AIParseResult, parse_ai_json_response
+from bot.services.ai_output_schema import (
+    AIOutputSchema,
+    fallback_for_language,
+    market_insight_schema,
+    schema_prompt,
+    today_narrative_schema,
+)
 from bot.services.ai_prompts import market_analyst_system_prompt
+from bot.services.ai_quality_engine import score_ai_output
 from bot.services.market_mood import MarketMood
 from bot.services.market_memory_engine import MarketMemoryResult, compare_current_to_previous
 from bot.services.market_regime_engine import MarketRegimeResult, classify_market_regime
@@ -37,12 +46,30 @@ _BANNED_FRAGMENTS = (
 
 _GENERIC_FRAGMENTS = (
     "people are watching because activity " + "increased",
+    "people are " + "watching",
     "activity " + "increased",
+    "worth " + "watching",
     "this market is " + "active today",
+    "market is " + "active",
     "public activity is above threshold",
     "public activity is above the visibility threshold",
+    "this market asks " + "whether",
+    "uncertainty " + "remains",
+    "interest is " + "there",
+    "confidence is " + "limited",
+    "monitor this " + "market",
+    "could be " + "important",
+    "люди " + "следят",
     "активность выросла",
+    "стоит " + "смотреть",
     "рынок активен сегодня",
+    "рынок " + "активен",
+    "этот рынок " + "спрашивает",
+    "неопределённость " + "сохраняется",
+    "интерес " + "есть",
+    "уверенности " + "мало",
+    "стоит " + "наблюдать",
+    "может быть " + "важно",
 )
 
 
@@ -105,10 +132,30 @@ class AIContextEngine:
         self._model = model
         self._timeout = timeout
         self._cache: dict[str, Any] = {}
+        self._parse_error_count = 0
+        self._fallback_count = 0
+        self._quality_scores: list[int] = []
 
     @property
     def enabled(self) -> bool:
         return bool(self._api_key)
+
+    def reset_quality_stats(self) -> None:
+        self._parse_error_count = 0
+        self._fallback_count = 0
+        self._quality_scores = []
+
+    def quality_stats(self) -> dict[str, int]:
+        average = (
+            round(sum(self._quality_scores) / len(self._quality_scores))
+            if self._quality_scores
+            else 0
+        )
+        return {
+            "ai_quality_avg": average,
+            "ai_fallback_count": self._fallback_count,
+            "ai_parse_error_count": self._parse_error_count,
+        }
 
     def probability_interpretation(
         self,
@@ -164,7 +211,17 @@ class AIContextEngine:
             return cached
 
         prompt = self._market_prompt(market, pulse_score, mood, delta, language, fallback)
-        result = await self._complete_json(prompt, language=language)
+        result = await self._complete_json(
+            prompt,
+            language=language,
+            schema=market_insight_schema,
+            response_type="market_insight",
+            context={
+                "title": market.question,
+                "category": fallback.category,
+                "dominant_outcome": fallback.dominant_side,
+            },
+        )
         if not result:
             return fallback
 
@@ -430,7 +487,17 @@ class AIContextEngine:
             return cached
 
         prompt = self._daily_prompt(markets, contexts, language)
-        result = await self._complete_json(prompt, language=language)
+        result = await self._complete_json(
+            prompt,
+            language=language,
+            schema=today_narrative_schema,
+            response_type="today_narrative",
+            context={
+                "title": markets[0].question if markets else "",
+                "category": contexts[0].category if contexts else "",
+                "has_changes": bool(markets),
+            },
+        )
         if not result:
             return fallback
 
@@ -781,19 +848,75 @@ class AIContextEngine:
         lines.extend(["", "Открыть PulseMarket AI:", "https://app.pulsemarketai.com/app"])
         return "\n".join(lines)
 
+    async def _openai_chat_content(self, payload: Mapping[str, Any]) -> str:
+        if not self._api_key:
+            return ""
+        headers = {
+            "Authorization": f"Bearer {self._api_key}",
+            "Content-Type": "application/json",
+        }
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            response = await client.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers=headers,
+                json=dict(payload),
+            )
+            response.raise_for_status()
+            data = response.json()
+            content = data["choices"][0]["message"]["content"]
+            return str(content or "")
+
+    def _record_quality(
+        self,
+        payload: Mapping[str, Any],
+        schema: AIOutputSchema,
+        context: Mapping[str, Any] | None,
+    ) -> None:
+        result = score_ai_output(payload, schema=schema, context=context)
+        self._quality_scores.append(result.score)
+        if result.flags:
+            logger.info(
+                "ai_quality ai_response_type=%s ai_quality_score=%s ai_quality_flags=%s",
+                schema.name,
+                result.score,
+                ",".join(result.flags),
+            )
+
+    def _log_parse_failure(
+        self,
+        *,
+        response_type: str,
+        result: AIParseResult,
+    ) -> None:
+        logger.warning(
+            "AI JSON parse failed ai_parse_error=true ai_response_type=%s "
+            "error_message=%s raw_preview=%s",
+            response_type,
+            ";".join(result.errors) or "validation_failed",
+            result.raw_preview,
+        )
+
     async def _complete_json(
         self,
         prompt: str,
         language: str | None = None,
+        schema: AIOutputSchema | None = None,
+        response_type: str = "unknown",
+        context: Mapping[str, Any] | None = None,
     ) -> Mapping[str, Any] | None:
         if not self._api_key:
             return None
-        payload = {
+        active_schema = schema or market_insight_schema
+        fallback = fallback_for_language(active_schema, language)
+        payload: dict[str, Any] = {
             "model": self._model,
             "messages": [
                 {
                     "role": "system",
-                    "content": market_analyst_system_prompt() + " Return compact JSON only.",
+                    "content": (
+                        market_analyst_system_prompt()
+                        + " Return compact JSON only. No markdown. No prose outside JSON."
+                    ),
                 },
                 {"role": "user", "content": prompt},
             ],
@@ -801,26 +924,63 @@ class AIContextEngine:
             "max_tokens": 620,
             "response_format": {"type": "json_object"},
         }
-        headers = {
-            "Authorization": f"Bearer {self._api_key}",
-            "Content-Type": "application/json",
-        }
         try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.post(
-                    "https://api.openai.com/v1/chat/completions",
-                    headers=headers,
-                    json=payload,
-                )
-                response.raise_for_status()
-                data = response.json()
-                content = data["choices"][0]["message"]["content"]
-                loaded = json.loads(content)
-                return loaded if isinstance(loaded, Mapping) else None
+            content = await self._openai_chat_content(payload)
+            parsed = parse_ai_json_response(
+                content,
+                active_schema,
+                fallback=fallback,
+                lang=language,
+            )
+            if parsed.ok:
+                self._record_quality(parsed.payload, active_schema, context)
+                return parsed.payload
+
+            self._parse_error_count += 1
+            self._log_parse_failure(response_type=response_type, result=parsed)
+            repair_payload = {
+                **payload,
+                "messages": [
+                    payload["messages"][0],
+                    {
+                        "role": "user",
+                        "content": (
+                            "Return ONLY valid JSON matching this schema. "
+                            "No markdown. No prose.\n"
+                            f"{schema_prompt(active_schema)}\n\n"
+                            f"Original task:\n{prompt}\n\n"
+                            f"Previous invalid output:\n{content[:1500]}"
+                        ),
+                    },
+                ],
+                "temperature": 0,
+            }
+            repaired_content = await self._openai_chat_content(repair_payload)
+            repaired = parse_ai_json_response(
+                repaired_content,
+                active_schema,
+                fallback=fallback,
+                lang=language,
+            )
+            if repaired.ok:
+                self._record_quality(repaired.payload, active_schema, context)
+                return repaired.payload
+
+            self._parse_error_count += 1
+            self._fallback_count += 1
+            self._log_parse_failure(response_type=response_type, result=repaired)
+            logger.warning(
+                "AI JSON fallback ai_fallback_reason=parse_error_after_retry "
+                "ai_response_type=%s",
+                response_type,
+            )
+            return None
         except httpx.TimeoutException as exc:
+            self._fallback_count += 1
             logger.warning("AI context generation failed ai_timeout=true: %s", exc)
             return None
         except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as exc:
+            self._fallback_count += 1
             logger.warning("AI context generation failed: %s", exc)
             return None
 
