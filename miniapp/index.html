@@ -228,6 +228,23 @@
       </div>
     </main>
 
+    <div id="app-loading" class="app-loading" role="status" aria-live="polite">
+      <div class="app-loading__card">
+        <div class="app-loading__mark" aria-hidden="true">P</div>
+        <div>
+          <p>PulseMarket AI</p>
+          <h2 data-i18n="loadingTitle">Preparing market briefing</h2>
+        </div>
+        <div class="app-loading__loader" aria-hidden="true"></div>
+        <ul>
+          <li data-i18n="loadingStepMarkets">collecting markets</li>
+          <li data-i18n="loadingStepActivity">comparing activity</li>
+          <li data-i18n="loadingStepChanges">checking changes</li>
+          <li data-i18n="loadingStepAnalysis">preparing short analysis</li>
+        </ul>
+      </div>
+    </div>
+
     <div id="explain-sheet" class="sheet-backdrop" hidden>
       <section class="explain-sheet" role="dialog" aria-modal="true" aria-labelledby="explain-title">
         <button class="sheet-close" type="button" data-action="close-explain" aria-label="Close">×</button>

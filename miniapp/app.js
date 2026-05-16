@@ -3,6 +3,7 @@ const BOT_URL = "https://t.me/PulseMarketAIBot";
 const APP_URL = "https://app.pulsemarketai.com/app";
 const POLYMARKET_URL = "https://polymarket.com";
 const EMPTY_MESSAGE = "No data yet. PulseMarket will keep watching.";
+const BOOT_LOADING_MIN_MS = 520;
 const STORAGE_PREFIX = "pulsemarket-miniapp:";
 const SEARCH_SUGGESTIONS = ["bitcoin", "election", "fed", "ai", "sports"];
 const EVENT_CATEGORIES = [
@@ -42,6 +43,13 @@ const state = {
   moves: [],
   searchResults: [],
   lastExplained: null,
+  loading: {
+    today: true,
+    radar: true,
+    hot: true,
+    moves: true,
+  },
+  errors: {},
 };
 
 const copy = {
@@ -50,6 +58,14 @@ const copy = {
     researchLabel: "Research only · No trade execution",
     botLink: "Bot",
     refresh: "Refresh",
+    loadingTitle: "Preparing market briefing",
+    loadingStepMarkets: "collecting markets",
+    loadingStepActivity: "comparing activity",
+    loadingStepChanges: "checking changes",
+    loadingStepAnalysis: "preparing short analysis",
+    apiErrorTitle: "Could not load briefing.",
+    apiErrorCopy: "Try refreshing in a few seconds.",
+    errorRefresh: "Refresh",
     todayTab: "Today",
     radarTab: "Radar",
     searchTab: "Search",
@@ -205,6 +221,14 @@ const copy = {
     researchLabel: "Для анализа · Без сделок",
     botLink: "Бот",
     refresh: "Обновить",
+    loadingTitle: "Готовим рыночный обзор",
+    loadingStepMarkets: "собираем рынки",
+    loadingStepActivity: "сравниваем активность",
+    loadingStepChanges: "проверяем изменения",
+    loadingStepAnalysis: "готовим короткий разбор",
+    apiErrorTitle: "Не удалось загрузить обзор.",
+    apiErrorCopy: "Попробуй обновить через несколько секунд.",
+    errorRefresh: "Обновить",
     todayTab: "Сегодня",
     radarTab: "Радар",
     searchTab: "Поиск",
@@ -634,7 +658,7 @@ async function loadJson(path) {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     return await response.json();
   } catch {
-    return { data: [], message: EMPTY_MESSAGE };
+    return { data: [], message: t("apiErrorCopy"), error: true };
   }
 }
 
@@ -645,6 +669,69 @@ function clearNode(node) {
 
 function emptyState(message, compact = false) {
   return `<div class="empty-state${compact ? " empty-state--compact" : ""}">${escapeHtml(message || EMPTY_MESSAGE)}</div>`;
+}
+
+function errorState(message = t("apiErrorCopy"), compact = false) {
+  return `
+    <div class="error-state${compact ? " error-state--compact" : ""}">
+      <strong>${escapeHtml(t("apiErrorTitle"))}</strong>
+      <span>${escapeHtml(message || t("apiErrorCopy"))}</span>
+      <button type="button" data-refresh>${escapeHtml(t("errorRefresh"))}</button>
+    </div>
+  `;
+}
+
+function skeletonLines(count = 3) {
+  return Array.from({ length: count }, (_, index) => `<span class="skeleton-line skeleton-line--${index + 1}"></span>`).join("");
+}
+
+function skeletonMarketCard(variant = "compact") {
+  return `
+    <article class="market-card market-card--${variant} skeleton-card skeleton-card--structured">
+      ${skeletonLines(4)}
+    </article>
+  `;
+}
+
+function renderLoadingSkeletons() {
+  const narrative = document.getElementById("today-narrative");
+  const hero = document.getElementById("today-hero");
+  const secondary = document.getElementById("today-secondary");
+  const radar = document.getElementById("smart-hero");
+  const radarList = document.getElementById("radar-list");
+  if (narrative) {
+    narrative.classList.add("skeleton-card", "skeleton-card--structured");
+    narrative.innerHTML = skeletonLines(3);
+  }
+  if (hero) {
+    hero.classList.add("skeleton-card", "skeleton-card--structured");
+    hero.innerHTML = skeletonLines(5);
+  }
+  if (secondary) {
+    secondary.innerHTML = [skeletonMarketCard("secondary"), skeletonMarketCard("secondary")].join("");
+  }
+  if (radar) {
+    radar.classList.add("skeleton-card", "skeleton-card--structured");
+    radar.innerHTML = skeletonLines(4);
+  }
+  if (radarList) {
+    radarList.innerHTML = skeletonMarketCard("compact");
+  }
+  renderDailySnapshot();
+  renderTodayExtras();
+}
+
+function hideBootLoader() {
+  const loader = document.getElementById("app-loading");
+  if (!loader || loader.hidden) return;
+  loader.classList.add("is-hidden");
+  window.setTimeout(() => {
+    loader.hidden = true;
+  }, state.toggles.reducedAnimations ? 0 : 220);
+}
+
+function delay(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 function compactTitle(title, limit = 72) {
@@ -1145,6 +1232,14 @@ function renderDailySnapshot() {
   clearNode(changed);
   clearNode(moodTarget);
 
+  if (state.loading.today || state.loading.hot || state.loading.moves) {
+    changed.classList.add("skeleton-card", "skeleton-card--structured");
+    moodTarget.classList.add("skeleton-card", "skeleton-card--structured");
+    changed.innerHTML = skeletonLines(3);
+    moodTarget.innerHTML = skeletonLines(2);
+    return;
+  }
+
   const allMarkets = [...state.today, ...state.hot, ...state.moves];
   const notes = [];
   if (Array.isArray(state.todayMeta.changed_since_last_brief)) {
@@ -1196,6 +1291,16 @@ function renderNarrative() {
   if (!target) return;
   clearNode(target);
 
+  if (state.loading.today) {
+    target.classList.add("skeleton-card", "skeleton-card--structured");
+    target.innerHTML = skeletonLines(3);
+    return;
+  }
+  if (state.errors.today) {
+    target.innerHTML = errorState(t("apiErrorCopy"), true);
+    return;
+  }
+
   const category = selectedCategory();
   const moodCategories = rankedMoodCategories([...state.today, ...state.hot, ...state.moves]);
   const topCategory = category !== "all" ? category : (moodCategories[0] && moodCategories[0][0]) || "other";
@@ -1219,6 +1324,8 @@ function renderNarrative() {
 }
 
 function renderToday(payload) {
+  state.loading.today = false;
+  state.errors.today = Boolean(payload && payload.error);
   state.today = dataFrom(payload);
   state.todayMeta = {
     narrative: payload && payload.narrative,
@@ -1234,6 +1341,11 @@ function renderToday(payload) {
 
   const visibleToday = filterBySelectedCategory(state.today);
   renderNarrative();
+  if (state.errors.today) {
+    hero.innerHTML = errorState(payload && payload.message);
+    renderDailySnapshot();
+    return;
+  }
   if (!visibleToday.length) {
     hero.innerHTML = emptyState(t("todayEmpty"));
     return;
@@ -1260,6 +1372,8 @@ function renderToday(payload) {
 }
 
 function renderRadar(payload) {
+  state.loading.radar = false;
+  state.errors.radar = Boolean(payload && payload.error);
   state.radar = dataFrom(payload);
   const hero = document.getElementById("smart-hero");
   const list = document.getElementById("radar-list");
@@ -1267,6 +1381,10 @@ function renderRadar(payload) {
   list.innerHTML = "";
 
   const visibleRadar = filterBySelectedCategory(state.radar);
+  if (state.errors.radar) {
+    hero.innerHTML = errorState(payload && payload.message, true);
+    return;
+  }
   if (!visibleRadar.length) {
     hero.innerHTML = emptyState(t("radarEmpty"), true);
     return;
@@ -1310,10 +1428,14 @@ function renderRadar(payload) {
 }
 
 function renderHot(payload) {
+  state.loading.hot = false;
+  state.errors.hot = Boolean(payload && payload.error);
   state.hot = dataFrom(payload);
 }
 
 function renderMoves(payload) {
+  state.loading.moves = false;
+  state.errors.moves = Boolean(payload && payload.error);
   state.moves = dataFrom(payload).filter((item) => Math.abs(Number(item.movement || 0)) >= 5);
 }
 
@@ -1321,6 +1443,10 @@ function renderSearch(payload) {
   state.searchResults = dataFrom(payload);
   state.searchMeta = { summary: payload && payload.summary };
   const target = document.getElementById("search-results");
+  if (payload && payload.error) {
+    target.innerHTML = errorState(payload.message, true);
+    return;
+  }
   const localizedSummary = localizedText(
     state.searchMeta.summary,
     state.searchResults[0] ? editorialReason(state.searchResults[0]) : "",
@@ -1345,18 +1471,28 @@ function renderTodayExtras() {
 
   const hotCards = filterBySelectedCategory(state.hot).slice(0, 5).map((item) => marketCard(item, "compact")).join("");
   const movesCards = filterBySelectedCategory(state.moves).slice(0, 3).map((item) => marketCard(item, "compact")).join("");
+  const hotBody = state.loading.hot
+    ? `<div class="horizontal-strip">${[skeletonMarketCard(), skeletonMarketCard()].join("")}</div>`
+    : state.errors.hot
+      ? errorState(t("apiErrorCopy"), true)
+      : `<div class="horizontal-strip">${hotCards || emptyState(t("hotEmpty"), true)}</div>`;
+  const movesBody = state.loading.moves
+    ? `<div class="compact-list">${skeletonMarketCard()}</div>`
+    : state.errors.moves
+      ? errorState(t("apiErrorCopy"), true)
+      : `<div class="compact-list">${movesCards || emptyState(t("movesEmpty"), true)}</div>`;
 
   existing.innerHTML = `
     <div class="subsection-heading">
       <h3>${escapeHtml(t("hotTitle"))}</h3>
       <span>${escapeHtml(t("hotSubtitle"))}</span>
     </div>
-    <div class="horizontal-strip">${hotCards || emptyState(t("hotEmpty"), true)}</div>
+    ${hotBody}
     <div class="subsection-heading subsection-heading--spaced">
       <h3>${escapeHtml(t("movesTitle"))}</h3>
       <span>${escapeHtml(state.moves.length ? t("movesSubtitle") : t("movesEmpty"))}</span>
     </div>
-    <div class="compact-list">${movesCards || emptyState(t("movesEmpty"), true)}</div>
+    ${movesBody}
   `;
 }
 
@@ -1428,21 +1564,37 @@ function renderAllSavedButtons() {
   }
 }
 
-async function refreshDashboard() {
-  const [today, radar, hot, moves] = await Promise.all([
-    loadJson("/api/today"),
-    loadJson("/api/smart-money/active"),
-    loadJson("/api/markets/hot"),
-    loadJson("/api/markets/moves"),
-  ]);
-
-  renderToday(today);
-  renderRadar(radar);
-  renderHot(hot);
-  renderMoves(moves);
-  renderTodayExtras();
-  renderDailySnapshot();
+async function refreshDashboard(options = {}) {
+  state.loading = { today: true, radar: true, hot: true, moves: true };
+  state.errors = {};
+  renderLoadingSkeletons();
   renderSaved();
+
+  const tasks = [
+    loadJson("/api/today").then((payload) => {
+      renderToday(payload);
+      renderDailySnapshot();
+    }),
+    loadJson("/api/smart-money/active").then(renderRadar),
+    loadJson("/api/markets/hot").then((payload) => {
+      renderHot(payload);
+      renderTodayExtras();
+      renderDailySnapshot();
+    }),
+    loadJson("/api/markets/moves").then((payload) => {
+      renderMoves(payload);
+      renderTodayExtras();
+      renderDailySnapshot();
+    }),
+  ];
+
+  if (options.initial) {
+    const firstSettled = Promise.race(tasks.map((task) => task.catch(() => null)));
+    await Promise.all([delay(BOOT_LOADING_MIN_MS), firstSettled]);
+    hideBootLoader();
+  }
+
+  await Promise.allSettled(tasks);
 }
 
 function updateContext() {
@@ -1644,4 +1796,5 @@ renderCategoryChips();
 renderInterestChips();
 renderSearchSuggestions();
 setupEvents();
-refreshDashboard();
+renderLoadingSkeletons();
+refreshDashboard({ initial: true });

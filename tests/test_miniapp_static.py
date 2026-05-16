@@ -102,6 +102,9 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "simple-read",
         "search-summary",
         "skeleton-card",
+        "app-loading",
+        "skeleton-line",
+        "error-state",
         "empty-state--compact",
         "footer-note",
     ):
@@ -254,6 +257,37 @@ def test_miniapp_cards_are_compressed_and_have_habit_layer() -> None:
     assert "Public activity is above the visibility threshold" not in script_text
     assert "People are watching because activity increased" not in script_text
     assert "activity increased" not in script_text.lower()
+
+
+def test_miniapp_loading_skeleton_and_error_states_exist() -> None:
+    root = Path(__file__).resolve().parents[1]
+    index_text = (root / "miniapp" / "index.html").read_text()
+    script_text = (root / "miniapp" / "app.js").read_text()
+    styles_text = (root / "miniapp" / "styles.css").read_text()
+
+    assert 'id="app-loading"' in index_text
+    assert "Preparing market briefing" in index_text
+    assert "collecting markets" in index_text
+    assert "Готовим рыночный обзор" in script_text
+    assert "собираем рынки" in script_text
+    assert "renderLoadingSkeletons" in script_text
+    assert "skeletonMarketCard" in script_text
+    assert "skeletonLines" in script_text
+    assert "skeleton-card--structured" in script_text
+    assert "BOOT_LOADING_MIN_MS = 520" in script_text
+    assert "hideBootLoader" in script_text
+    assert "Promise.race" in script_text
+    assert "Could not load briefing." in script_text
+    assert "Не удалось загрузить обзор." in script_text
+    assert "errorState" in script_text
+    assert "data-refresh" in script_text
+    assert "state.loading.today" in script_text
+    assert script_text.find("if (state.loading.today)") < script_text.find("emptyState(t(\"todayEmpty\")")
+    assert "refreshDashboard({ initial: true })" in script_text
+    assert ".app-loading" in styles_text
+    assert ".skeleton-line" in styles_text
+    assert ".error-state" in styles_text
+    assert "@keyframes loadingBar" in styles_text
 
 
 def test_health_server_can_resolve_miniapp_assets() -> None:
