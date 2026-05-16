@@ -584,18 +584,50 @@ button {
   gap: 6px;
 }
 
-.indicator-grid {
+.market-scorecard {
+  display: grid;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.market-scorecard--compact {
+  gap: 6px;
+}
+
+.score-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.score-pill {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 4px 8px;
+  color: var(--text-soft);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.score-pill--prob {
+  color: var(--text);
+  border-color: rgba(123, 214, 164, 0.24);
+  background: rgba(123, 214, 164, 0.09);
+}
+
+.score-pill--meaning {
+  color: #bfd0df;
+}
+
+.score-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
-  margin-top: 8px;
 }
 
-.indicator-grid--compact {
-  gap: 5px;
-}
-
-.indicator-cell {
+.score-item {
   display: grid;
   gap: 3px;
   min-width: 0;
@@ -605,7 +637,7 @@ button {
   background: rgba(255, 255, 255, 0.035);
 }
 
-.indicator-cell span {
+.score-label {
   color: var(--muted);
   font-size: 0.62rem;
   font-weight: 900;
@@ -613,21 +645,22 @@ button {
   text-transform: uppercase;
 }
 
-.indicator-cell strong {
+.score-value {
   color: var(--text);
-  font-size: 0.76rem;
+  font-size: 0.86rem;
+  font-weight: 900;
   line-height: 1.18;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.indicator-cell--risk strong {
+.score-item--risk .score-value {
   color: #f3c58f;
 }
 
-.indicator-cell--confirmation strong,
-.indicator-cell--pulse strong {
+.score-item--confirmation .score-value,
+.score-item--pulse .score-value {
   color: #b9d3ff;
 }
 
@@ -647,11 +680,34 @@ button {
   background: linear-gradient(90deg, #4b8dff, #7bd6a4);
 }
 
+.confidence-bar {
+  height: 4px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: rgba(148, 179, 209, 0.1);
+}
+
+.confidence-bar span {
+  display: block;
+  height: 100%;
+  min-width: 12%;
+  border-radius: inherit;
+  background: #8292a5;
+}
+
+.confidence-bar--medium span {
+  background: linear-gradient(90deg, #6aa0ff, #a9b8c8);
+}
+
+.confidence-bar--strong span {
+  background: linear-gradient(90deg, #4b8dff, #7bd6a4);
+}
+
 .verdict-line {
   display: grid;
   gap: 3px;
-  margin-top: 8px;
-  padding-top: 8px;
+  margin-top: 1px;
+  padding-top: 7px;
   border-top: 1px solid var(--line);
 }
 
@@ -670,56 +726,52 @@ button {
   line-height: 1.25;
 }
 
-.today-summary-strip {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  overflow-x: auto;
-  margin-top: 8px;
-  padding-bottom: 1px;
-  scrollbar-width: none;
-}
-
-.today-summary-strip span,
-.today-summary-strip strong {
-  flex: 0 0 auto;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-pill);
-  padding: 5px 8px;
-  font-size: 0.65rem;
-  font-weight: 900;
-}
-
-.today-summary-strip span {
-  color: var(--muted);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.today-summary-strip strong {
-  color: var(--text);
-  background: rgba(75, 141, 255, 0.09);
-}
-
-.indicator-panel {
+.today-dashboard {
   display: grid;
-  gap: 8px;
-  margin-top: 12px;
-  padding: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.dashboard-item {
+  display: grid;
+  gap: 3px;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 14px;
+  padding: 8px 9px;
   background: rgba(255, 255, 255, 0.035);
 }
 
-.indicator-panel__head {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  align-items: center;
+.dashboard-item span {
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-.indicator-panel__head strong {
+.dashboard-item strong {
   color: var(--text);
-  font-size: 0.8rem;
+  font-size: 0.86rem;
+  line-height: 1.14;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.check-list {
+  margin: 3px 0 0;
+  padding-left: 17px;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.analysis-note {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.3;
 }
 
 .pulse-subtle {
@@ -1528,7 +1580,10 @@ html[data-compact="true"] .screen-intro {
   }
 
   .horizontal-strip {
-    grid-auto-columns: minmax(254px, 86%);
+    grid-auto-flow: row;
+    grid-auto-columns: unset;
+    overflow: visible;
+    scroll-snap-type: none;
   }
 
   .learn-grid,

@@ -36,7 +36,7 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "Attention vs conviction",
         "Market memory",
         "Market regime",
-        "Market indicators",
+        "Market scorecard",
         "Market heat",
         "Confirmation",
         "Error risk",
@@ -107,11 +107,17 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "pill--regime",
         "pill--heat",
         "pill--time",
-        "indicator-grid",
+        "market-scorecard",
+        "score-grid",
+        "score-item",
+        "score-label",
+        "score-value",
         "indicator-panel",
         "verdict-line",
         "probability-bar",
-        "today-summary-strip",
+        "confidence-bar",
+        "today-dashboard",
+        "dashboard-item",
         "pulse-subtle",
         "simple-read",
         "search-summary",
@@ -189,7 +195,11 @@ def test_miniapp_settings_language_theme_and_saved_features_exist() -> None:
     assert "time_pressure" in script_text
     assert "market_depth" in script_text
     assert "ai_verdict" in script_text
-    assert "indicatorGrid" in script_text
+    assert "renderMarketScorecard" in script_text
+    assert "renderScoreGrid" in script_text
+    assert "score-grid" in script_text
+    assert "probability-bar" in script_text
+    assert "confidence-bar" in script_text
     assert "todaySummaryStrip" in script_text
     assert "changed_since_last_brief" in script_text
     assert "related_topics" in script_text
@@ -209,7 +219,7 @@ def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
     assert "no financial advice" in text
     assert "where public attention is rising" in text
     assert "market mood" in text
-    assert "market indicators" in text
+    assert "market scorecard" in text
     assert "confirmation" in text
     assert "error risk" in text
     assert "morning briefing" in text
@@ -235,6 +245,9 @@ def test_miniapp_static_text_has_safety_and_no_banned_phrases() -> None:
         "good bet",
         "buy now",
         "sell now",
+        "this market asks whether",
+        "market is active",
+        "people are watching",
     )
     for phrase in banned:
         assert phrase not in text
@@ -271,23 +284,45 @@ def test_miniapp_cards_are_compressed_and_have_habit_layer() -> None:
     assert "marketMemory" in script_text
     assert "marketRegime" in script_text
     assert "marketIndicators" in script_text
-    assert "indicatorGrid" in script_text
+    assert "renderMarketScorecard" in script_text
+    assert "renderScoreGrid" in script_text
+    assert "score-grid" in script_text
+    assert "market-scorecard" in script_text
+    assert "probability-bar" in script_text
+    assert "confidence-bar" in script_text
     assert "indicatorSummary" in script_text
     assert "confidenceLevel" in script_text
     assert "whatInfluences" in script_text
     assert "relatedTopics" in script_text
     assert "resolutionRules" in script_text
     assert "probabilityDisplay" in script_text
+    assert "uniqueAnalysisRows" in script_text
+    assert "renderWhatToCheck" in script_text
+    assert "analysis-note" in script_text
     assert "simple-read" not in script_text
-    assert "Worth watching" in script_text
+    assert "Notable" in script_text
     assert "High attention" in script_text
     assert "grid-auto-columns: minmax(252px, 82%)" in styles_text
+    assert "@media (max-width: 420px)" in styles_text
+    assert "grid-auto-flow: row" in styles_text
     assert ".daily-snapshot" in styles_text
     assert "pill--pulse" not in styles_text
+    assert "indicatorGrid" not in script_text
+    assert "indicator-grid" not in styles_text
+    assert "Pulse Score Pulse" not in script_text
+    assert "Подтверждение Слабое" not in script_text
+    assert "Риск ошибки Высокий" not in script_text
+    assert "Объём Живой объём" not in script_text
     assert "People are watching this because activity increased" not in script_text
     assert "Public activity is above the visibility threshold" not in script_text
     assert "People are watching because activity increased" not in script_text
     assert "activity increased" not in script_text.lower()
+    assert "Рынок близок к разрешению, поэтому внимание выше" not in script_text
+    assert "Этот рынок спрашивает" not in script_text
+    assert "Смотри на вероятность и правила разрешения" not in script_text
+    assert "Рынок активен" not in script_text
+    assert "Внимание выросло" not in script_text
+    assert "Стоит изучить" not in script_text
 
 
 def test_miniapp_loading_skeleton_and_error_states_exist() -> None:

@@ -136,7 +136,7 @@ const copy = {
     secondaryStories: "Also worth a look",
     probability: "Probability",
     pulseScore: "Pulse Score",
-    pulseWorthWatching: "Worth watching",
+    pulseWorthWatching: "Notable",
     pulseHighAttention: "High attention",
     pulseQuiet: "Quiet",
     pulseHeating: "Heating up",
@@ -156,7 +156,7 @@ const copy = {
     publicActivity: "Public activity",
     activityLevel: "Activity level",
     radarEmpty: "No strong public activity detected right now. PulseMarket will keep watching.",
-    radarReason: "Attention is rising around this market.",
+    radarReason: "This market stands out in the attention layer.",
     radarListTitle: "More markets getting attention",
     todayEmpty: "PulseMarket is preparing today’s intelligence.",
     hotTitle: "Hot markets",
@@ -172,10 +172,10 @@ const copy = {
     searchNoResults: "No markets found.",
     veryLow: "Unlikely",
     lowButActive: "Low probability, but this market may still be active.",
-    marketAttentionRising: "People are paying more attention to this market.",
-    worthWatching: "Worth watching today.",
-    activeToday: "Attention grew around this market.",
-    attentionMoved: "Public attention is rising.",
+    marketAttentionRising: "This market became more visible today.",
+    worthWatching: "Notable today.",
+    activeToday: "The topic became more visible in today’s read.",
+    attentionMoved: "This market stands out in today’s read.",
     quietNote: "No major shift yet.",
     endingSoonOne: "market is ending soon.",
     endingSoonMany: "markets are ending soon.",
@@ -195,7 +195,7 @@ const copy = {
     selectedToday: "Selected for today’s market scan.",
     categoryAll: "All",
     simpleReadTitle: "Simple Read",
-    simpleReadCopy: "This market asks whether an event will happen. Watch the probability and rules before drawing conclusions.",
+    simpleReadCopy: "Use the probability, volume, timing, and rules together before drawing conclusions.",
     whatMarketAsks: "Market question",
     whatChangedDetail: "What changed",
     quickTake: "Quick take",
@@ -211,14 +211,23 @@ const copy = {
     relatedTopics: "Related topics",
     resolutionRules: "Resolution rules",
     resolutionRulesCopy: "Open the market page and review the official resolution criteria.",
-    marketIndicators: "Market indicators",
+    marketIndicators: "Market scorecard",
     marketHeat: "Market heat",
     confirmation: "Confirmation",
+    confirmationShort: "Confirm.",
     errorRisk: "Error risk",
+    riskShort: "Risk",
     timePressure: "Time pressure",
     marketDepth: "Market depth",
+    depthShort: "Liveness",
     aiVerdict: "AI verdict",
+    aiRead: "AI read",
     todaySummary: "Today",
+    mainMarket: "Main market today",
+    hotCountLabel: "Hot markets",
+    endingCountLabel: "Ending soon",
+    averageConfirmation: "Avg. confirmation",
+    mainTheme: "Main theme",
     moodQuiet: "Quiet",
     moodActive: "Active",
     moodHeating: "Heating up",
@@ -242,7 +251,7 @@ const copy = {
     depthLive: "Live volume",
     depthMedium: "Medium volume",
     depthWeak: "Weak volume",
-    verdictWorthWatching: "Worth watching",
+    verdictWorthWatching: "Notable",
     verdictCaution: "Caution",
     verdictNotEnoughData: "Not enough data",
     verdictStrongInterest: "Strong interest",
@@ -330,7 +339,7 @@ const copy = {
     secondaryStories: "Ещё стоит посмотреть",
     probability: "Вероятность",
     pulseScore: "Pulse Score",
-    pulseWorthWatching: "Стоит изучить",
+    pulseWorthWatching: "Заметен",
     pulseHighAttention: "Высокое внимание",
     pulseQuiet: "Тихо",
     pulseHeating: "Разогревается",
@@ -350,7 +359,7 @@ const copy = {
     publicActivity: "Публичная активность",
     activityLevel: "Уровень активности",
     radarEmpty: "Сейчас нет сильной публичной активности. PulseMarket продолжит отслеживание.",
-    radarReason: "Внимание к этому рынку растёт.",
+    radarReason: "Рынок выделяется в слое внимания.",
     radarListTitle: "Ещё рынки с ростом внимания",
     todayEmpty: "Пока собираю картину дня.",
     hotTitle: "Горячие рынки",
@@ -366,10 +375,10 @@ const copy = {
     searchNoResults: "Рынки не найдены.",
     veryLow: "Маловероятно",
     lowButActive: "Вероятность низкая, но рынок может быть активным.",
-    marketAttentionRising: "К этому рынку растёт внимание.",
-    worthWatching: "Сегодня стоит изучить.",
-    activeToday: "Интерес к этому рынку вырос.",
-    attentionMoved: "Публичное внимание растёт.",
+    marketAttentionRising: "Рынок стал заметнее сегодня.",
+    worthWatching: "Заметен сегодня.",
+    activeToday: "Тема стала заметнее в сегодняшнем обзоре.",
+    attentionMoved: "Рынок выделяется в сегодняшнем обзоре.",
     quietNote: "Без больших изменений.",
     endingSoonOne: "рынок скоро завершится.",
     endingSoonMany: "рынка скоро завершатся.",
@@ -389,7 +398,7 @@ const copy = {
     selectedToday: "Отобран для короткого обзора.",
     categoryAll: "Все",
     simpleReadTitle: "Простой смысл",
-    simpleReadCopy: "Этот рынок спрашивает, произойдёт ли событие. Смотри на вероятность и правила разрешения, прежде чем делать выводы.",
+    simpleReadCopy: "Смотри на вероятность, объём, тайминг и правила вместе, прежде чем делать выводы.",
     whatMarketAsks: "О чём рынок",
     whatChangedDetail: "Что изменилось",
     quickTake: "Короткий вывод",
@@ -405,14 +414,23 @@ const copy = {
     relatedTopics: "Связанные темы",
     resolutionRules: "Правила разрешения",
     resolutionRulesCopy: "Открой страницу рынка и проверь официальные критерии разрешения.",
-    marketIndicators: "Индикаторы рынка",
+    marketIndicators: "Скоринг рынка",
     marketHeat: "Температура",
     confirmation: "Подтверждение",
+    confirmationShort: "Подтвержд.",
     errorRisk: "Риск ошибки",
+    riskShort: "Риск",
     timePressure: "Давление времени",
     marketDepth: "Объём",
+    depthShort: "Живость",
     aiVerdict: "AI вывод",
+    aiRead: "AI вывод",
     todaySummary: "Сегодня",
+    mainMarket: "Главный рынок дня",
+    hotCountLabel: "Горячих рынков",
+    endingCountLabel: "Скоро завершатся",
+    averageConfirmation: "Среднее подтверждение",
+    mainTheme: "Главная тема",
     moodQuiet: "Тихо",
     moodActive: "Активно",
     moodHeating: "Разогревается",
@@ -436,7 +454,7 @@ const copy = {
     depthLive: "Живой объём",
     depthMedium: "Средний объём",
     depthWeak: "Слабый объём",
-    verdictWorthWatching: "Стоит смотреть",
+    verdictWorthWatching: "Заметен",
     verdictCaution: "Осторожно",
     verdictNotEnoughData: "Мало данных",
     verdictStrongInterest: "Сильный интерес",
@@ -654,6 +672,20 @@ function probabilityDisplay(item) {
   return `${label} · ${number}`;
 }
 
+function probabilityNumber(item) {
+  if (item && item.probability !== null && item.probability !== undefined) {
+    const value = Number(item.probability);
+    if (!Number.isNaN(value)) {
+      if (value <= 0) return "<1%";
+      if (value < 1) return "<1%";
+      return `${Math.round(value)}%`;
+    }
+  }
+  const label = String((item && item.probability_label) || "").trim();
+  if (label && !/[a-zа-я]/i.test(label)) return label;
+  return "n/a";
+}
+
 function probabilityMeaning(item) {
   const value = item && item.probability !== null && item.probability !== undefined ? Number(item.probability) : null;
   if (value === null || Number.isNaN(value)) return isRu() ? "Пока нет данных" : "Unknown";
@@ -668,8 +700,6 @@ function isGenericReason(value) {
   if (!text) return true;
   return [
     "this market is " + "active today",
-    "people are watching because activity " + "increased",
-    "people are paying attention, but the story is still early",
     "activity " + "increased",
     "public activity is above the visibility threshold",
     "public attention is rising around this market",
@@ -693,7 +723,7 @@ function localizedText(value, fallback) {
 function editorialReason(item) {
   const mood = marketMood(item || {});
   if (mood.key === "ending_soon") {
-    return isRu() ? "Рынок близок к разрешению, поэтому внимание выше." : "The market is close to resolution, so attention is higher.";
+    return isRu() ? "Дедлайн близко; важнее проверить правила разрешения." : "The deadline is close; resolution rules matter more here.";
   }
   if (mood.key === "volatile") {
     return isRu() ? "Вероятность заметно изменилась, и рынок стал заметнее." : "Probability moved enough to make this market stand out.";
@@ -702,21 +732,21 @@ function editorialReason(item) {
   const title = String((item && item.title) || "").toLowerCase();
   const category = categoryForItem(item || {});
   if (/(bitcoin|btc|ethereum|eth|crypto|binance|coinbase)/.test(title) || category === "crypto") {
-    return isRu() ? "Активность усилилась после движения крипторынка." : "Crypto volatility brought more attention to this market.";
+    return isRu() ? "Крипторынок двигается, поэтому этот сценарий стал заметнее." : "Crypto volatility made this scenario more visible.";
   }
   if (/(iran|israel|trump|election|president|senate|war|diplomacy|china|russia|ukraine)/.test(title) || category === "politics" || category === "global") {
     return isRu() ? "Политическая повестка сделала рынок заметнее." : "Political headlines made this market more visible.";
   }
   if (/(nba|nfl|ufc|soccer|football|tennis|baseball|fifa|playoff|match)/.test(title) || category === "sports") {
-    return isRu() ? "Рынок оживился перед спортивным событием." : "Activity grew ahead of the event.";
+    return isRu() ? "Близость события делает рынок чувствительнее к новым данным." : "Event timing makes this market more sensitive to new information.";
   }
   if (/(openai|nvidia|anthropic|robot| ai )/.test(` ${title} `) || category === "ai") {
-    return isRu() ? "Внимание к AI-теме усилилось." : "AI-related attention increased today.";
+    return isRu() ? "AI-повестка сделала этот сценарий заметнее." : "The AI news cycle made this scenario more visible.";
   }
   if (Number((item && item.public_activity) || 0) > 0) {
-    return isRu() ? "Публичное внимание к этому рынку растёт." : "Public attention is rising around this market.";
+    return isRu() ? "Публичная активность вывела этот рынок в обзор." : "Public activity pushed this market into today’s read.";
   }
-  return isRu() ? "Пользователи активнее следят за развитием темы." : "Users started watching this topic more actively.";
+  return isRu() ? "Рынок попал в обзор из-за сочетания вероятности, объёма и времени." : "This market made the brief because probability, volume, and timing line up.";
 }
 
 function pulseLabel(item) {
@@ -730,6 +760,12 @@ function pulseLabel(item) {
 
 function pulseMeta(item) {
   return `Pulse ${escapeHtml((item && item.pulse_score) ?? 0)}/100`;
+}
+
+function pulseNumber(item) {
+  const score = Number((item && item.pulse_score) || 0);
+  if (Number.isNaN(score)) return "0";
+  return String(Math.round(score));
 }
 
 function pulseSecondary(item) {
@@ -1040,21 +1076,35 @@ function indicatorSummary(item) {
   return "Interest is present, but confirmation is still limited.";
 }
 
-function indicatorGrid(item, compact = false) {
+function confidenceValue(item) {
+  const key = String((item && item.confirmation_level_key) || "weak");
+  if (key === "strong") return 100;
+  if (key === "medium") return 62;
+  return 28;
+}
+
+function depthScoreValue(item) {
+  const key = String((item && item.market_depth_key) || "weak");
+  if (key === "live") return isRu() ? "Живой" : "Live";
+  if (key === "medium") return isRu() ? "Средний" : "Medium";
+  return isRu() ? "Слабый" : "Weak";
+}
+
+function renderScoreGrid(item) {
   const entries = [
-    [t("confirmation"), confirmationLevel(item), "confirmation"],
-    [t("errorRisk"), errorRisk(item), "risk"],
-    [t("marketDepth"), marketDepth(item), "depth"],
-    [t("pulseScore"), pulseMeta(item), "pulse"],
+    [t("depthShort"), depthScoreValue(item), "depth"],
+    [t("confirmationShort"), confirmationLevel(item), "confirmation"],
+    [t("riskShort"), errorRisk(item), "risk"],
+    ["Pulse", pulseNumber(item), "pulse"],
   ];
   return `
-    <div class="indicator-grid${compact ? " indicator-grid--compact" : ""}">
+    <div class="score-grid">
       ${entries
         .map(
           ([label, value, key]) => `
-            <div class="indicator-cell indicator-cell--${key}">
-              <span>${escapeHtml(label)}</span>
-              <strong>${escapeHtml(value)}</strong>
+            <div class="score-item score-item--${key}">
+              <span class="score-label">${escapeHtml(label)}</span>
+              <strong class="score-value">${escapeHtml(value)}</strong>
             </div>
           `,
         )
@@ -1072,11 +1122,19 @@ function probabilityBar(item) {
   `;
 }
 
-function indicatorTopRow(item) {
+function confidenceBar(item) {
   return `
-    <div class="pill-row pill-row--indicators">
-      <span class="pill pill--prob">${escapeHtml(probabilityDisplay(item))}</span>
-      <span class="pill pill--heat">${escapeHtml(marketHeat(item))}</span>
+    <div class="confidence-bar confidence-bar--${escapeHtml(String((item && item.confirmation_level_key) || "weak"))}" aria-hidden="true">
+      <span style="width: ${confidenceValue(item)}%"></span>
+    </div>
+  `;
+}
+
+function scorePills(item) {
+  return `
+    <div class="score-pills">
+      <span class="score-pill score-pill--prob">${escapeHtml(probabilityNumber(item))}</span>
+      <span class="score-pill score-pill--meaning">${escapeHtml(probabilityMeaning(item))}</span>
       <span class="pill pill--time">${escapeHtml(timePressure(item))}</span>
     </div>
   `;
@@ -1084,24 +1142,69 @@ function indicatorTopRow(item) {
 
 function verdictLine(item) {
   return `
-    <div class="verdict-line">
-      <span>${escapeHtml(t("aiVerdict"))}</span>
+    <div class="verdict-line verdict-line--scorecard">
       <strong>${escapeHtml(indicatorSummary(item))}</strong>
     </div>
   `;
+}
+
+function renderMarketScorecard(item, options = {}) {
+  const compact = Boolean(options.compact);
+  return `
+    <div class="market-scorecard${compact ? " market-scorecard--compact" : ""}">
+      ${scorePills(item)}
+      ${probabilityBar(item)}
+      ${compact ? "" : renderScoreGrid(item)}
+      ${confidenceBar(item)}
+      ${verdictLine(item)}
+    </div>
+  `;
+}
+
+function dominantCategory(items) {
+  const counts = new Map();
+  for (const item of Array.isArray(items) ? items : []) {
+    const key = categoryForItem(item);
+    counts.set(key, (counts.get(key) || 0) + 1);
+  }
+  const sorted = Array.from(counts.entries()).sort((left, right) => right[1] - left[1]);
+  return sorted[0] ? categoryLabel(sorted[0][0]) : categoryLabel("global");
+}
+
+function averageConfirmation(items) {
+  const markets = Array.isArray(items) ? items : [];
+  const weights = { weak: 1, medium: 2, strong: 3 };
+  if (!markets.length) return confirmationLevel({});
+  const average =
+    markets.reduce((sum, item) => sum + (weights[String(item.confirmation_level_key || "weak")] || 1), 0) /
+    markets.length;
+  if (average >= 2.5) return t("confirmationStrong");
+  if (average >= 1.6) return t("confirmationMedium");
+  return t("confirmationWeak");
 }
 
 function todaySummaryStrip(items) {
   const markets = Array.isArray(items) ? items : [];
   const hotCount = markets.filter((item) => String(item.market_heat_key || "") === "hot" || Number(item.pulse_score || 0) >= 75).length;
   const endingCount = markets.filter((item) => String(item.time_pressure_key || "") === "ending_soon").length;
-  const weakCount = markets.filter((item) => String(item.confirmation_level_key || "weak") === "weak").length;
   return `
-    <div class="today-summary-strip">
-      <span>${escapeHtml(t("todaySummary"))}</span>
-      <strong>${hotCount} ${escapeHtml(t("hotMarketsCount"))}</strong>
-      <strong>${endingCount} ${escapeHtml(t("endingSoonCount"))}</strong>
-      <strong>${weakCount} ${escapeHtml(t("weakConfirmationCount"))}</strong>
+    <div class="today-dashboard">
+      <div class="dashboard-item">
+        <span>${escapeHtml(t("hotCountLabel"))}</span>
+        <strong>${hotCount}</strong>
+      </div>
+      <div class="dashboard-item">
+        <span>${escapeHtml(t("endingCountLabel"))}</span>
+        <strong>${endingCount}</strong>
+      </div>
+      <div class="dashboard-item">
+        <span>${escapeHtml(t("averageConfirmation"))}</span>
+        <strong>${escapeHtml(averageConfirmation(markets))}</strong>
+      </div>
+      <div class="dashboard-item">
+        <span>${escapeHtml(t("mainTheme"))}</span>
+        <strong>${escapeHtml(dominantCategory(markets))}</strong>
+      </div>
     </div>
   `;
 }
@@ -1122,18 +1225,18 @@ function moodReason(key) {
   if (isRu()) {
     return {
       quiet: "Сильного движения пока нет.",
-      active: "Публичное внимание уже есть.",
-      heating_up: "Внимание к этому рынку растёт.",
+      active: "Интерес есть, но подтверждение пока ограниченное.",
+      heating_up: "Тема стала заметнее, но вывод ещё нужно проверять.",
       volatile: "Вероятность заметно изменилась, поэтому рынок выделяется.",
-      ending_soon: "Рынок близок к разрешению.",
+      ending_soon: "Дедлайн близко; правила разрешения особенно важны.",
     }[key] || "Сильного движения пока нет.";
   }
   return {
     quiet: "No strong movement yet.",
-    active: "Public attention is present.",
-    heating_up: "Attention is rising around this market.",
+    active: "Interest is present, but confirmation is still limited.",
+    heating_up: "The topic became more visible, but the read still needs review.",
     volatile: "Probability moved enough to make the market noticeable.",
-    ending_soon: "The market is close to resolution.",
+    ending_soon: "The deadline is close; resolution rules matter more here.",
   }[key] || "No strong movement yet.";
 }
 
@@ -1281,6 +1384,7 @@ function buttonRow(item) {
 }
 
 function marketCard(item, variant = "compact") {
+  const compactScorecard = variant === "hot";
   return `
     <article class="market-card market-card--${variant}">
       <div class="market-card__main">
@@ -1289,11 +1393,7 @@ function marketCard(item, variant = "compact") {
         </div>
         <p>${escapeHtml(shortReason(item))}</p>
       </div>
-      ${indicatorTopRow(item)}
-      ${probabilityBar(item)}
-      ${indicatorGrid(item)}
-      ${verdictLine(item)}
-      ${pulseSecondary(item)}
+      ${renderMarketScorecard(item, { compact: compactScorecard })}
       ${buttonRow(item)}
     </article>
   `;
@@ -1309,10 +1409,7 @@ function savedCard(item, removable = false) {
         </div>
         <p>${escapeHtml(item.why || t("selectedToday"))}</p>
       </div>
-      ${indicatorTopRow(item)}
-      ${indicatorGrid(item, true)}
-      ${verdictLine(item)}
-      ${pulseSecondary(item)}
+      ${renderMarketScorecard(item)}
       <div class="action-row">
         <a class="primary-action" href="${escapeHtml(safeUrl(item.url))}" target="_blank" rel="noreferrer" data-open-market="${encoded}">${escapeHtml(t("open"))}</a>
         ${
@@ -1325,6 +1422,55 @@ function savedCard(item, removable = false) {
   `;
 }
 
+function normalizedSentence(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[.,:;!?()[\]«»"“”'’\-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isWeakMemoryText(value) {
+  const text = normalizedSentence(value);
+  return (
+    !text ||
+    text.includes("not enough history") ||
+    text.includes("мало истории") ||
+    text.includes("недостаточно истории")
+  );
+}
+
+function uniqueAnalysisRows(rows) {
+  const seen = new Set();
+  const result = [];
+  for (const row of rows) {
+    const value = localizedText(row.value, "").trim();
+    const normalized = normalizedSentence(value);
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    result.push({ label: row.label, value });
+  }
+  return result;
+}
+
+function whatToCheckItems(item) {
+  const raw = item && item.what_to_watch;
+  const source = Array.isArray(raw) ? raw : String(raw || "").split(/[;•\n]/);
+  const items = source.map((value) => value.trim()).filter(Boolean);
+  if (items.length) return items.slice(0, 3);
+  return isRu()
+    ? ["правила разрешения", "последние новости", "объём и ликвидность"]
+    : ["resolution rules", "latest news", "volume and liquidity"];
+}
+
+function renderWhatToCheck(item) {
+  return `
+    <ul class="check-list">
+      ${whatToCheckItems(item).map((value) => `<li>${escapeHtml(value)}</li>`).join("")}
+    </ul>
+  `;
+}
+
 function openExplain(item) {
   const normalized = normalizeMarket(item);
   state.lastExplained = normalized;
@@ -1332,10 +1478,19 @@ function openExplain(item) {
   const title = document.getElementById("explain-title");
   const body = document.getElementById("explain-body");
   const actions = document.getElementById("explain-actions");
-  const mood = marketMood(normalized);
   const topics = Array.isArray(normalized.related_topics) && normalized.related_topics.length
     ? normalized.related_topics.map(topicLabel).join(", ")
     : categoryLabel(normalized.category || "global");
+  const memoryText = localizedText(normalized.market_memory_summary, t("memoryFallback"));
+  const memoryIsWeak = isWeakMemoryText(memoryText);
+  const rows = uniqueAnalysisRows([
+    { label: t("quickTake"), value: localizedText(normalized.quick_take, normalized.why || shortReason(normalized)) },
+    { label: t("whatThisMeans"), value: localizedText(normalized.what_this_means, indicatorSummary(normalized)) },
+    { label: t("mainTension"), value: localizedText(normalized.main_tension, localizedText(normalized.attention_vs_conviction, indicatorSummary(normalized))) },
+    { label: t("attentionVsConviction"), value: localizedText(normalized.attention_vs_conviction, "") },
+    { label: t("relatedTopics"), value: topics },
+    { label: t("resolutionRules"), value: localizedText(normalized.resolution_note, t("resolutionRulesCopy")) },
+  ]);
 
   title.textContent = normalized.title;
   body.innerHTML = `
@@ -1344,63 +1499,24 @@ function openExplain(item) {
         <span>${escapeHtml(t("marketIndicators"))}</span>
         <strong>${escapeHtml(aiVerdict(normalized))}</strong>
       </div>
-      ${indicatorTopRow(normalized)}
-      ${indicatorGrid(normalized)}
-      ${verdictLine(normalized)}
+      ${renderMarketScorecard(normalized)}
     </section>
     <div class="detail-list">
       <div>
-        <span>${escapeHtml(t("quickTake"))}</span>
-        <strong>${escapeHtml(localizedText(normalized.quick_take, normalized.why || shortReason(normalized)))}</strong>
-      </div>
-      <div>
-        <span>${escapeHtml(t("whatMarketAsks"))}</span>
-        <strong>${escapeHtml(localizedText(normalized.simple_read, t("simpleReadCopy")))}</strong>
-      </div>
-      <div>
-        <span>${escapeHtml(t("whatChangedDetail"))}</span>
-        <strong>${escapeHtml(localizedText(normalized.what_happened, localizedText(normalized.attention_summary, mood.reason || editorialReason(normalized))))}</strong>
-      </div>
-      <div>
-        <span>${escapeHtml(t("mainTension"))}</span>
-        <strong>${escapeHtml(localizedText(normalized.main_tension, localizedText(normalized.attention_vs_conviction, mood.reason || editorialReason(normalized))))}</strong>
-      </div>
-      <div>
-        <span>${escapeHtml(t("whatThisMeans"))}</span>
-        <strong>${escapeHtml(localizedText(normalized.what_this_means, editorialReason(normalized)))}</strong>
-      </div>
-      <div>
-        <span>${escapeHtml(t("attentionVsConviction"))}</span>
-        <strong>${escapeHtml(localizedText(normalized.attention_vs_conviction, mood.reason || editorialReason(normalized)))}</strong>
-      </div>
-      <div>
-        <span>${escapeHtml(t("marketMemory"))}</span>
-        <strong>${escapeHtml(localizedText(normalized.market_memory_summary, t("memoryFallback")))}</strong>
-      </div>
-      <div>
-        <span>${escapeHtml(t("marketRegime"))}</span>
-        <strong>${escapeHtml(`${marketRegime(normalized)}. ${localizedText(normalized.regime_reason, t("memoryFallback"))}`)}</strong>
-      </div>
-      <div>
-        <span>${escapeHtml(t("howSerious"))}</span>
-        <strong>${escapeHtml(localizedText(normalized.insight_strength, insightStrength(normalized)))}</strong>
-      </div>
-      <div>
         <span>${escapeHtml(t("whatInfluences"))}</span>
-        <strong>${escapeHtml(localizedText(normalized.what_to_watch, t("influencingFactorsCopy")))}</strong>
+        ${renderWhatToCheck(normalized)}
       </div>
-      <div>
-        <span>${escapeHtml(t("confidenceLevel"))}</span>
-        <strong>${escapeHtml(localizedText(normalized.confidence_level, insightStrength(normalized)))}</strong>
-      </div>
-      <div>
-        <span>${escapeHtml(t("relatedTopics"))}</span>
-        <strong>${escapeHtml(topics)}</strong>
-      </div>
-      <div>
-        <span>${escapeHtml(t("resolutionRules"))}</span>
-        <strong>${escapeHtml(localizedText(normalized.resolution_note, t("resolutionRulesCopy")))}</strong>
-      </div>
+      ${rows
+        .map(
+          (row) => `
+            <div>
+              <span>${escapeHtml(row.label)}</span>
+              <strong>${escapeHtml(row.value)}</strong>
+            </div>
+          `,
+        )
+        .join("")}
+      <p class="analysis-note">${escapeHtml(memoryIsWeak ? t("memoryFallback") : memoryText)}</p>
     </div>
   `;
   actions.innerHTML = detailActionButtons(normalized);
@@ -1624,17 +1740,13 @@ function renderToday(payload) {
   const top = visibleToday[0];
   hero.innerHTML = `
     <div class="story-card__topline">
-      <span>${escapeHtml(t("mainStory"))}</span>
+      <span>${escapeHtml(t("todaySummary"))}</span>
       <span>${escapeHtml(aiVerdict(top))}</span>
     </div>
     ${todaySummaryStrip(visibleToday)}
+    <p class="hero-market-label">${escapeHtml(t("mainMarket"))}</p>
     <h3>${escapeHtml(compactTitle(top.title, 86))}</h3>
-    ${indicatorTopRow(top)}
-    ${probabilityBar(top)}
-    ${indicatorGrid(top)}
-    ${verdictLine(top)}
-    ${pulseSecondary(top)}
-    <p>${escapeHtml(shortReason(top))}</p>
+    ${renderMarketScorecard(top)}
     ${buttonRow(top)}
   `;
 
@@ -1668,9 +1780,7 @@ function renderRadar(payload) {
     </div>
     <h3>${escapeHtml(compactTitle(top.title || "Public market activity", 82))}</h3>
     <p>${escapeHtml(shortReason(top))}</p>
-    ${indicatorTopRow(top)}
-    ${indicatorGrid(top, true)}
-    ${verdictLine(top)}
+    ${renderMarketScorecard(top, { compact: true })}
     ${buttonRow({ ...top, pulse_score: top.pulse_score || 0, probability: top.probability })}
   `;
 
@@ -1742,7 +1852,7 @@ function renderTodayExtras() {
     todayScreen.appendChild(existing);
   }
 
-  const hotCards = filterBySelectedCategory(state.hot).slice(0, 5).map((item) => marketCard(item, "compact")).join("");
+  const hotCards = filterBySelectedCategory(state.hot).slice(0, 5).map((item) => marketCard(item, "hot")).join("");
   const movesCards = filterBySelectedCategory(state.moves).slice(0, 3).map((item) => marketCard(item, "compact")).join("");
   const hotBody = state.loading.hot
     ? `<div class="horizontal-strip">${[skeletonMarketCard(), skeletonMarketCard()].join("")}</div>`
