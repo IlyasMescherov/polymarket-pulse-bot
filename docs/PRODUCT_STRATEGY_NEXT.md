@@ -60,6 +60,8 @@ The product should prioritize meaning before metrics:
 - Morning Briefing instead of raw market feeds.
 - Attention Shift instead of raw wallet lists.
 - Market Mood instead of unexplained activity numbers.
+- Market Memory instead of one-time snapshots.
+- Market Regimes instead of raw movement labels.
 - Simple Read instead of technical market descriptions.
 - Personal Topics instead of generic discovery for everyone.
 
@@ -92,6 +94,23 @@ RU:
 - Разогревается
 - Волатильно
 - Скоро завершение
+
+### Market Memory
+
+PulseMarket AI should remember whether a market became more visible, cooled down, or stayed active across briefs.
+
+This turns the product from a current dashboard into a daily observer.
+
+### Market Regimes
+
+Every notable market should have a behavior label:
+
+- Quiet market
+- Short-term attention
+- Near resolution
+- Sustained interest
+- Weak confirmation
+- More confident move
 
 ### Simple Read
 

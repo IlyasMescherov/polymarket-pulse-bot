@@ -34,6 +34,8 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "Today’s Narrative",
         "What this means",
         "Attention vs conviction",
+        "Market memory",
+        "Market regime",
         "Strength of read",
         "Activity Radar",
         "Search",
@@ -95,6 +97,7 @@ def test_miniapp_sections_render_as_premium_dashboard() -> None:
         "segmented",
         "switch",
         "pill--mood",
+        "pill--regime",
         "pulse-subtle",
         "simple-read",
         "search-summary",
@@ -161,6 +164,9 @@ def test_miniapp_settings_language_theme_and_saved_features_exist() -> None:
     assert "insightStrength" in script_text
     assert "what_this_means" in script_text
     assert "attention_vs_conviction" in script_text
+    assert "market_memory_summary" in script_text
+    assert "marketRegime" in script_text
+    assert "changed_since_last_brief" in script_text
     assert "related_topics" in script_text
 
 
@@ -231,6 +237,8 @@ def test_miniapp_cards_are_compressed_and_have_habit_layer() -> None:
     assert "whatMarketAsks" in script_text
     assert "quickTake" in script_text
     assert "mainTension" in script_text
+    assert "marketMemory" in script_text
+    assert "marketRegime" in script_text
     assert "confidenceLevel" in script_text
     assert "whatInfluences" in script_text
     assert "relatedTopics" in script_text

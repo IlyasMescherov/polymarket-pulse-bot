@@ -12,6 +12,8 @@ from bot.services.event_categories import category_label, classify_market_catego
 from bot.services.ai_insight_engine import generate_market_briefing
 from bot.services.ai_prompts import market_analyst_system_prompt
 from bot.services.market_mood import MarketMood
+from bot.services.market_memory_engine import MarketMemoryResult, compare_current_to_previous
+from bot.services.market_regime_engine import MarketRegimeResult, classify_market_regime
 from bot.services.polymarket_client import Market
 from bot.services.pulse_score import PulseScore
 from bot.utils.i18n import normalize_language
@@ -65,6 +67,13 @@ class MarketContext:
     resolution_note: str
     category_voice: str
     related_topics: tuple[str, ...]
+    market_memory_summary: str
+    market_regime_key: str
+    market_regime: str
+    regime_reason: str
+    memory_pattern: str
+    changed_since_last_seen: str
+    historical_context: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,6 +124,8 @@ class AIContextEngine:
         mood: MarketMood,
         delta: float | None = None,
         language: str | None = None,
+        history: Sequence[Any] | None = None,
+        related_count: int = 0,
     ) -> MarketContext:
         fallback = self.fallback_market_context(
             market,
@@ -122,16 +133,27 @@ class AIContextEngine:
             mood,
             delta=delta,
             language=language,
+            history=history,
+            related_count=related_count,
         )
         if not self._api_key:
             return fallback
 
-        cache_key = self._cache_key("market", market.id, market.question, market.yes_probability, delta, language)
+        cache_key = self._cache_key(
+            "market",
+            market.id,
+            market.question,
+            market.yes_probability,
+            delta,
+            language,
+            fallback.market_memory_summary,
+            fallback.market_regime,
+        )
         cached = self._cache.get(cache_key)
         if isinstance(cached, MarketContext):
             return cached
 
-        prompt = self._market_prompt(market, pulse_score, mood, delta, language)
+        prompt = self._market_prompt(market, pulse_score, mood, delta, language, fallback)
         result = await self._complete_json(prompt, language=language)
         if not result:
             return fallback
@@ -221,6 +243,37 @@ class AIContextEngine:
                 fallback.category_voice,
                 max_chars=180,
             ),
+            market_memory_summary=self._safe_short(
+                result.get("market_memory_summary"),
+                fallback.market_memory_summary,
+                max_chars=190,
+            ),
+            market_regime=self._safe_short(
+                result.get("market_regime"),
+                fallback.market_regime,
+                max_chars=80,
+            ),
+            market_regime_key=fallback.market_regime_key,
+            regime_reason=self._safe_short(
+                result.get("regime_reason"),
+                fallback.regime_reason,
+                max_chars=190,
+            ),
+            memory_pattern=self._safe_short(
+                result.get("memory_pattern"),
+                fallback.memory_pattern,
+                max_chars=160,
+            ),
+            changed_since_last_seen=self._safe_short(
+                result.get("changed_since_last_seen"),
+                fallback.changed_since_last_seen,
+                max_chars=160,
+            ),
+            historical_context=self._safe_short(
+                result.get("historical_context"),
+                fallback.historical_context,
+                max_chars=190,
+            ),
         )
         self._cache[cache_key] = context
         return context
@@ -232,15 +285,30 @@ class AIContextEngine:
         mood: MarketMood,
         delta: float | None = None,
         language: str | None = None,
+        history: Sequence[Any] | None = None,
+        related_count: int = 0,
     ) -> MarketContext:
         normalized = normalize_language(language)
         category = classify_market_category(market)
         probability_label = self.probability_interpretation(market.yes_probability, normalized)
         abs_delta = abs(delta or 0)
         high_volume = (market.volume or 0) >= 100_000
-        briefing = generate_market_briefing(
+        memory = compare_current_to_previous(
             self._market_payload(market, pulse_score, delta),
+            history,
+            lang=normalized,
+        )
+        regime = classify_market_regime(
+            self._market_payload(market, pulse_score, delta),
+            history,
+            related_count=related_count,
+            lang=normalized,
+        )
+        payload = self._market_payload(market, pulse_score, delta, memory=memory, regime=regime)
+        briefing = generate_market_briefing(
+            payload,
             normalized,
+            related_count=related_count,
         )
         topic_reason = self._topic_reason(market.question, normalized)
         signal = str(briefing["insight_strength"])
@@ -304,6 +372,13 @@ class AIContextEngine:
             resolution_note=str(briefing["resolution_note"]),
             category_voice=str(briefing["category_voice"]),
             related_topics=related_topics,
+            market_memory_summary=str(briefing["market_memory_summary"]),
+            market_regime_key=regime.key,
+            market_regime=str(briefing["market_regime"]),
+            regime_reason=str(briefing["regime_reason"]),
+            memory_pattern=str(briefing["memory_pattern"]),
+            changed_since_last_seen=str(briefing["changed_since_last_seen"]),
+            historical_context=str(briefing["historical_context"]),
         )
 
     async def daily_narrative(
@@ -725,6 +800,7 @@ class AIContextEngine:
         mood: MarketMood,
         delta: float | None,
         language: str | None,
+        fallback: MarketContext,
     ) -> str:
         normalized = normalize_language(language)
         language_name = "English" if normalized == "en" else "Russian"
@@ -734,12 +810,16 @@ class AIContextEngine:
             "attention_summary, topic_narrative, market_mood_reasoning, "
             "quick_take, what_happened, main_tension, what_this_means, "
             "attention_vs_conviction, insight_strength, confidence_level, "
-            "resolution_note, category_voice, related_topics.\n"
+            "resolution_note, category_voice, related_topics, "
+            "market_memory_summary, market_regime, regime_reason, memory_pattern, "
+            "changed_since_last_seen, historical_context.\n"
             "insight_strength must be exactly one of: Weak confirmation, Interest is present, "
             "More noticeable than usual, Strong attention, More convincing than usual.\n"
             "related_topics must be an array of 2-4 short topic labels.\n"
             "Each sentence must explain the reader takeaway, not market outcomes. "
             "Name the main tension between probability, volume, time left, and related markets. "
+            "Use market memory to compare the current market with previous snapshots. "
+            "Use market regime to name the current behavior type. "
             "No directional advice.\n\n"
             f"Market title: {market.question}\n"
             f"Probability: {market.yes_probability}\n"
@@ -747,6 +827,11 @@ class AIContextEngine:
             f"Probability delta: {delta}\n"
             f"Pulse score: {pulse_score.value}/100 {pulse_score.label}\n"
             f"Market mood: {mood.label} - {mood.reason}\n"
+            f"Market memory: {fallback.market_memory_summary}\n"
+            f"Memory pattern: {fallback.memory_pattern}\n"
+            f"Changed since last brief: {fallback.changed_since_last_seen}\n"
+            f"Historical context: {fallback.historical_context}\n"
+            f"Market regime: {fallback.market_regime} - {fallback.regime_reason}\n"
             f"Ends: {market.end_date}\n"
             f"Description: {market.raw.get('description') or ''}\n"
         )
@@ -766,6 +851,9 @@ class AIContextEngine:
                 "why": context.why_people_care,
                 "probability": market.yes_probability,
                 "volume": market.volume,
+                "market_memory": context.market_memory_summary,
+                "market_regime": context.market_regime,
+                "changed_since_last_brief": context.changed_since_last_seen,
             }
             for market, context in zip(markets[:5], contexts[:5], strict=False)
         ]
@@ -776,6 +864,7 @@ class AIContextEngine:
             "what_changed: array of 2-3 very short bullets.\n"
             "category_summaries: object keyed by category with one short sentence.\n"
             "interpretation: one short sentence connecting attention and expectations across markets.\n"
+            "Use market_memory and market_regime to explain whether today differs from the previous brief.\n"
             "No predictions, no advice, no hype.\n\n"
             f"Markets: {json.dumps(items, ensure_ascii=False)}"
         )
@@ -830,8 +919,10 @@ class AIContextEngine:
         market: Market,
         pulse_score: PulseScore,
         delta: float | None,
+        memory: MarketMemoryResult | None = None,
+        regime: MarketRegimeResult | None = None,
     ) -> dict[str, Any]:
-        return {
+        payload = {
             "id": market.id,
             "title": market.question,
             "question": market.question,
@@ -843,6 +934,11 @@ class AIContextEngine:
             "pulse_score": pulse_score.value,
             "description": market.raw.get("description") or "",
         }
+        if memory is not None:
+            payload.update(memory.as_dict())
+        if regime is not None:
+            payload.update(regime.as_dict())
+        return payload
 
     def _safe_topics(self, value: object, fallback: tuple[str, ...]) -> tuple[str, ...]:
         if not isinstance(value, Iterable) or isinstance(value, (str, bytes)):

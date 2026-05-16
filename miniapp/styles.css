@@ -457,6 +457,12 @@ button {
   background: var(--green-soft);
 }
 
+.pill--regime {
+  color: var(--text-soft);
+  border: 1px solid rgba(118, 154, 255, 0.2);
+  background: rgba(118, 154, 255, 0.08);
+}
+
 .pulse-subtle {
   display: block;
   margin-top: 6px;

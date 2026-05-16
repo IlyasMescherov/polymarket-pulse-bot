@@ -16,6 +16,8 @@ AI acts as a calm market intelligence analyst. It explains:
 - what changed around the market
 - whether the read is weak, notable, or more convincing than usual
 - whether attention is moving together with probability
+- how the market changed compared with prior snapshots
+- what behavior regime the market is currently in
 - which related topics matter
 - what to watch next
 
@@ -31,6 +33,12 @@ Market API objects can include:
 - `confidence_level`
 - `attention_vs_conviction`
 - `related_topics`
+- `market_memory_summary`
+- `market_regime`
+- `regime_reason`
+- `memory_pattern`
+- `changed_since_last_seen`
+- `historical_context`
 
 Daily briefing payloads can include:
 
@@ -66,6 +74,35 @@ PulseMarket separates attention from conviction:
 
 This is the main interpretation advantage over raw dashboards.
 
+## Market Memory
+
+Market Memory compares the current market with stored `market_snapshots`.
+
+It can explain whether:
+
+- activity is holding across briefs
+- interest cooled after an earlier active period
+- probability barely moved over 24h
+- attention grew faster than probability
+- the market is close to resolution
+
+If history is weak, the product says so directly instead of inventing context.
+
+## Market Regime
+
+Market Regime names the current behavior type:
+
+- Quiet market
+- Market became active
+- Short-term attention
+- Near resolution
+- News-driven reaction
+- Sustained interest
+- Weak confirmation
+- More confident move
+
+These labels describe market behavior, not future outcomes.
+
 ## Safety Scope
 
 The interpretation layer must not include:
@@ -87,3 +124,5 @@ If `OPENAI_API_KEY` is missing or the API fails, deterministic fallback text sti
 - attention vs conviction
 - related topics
 - daily interpretation
+- market memory fallback
+- market regime fallback

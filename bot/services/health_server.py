@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from bot.database.db import ping_database
-from bot.database.repositories import get_latest_snapshots
+from bot.database.repositories import get_latest_snapshots, get_recent_snapshots
 from bot.services.ai_context_engine import AIContextEngine, MarketContext
 from bot.services.ai_insight_engine import generate_market_briefing
 from bot.services.event_categories import category_label, classify_market_category
@@ -171,6 +171,41 @@ def _market_to_api_object(
             else f"{category_label(category, 'en')} markets need a separate read."
         ),
         "related_topics": list(context.related_topics) if context is not None else [],
+        "market_memory_summary": (
+            context.market_memory_summary
+            if context is not None
+            else "Not enough history for comparison yet."
+        ),
+        "market_regime": (
+            context.market_regime
+            if context is not None
+            else "Quiet market"
+        ),
+        "market_regime_key": (
+            context.market_regime_key
+            if context is not None
+            else "quiet"
+        ),
+        "regime_reason": (
+            context.regime_reason
+            if context is not None
+            else "There is not enough activity for a strong comparison yet."
+        ),
+        "memory_pattern": (
+            context.memory_pattern
+            if context is not None
+            else "Not enough history for comparison yet."
+        ),
+        "changed_since_last_seen": (
+            context.changed_since_last_seen
+            if context is not None
+            else "Not enough history for comparison yet."
+        ),
+        "historical_context": (
+            context.historical_context
+            if context is not None
+            else "Not enough history for comparison yet."
+        ),
         "risk_flags": market_risk_flags(market, delta=delta),
         "url": market.url,
     }
@@ -242,10 +277,17 @@ def _smart_market_to_api_object(activity: MarketActivity) -> dict[str, Any]:
         "confidence_level": briefing["confidence_level"],
         "what_to_check": briefing["what_to_check"],
         "resolution_note": briefing["resolution_note"],
-        "category_voice": briefing["category_voice"],
-        "related_topics": briefing["related_topics"],
-        "category": category,
-        "category_label": category_label(category, "en"),
+            "category_voice": briefing["category_voice"],
+            "market_memory_summary": briefing["market_memory_summary"],
+            "market_regime": briefing["market_regime"],
+            "market_regime_key": "short_term_attention",
+            "regime_reason": briefing["regime_reason"],
+            "memory_pattern": briefing["memory_pattern"],
+            "changed_since_last_seen": briefing["changed_since_last_seen"],
+            "historical_context": briefing["historical_context"],
+            "related_topics": briefing["related_topics"],
+            "category": category,
+            "category_label": category_label(category, "en"),
     }
 
 
@@ -371,6 +413,16 @@ class HealthServer:
     def _api_empty(self, message: str) -> web.Response:
         return web.json_response({"data": [], "message": message})
 
+    async def _market_history(self, market_id: str) -> list[Any]:
+        if self._session_factory is None:
+            return []
+        try:
+            async with self._session_factory() as session:
+                return await get_recent_snapshots(session, market_id, limit=48)
+        except Exception as exc:
+            logger.debug("Could not load market memory for %s: %s", market_id, exc)
+            return []
+
     async def _market_api_object(
         self,
         market: Market,
@@ -384,6 +436,7 @@ class HealthServer:
             mood,
             delta=delta,
             language="en",
+            history=await self._market_history(market.id),
         )
         result = _market_to_api_object(market, delta, context=context)
         result["why_it_matters"] = context.why_people_care
@@ -401,6 +454,7 @@ class HealthServer:
                 mood,
                 delta=item.delta,
                 language="en",
+                history=await self._market_history(item.market.id),
             )
             contexts.append(context)
             result = _market_to_api_object(item.market, item.delta, context=context)
@@ -418,6 +472,11 @@ class HealthServer:
             "narrative": narrative.headline,
             "interpretation": narrative.interpretation,
             "what_changed": list(narrative.what_changed),
+            "changed_since_last_brief": [
+                context.changed_since_last_seen
+                for context in contexts[:3]
+                if context.changed_since_last_seen
+            ],
             "category_summaries": narrative.category_summaries,
         }
 

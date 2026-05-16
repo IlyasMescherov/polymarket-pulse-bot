@@ -160,6 +160,7 @@ async def _send_market_cards(
             mood,
             delta=delta,
             language=language,
+            history=recent,
         )
         explanation = context.simple_read or await ai_explainer.explain_market(market)
         await message.answer(
@@ -221,6 +222,7 @@ async def _send_movement_cards(
             mood,
             delta=movement.delta,
             language=language,
+            history=recent,
         )
         explanation = context.attention_summary or await ai_explainer.explain_market(movement.market)
         await message.answer(
@@ -269,6 +271,7 @@ async def _send_today_pulse_cards(
     ai_explainer: AIExplainer,
     ai_context_engine: AIContextEngine,
     language: str,
+    session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     if not items:
         await message.answer(
@@ -280,12 +283,15 @@ async def _send_today_pulse_cards(
 
     for index, item in enumerate(items[:5], start=1):
         mood = calculate_market_mood(item.market, delta=item.delta, language=language)
+        async with session_factory() as session:
+            recent = await get_recent_snapshots(session, item.market.id, limit=8)
         context = await ai_context_engine.market_context(
             item.market,
             item.pulse_score,
             mood,
             delta=item.delta,
             language=language,
+            history=recent,
         )
         ai_why = context.why_people_care or await ai_explainer.explain_market(item.market)
         await message.answer(
@@ -401,7 +407,7 @@ async def today_pulse(
             else "Не смог собрать Пульс дня. Попробуйте позже."
         )
         return
-    await _send_today_pulse_cards(callback.message, items, ai_explainer, ai_context_engine, language)
+    await _send_today_pulse_cards(callback.message, items, ai_explainer, ai_context_engine, language, session_factory)
 
 
 @router.message(Command("today"))
@@ -438,7 +444,7 @@ async def today_pulse_command(
             else "Не смог собрать Пульс дня. Попробуйте позже."
         )
         return
-    await _send_today_pulse_cards(message, items, ai_explainer, ai_context_engine, language)
+    await _send_today_pulse_cards(message, items, ai_explainer, ai_context_engine, language, session_factory)
 
 
 @router.callback_query(F.data == NEW_MARKETS)
@@ -811,11 +817,14 @@ async def explain_market(
 
     pulse_score = calculate_pulse_score(market)
     mood = calculate_market_mood(market, language=language)
+    async with session_factory() as session:
+        recent = await get_recent_snapshots(session, market.id, limit=8)
     context = await ai_context_engine.market_context(
         market,
         pulse_score,
         mood,
         language=language,
+        history=recent,
     )
     if language == "en":
         ai_brief = "\n".join(
@@ -825,6 +834,8 @@ async def explain_market(
                 f"Main tension: {context.main_tension}",
                 f"What this means: {context.what_this_means}",
                 f"Attention vs conviction: {context.attention_vs_conviction}",
+                f"Market memory: {context.market_memory_summary}",
+                f"Market regime: {context.market_regime}. {context.regime_reason}",
                 f"Strength of read: {context.insight_strength}",
                 f"What to check: {context.what_to_watch}",
                 f"Related topics: {', '.join(context.related_topics)}",
@@ -839,6 +850,8 @@ async def explain_market(
                 f"Главное противоречие: {context.main_tension}",
                 f"Что это значит: {context.what_this_means}",
                 f"Внимание vs убеждённость: {context.attention_vs_conviction}",
+                f"Память рынка: {context.market_memory_summary}",
+                f"Тип поведения: {context.market_regime}. {context.regime_reason}",
                 f"Сила вывода: {context.insight_strength}",
                 f"Что проверить: {context.what_to_watch}",
                 f"Связанные темы: {', '.join(context.related_topics)}",

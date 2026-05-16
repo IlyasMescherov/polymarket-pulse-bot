@@ -6,6 +6,8 @@ from typing import Any, Mapping, Sequence
 from bot.services.ai_prompts import validate_ai_output
 from bot.services.category_analyzer import category_summary
 from bot.services.cross_market_analyzer import group_markets_by_narrative
+from bot.services.market_memory_engine import NO_HISTORY_MESSAGE
+from bot.services.market_regime_engine import REGIME_LABELS
 from bot.utils.i18n import normalize_language
 
 FALLBACK_MESSAGES: dict[str, dict[str, str]] = {
@@ -476,6 +478,34 @@ def generate_market_briefing(
     resolution = resolution_note(market, normalized)
     category_voice = category_voice_summary(market, normalized)
     related = related_topics_for_market(market)
+    memory_summary = _safe(
+        str(market.get("market_memory_summary") or ""),
+        NO_HISTORY_MESSAGE[normalized],
+    )
+    memory_pattern = _safe(
+        str(market.get("memory_pattern") or ""),
+        memory_summary,
+    )
+    changed_since_last_seen = _safe(
+        str(market.get("changed_since_last_seen") or ""),
+        memory_summary,
+    )
+    historical_context = _safe(
+        str(market.get("historical_context") or ""),
+        memory_summary,
+    )
+    regime_label = _safe(
+        str(market.get("market_regime") or ""),
+        REGIME_LABELS[normalized]["quiet"],
+    )
+    regime_reason = _safe(
+        str(market.get("regime_reason") or ""),
+        (
+            "There is not enough activity for a strong comparison yet."
+            if normalized == "en"
+            else "Пока мало активности для сильного сравнения."
+        ),
+    )
 
     if normalized == "en":
         strength_sentence = {
@@ -492,7 +522,12 @@ def generate_market_briefing(
             "quiet": "Движение спокойное; данных для сильного вывода мало.",
         }[strength]
 
-    quick_take = _safe(attention["interpretation"], FALLBACK_MESSAGES[normalized]["explain_fallback"])
+    if market.get("has_market_memory") and "barely changed" in memory_summary.lower():
+        quick_take = _safe(memory_summary, attention["interpretation"])
+    elif market.get("has_market_memory") and "почти не изменилась" in memory_summary.lower():
+        quick_take = _safe(memory_summary, attention["interpretation"])
+    else:
+        quick_take = _safe(attention["interpretation"], FALLBACK_MESSAGES[normalized]["explain_fallback"])
     return {
         "quick_take": quick_take,
         "what_happened": what_happened,
@@ -510,6 +545,12 @@ def generate_market_briefing(
         "resolution_note": resolution,
         "how_this_resolves": resolution,
         "category_voice": category_voice,
+        "market_memory_summary": memory_summary,
+        "memory_pattern": memory_pattern,
+        "changed_since_last_seen": changed_since_last_seen,
+        "historical_context": historical_context,
+        "market_regime": regime_label,
+        "regime_reason": regime_reason,
     }
 
 

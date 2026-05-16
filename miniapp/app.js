@@ -162,6 +162,7 @@ const copy = {
     movesOne: "market changed enough to review.",
     movesMany: "markets changed enough to review.",
     whatChangedTitle: "What changed",
+    changedSinceLastBrief: "Changed since last brief",
     moodTodayTitle: "Market mood today",
     moodSummaryEmpty: "Markets are quiet right now.",
     categoryGeopolitics: "Geopolitics",
@@ -181,6 +182,8 @@ const copy = {
     mainTension: "Main tension",
     whatThisMeans: "What this means",
     attentionVsConviction: "Attention vs conviction",
+    marketMemory: "Market memory",
+    marketRegime: "Market regime",
     howSerious: "Strength of read",
     whatInfluences: "What to check",
     confidenceLevel: "Confidence level",
@@ -195,6 +198,7 @@ const copy = {
     moodEnding: "Ending soon",
     copied: "Copied",
     appShared: "PulseMarket AI helps you understand what matters on Polymarket.",
+    memoryFallback: "Not enough history for comparison yet.",
   },
   ru: {
     productLine: "Быстро понять, что важно на Polymarket.",
@@ -289,7 +293,7 @@ const copy = {
     radarEmpty: "Сейчас нет сильной публичной активности. PulseMarket продолжит отслеживание.",
     radarReason: "Внимание к этому рынку растёт.",
     radarListTitle: "Ещё рынки с ростом внимания",
-    todayEmpty: "PulseMarket готовит обзор на сегодня.",
+    todayEmpty: "Пока собираю картину дня.",
     hotTitle: "Горячие рынки",
     hotSubtitle: "Рынки с сильной текущей активностью.",
     hotEmpty: "Пока нет горячих рынков.",
@@ -313,6 +317,7 @@ const copy = {
     movesOne: "рынок заметно изменился.",
     movesMany: "рынка заметно изменились.",
     whatChangedTitle: "Что изменилось",
+    changedSinceLastBrief: "Что изменилось с прошлого обзора",
     moodTodayTitle: "Настроение дня",
     moodSummaryEmpty: "Рынки сейчас спокойны.",
     categoryGeopolitics: "Геополитика",
@@ -332,6 +337,8 @@ const copy = {
     mainTension: "Главное противоречие",
     whatThisMeans: "Что это значит",
     attentionVsConviction: "Внимание vs убеждённость",
+    marketMemory: "Память рынка",
+    marketRegime: "Тип поведения",
     howSerious: "Сила вывода",
     whatInfluences: "Что проверить",
     confidenceLevel: "Уровень уверенности",
@@ -346,6 +353,7 @@ const copy = {
     moodEnding: "Скоро завершение",
     copied: "Скопировано",
     appShared: "PulseMarket AI помогает быстро понять, что важно на Polymarket.",
+    memoryFallback: "Пока мало истории для сравнения.",
   },
 };
 
@@ -728,6 +736,38 @@ function marketMood(item) {
   };
 }
 
+function marketRegime(item) {
+  const key = String((item && item.market_regime_key) || "").trim();
+  const label = String((item && item.market_regime) || "").trim();
+  const labels = {
+    en: {
+      quiet: "Quiet market",
+      active: "Market became active",
+      short_term_attention: "Short-term attention",
+      near_resolution: "Near resolution",
+      news_reaction: "News-driven reaction",
+      emotional: "Emotional reaction",
+      sustained_interest: "Sustained interest",
+      weak_confirmation: "Weak confirmation",
+      more_confident: "More confident move",
+    },
+    ru: {
+      quiet: "Спокойный рынок",
+      active: "Рынок оживился",
+      short_term_attention: "Краткосрочное внимание",
+      near_resolution: "Перед завершением",
+      news_reaction: "Новостная реакция",
+      emotional: "Эмоциональная реакция",
+      sustained_interest: "Устойчивый интерес",
+      weak_confirmation: "Слабое подтверждение",
+      more_confident: "Более уверенное движение",
+    },
+  };
+  if (key && labels[currentLanguage()][key]) return labels[currentLanguage()][key];
+  if (label && matchesCurrentLanguage(label)) return label;
+  return labels[currentLanguage()].quiet;
+}
+
 function inferMoodKey(item) {
   const movement = Math.abs(Number(item.movement || 0));
   const volume = Number(item.volume || item.public_activity || 0);
@@ -809,6 +849,13 @@ function normalizeMarket(item) {
     confidence_level: item && item.confidence_level,
     resolution_note: item && item.resolution_note,
     category_voice: item && item.category_voice,
+    market_memory_summary: item && item.market_memory_summary,
+    market_regime: item && item.market_regime,
+    market_regime_key: item && item.market_regime_key,
+    regime_reason: item && item.regime_reason,
+    memory_pattern: item && item.memory_pattern,
+    changed_since_last_seen: item && item.changed_since_last_seen,
+    historical_context: item && item.historical_context,
     related_topics: Array.isArray(item && item.related_topics) ? item.related_topics : [],
     category: categoryForItem(item || {}),
     category_label: item && item.category_label,
@@ -883,13 +930,13 @@ function buttonRow(item) {
 }
 
 function marketCard(item, variant = "compact") {
-  const mood = marketMood(item);
+  const regime = marketRegime(item);
   return `
     <article class="market-card market-card--${variant}">
       <div class="market-card__main">
         <div class="market-card__titleline">
           <h3>${escapeHtml(compactTitle(item.title))}</h3>
-          <span class="pill pill--mood">${escapeHtml(mood.label)}</span>
+          <span class="pill pill--regime">${escapeHtml(regime)}</span>
         </div>
         <p>${escapeHtml(shortReason(item))}</p>
       </div>
@@ -904,13 +951,13 @@ function marketCard(item, variant = "compact") {
 
 function savedCard(item, removable = false) {
   const encoded = encodeURIComponent(JSON.stringify(item));
-  const mood = marketMood(item);
+  const regime = marketRegime(item);
   return `
     <article class="market-card market-card--saved">
       <div class="market-card__main">
         <div class="market-card__titleline">
           <h3>${escapeHtml(compactTitle(item.title))}</h3>
-          <span class="pill pill--mood">${escapeHtml(mood.label)}</span>
+          <span class="pill pill--regime">${escapeHtml(regime)}</span>
         </div>
         <p>${escapeHtml(item.why || t("selectedToday"))}</p>
       </div>
@@ -968,6 +1015,14 @@ function openExplain(item) {
       <div>
         <span>${escapeHtml(t("attentionVsConviction"))}</span>
         <strong>${escapeHtml(localizedText(normalized.attention_vs_conviction, mood.reason || editorialReason(normalized)))}</strong>
+      </div>
+      <div>
+        <span>${escapeHtml(t("marketMemory"))}</span>
+        <strong>${escapeHtml(localizedText(normalized.market_memory_summary, t("memoryFallback")))}</strong>
+      </div>
+      <div>
+        <span>${escapeHtml(t("marketRegime"))}</span>
+        <strong>${escapeHtml(`${marketRegime(normalized)}. ${localizedText(normalized.regime_reason, t("memoryFallback"))}`)}</strong>
       </div>
       <div>
         <span>${escapeHtml(t("howSerious"))}</span>
@@ -1092,6 +1147,9 @@ function renderDailySnapshot() {
 
   const allMarkets = [...state.today, ...state.hot, ...state.moves];
   const notes = [];
+  if (Array.isArray(state.todayMeta.changed_since_last_brief)) {
+    notes.push(...state.todayMeta.changed_since_last_brief.filter((item) => matchesCurrentLanguage(item)));
+  }
   if (Array.isArray(state.todayMeta.what_changed)) {
     notes.push(...state.todayMeta.what_changed.filter((item) => matchesCurrentLanguage(item)));
   }
@@ -1108,7 +1166,7 @@ function renderDailySnapshot() {
 
   changed.innerHTML = `
     <div class="mini-panel__header">
-      <h3>${escapeHtml(t("whatChangedTitle"))}</h3>
+      <h3>${escapeHtml(t("changedSinceLastBrief"))}</h3>
     </div>
     <div class="change-list">
       ${uniqueNotes.slice(0, 3).map((note) => `<p>${escapeHtml(note)}</p>`).join("")}
@@ -1166,6 +1224,7 @@ function renderToday(payload) {
     narrative: payload && payload.narrative,
     interpretation: payload && payload.interpretation,
     what_changed: Array.isArray(payload && payload.what_changed) ? payload.what_changed : [],
+    changed_since_last_brief: Array.isArray(payload && payload.changed_since_last_brief) ? payload.changed_since_last_brief : [],
     category_summaries: (payload && payload.category_summaries) || {},
   };
   const hero = document.getElementById("today-hero");
@@ -1181,7 +1240,7 @@ function renderToday(payload) {
   }
 
   const top = visibleToday[0];
-  const topMood = marketMood(top);
+  const topRegime = marketRegime(top);
   hero.innerHTML = `
     <div class="story-card__topline">
       <span>${escapeHtml(t("mainStory"))}</span>
@@ -1190,7 +1249,7 @@ function renderToday(payload) {
     <h3>${escapeHtml(compactTitle(top.title, 86))}</h3>
     <div class="pill-row">
       <span class="pill pill--prob">${escapeHtml(probabilityDisplay(top))}</span>
-      <span class="pill pill--mood">${escapeHtml(topMood.label)}</span>
+      <span class="pill pill--regime">${escapeHtml(topRegime)}</span>
     </div>
     ${pulseSecondary(top)}
     <p>${escapeHtml(shortReason(top))}</p>

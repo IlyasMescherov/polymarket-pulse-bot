@@ -54,6 +54,13 @@ async def test_ai_context_engine_fallback_works_without_api_key() -> None:
     assert context.confidence_level
     assert context.resolution_note
     assert context.category_voice
+    assert context.market_memory_summary
+    assert context.market_regime
+    assert context.market_regime_key
+    assert context.regime_reason
+    assert context.memory_pattern
+    assert context.changed_since_last_seen
+    assert context.historical_context
     assert context.attention_vs_conviction
     assert context.related_topics
     assert context.category == "crypto"
@@ -62,6 +69,30 @@ async def test_ai_context_engine_fallback_works_without_api_key() -> None:
     assert context.why_people_care == "Crypto volatility made this market more visible."
     assert "People are watching because activity increased" not in context.why_people_care
     assert "Attention" in context.attention_vs_conviction or "expectations" in context.attention_vs_conviction
+
+
+@pytest.mark.asyncio
+async def test_ai_context_engine_uses_market_memory_history() -> None:
+    market = _market(probability=0.42)
+    pulse = calculate_pulse_score(market, delta=0.005)
+    mood = calculate_market_mood(market, delta=0.005, language="en")
+
+    class Snapshot:
+        yes_probability = 0.415
+        volume = 90_000
+        end_date = market.end_date
+
+    context = await AIContextEngine(None).market_context(
+        market,
+        pulse,
+        mood,
+        delta=0.005,
+        language="en",
+        history=[Snapshot()],
+    )
+
+    assert context.market_memory_summary != "Not enough history for comparison yet."
+    assert context.market_regime_key in {"short_term_attention", "active", "sustained_interest"}
 
 
 @pytest.mark.asyncio

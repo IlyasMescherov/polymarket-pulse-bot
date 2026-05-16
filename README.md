@@ -7,7 +7,7 @@
 - **Mini App preview:** [https://app.pulsemarketai.com/app](https://app.pulsemarketai.com/app)
 - **Production health:** [https://pulsemarketai.com/health](https://pulsemarketai.com/health)
 
-PulseMarket AI is a daily market intelligence companion for Polymarket. It helps users understand what matters today, why people are watching a market, where public attention is rising, and what to inspect next.
+PulseMarket AI is a daily market intelligence companion for Polymarket. It helps users understand what matters today, why a market deserves attention, where public attention is rising, and what to inspect next.
 
 This project is prepared for a Polymarket Builders Program submission. The current MVP is intentionally scoped around analytics, notifications, and public market links.
 
@@ -47,12 +47,14 @@ Builder submission package:
 - AI reasoning layer: [docs/AI_REASONING_LAYER.md](docs/AI_REASONING_LAYER.md)
 - AI interpretation layer: [docs/AI_INTERPRETATION_LAYER.md](docs/AI_INTERPRETATION_LAYER.md)
 - AI market briefing: [docs/AI_MARKET_BRIEFING.md](docs/AI_MARKET_BRIEFING.md)
+- Market Memory: [docs/MARKET_MEMORY.md](docs/MARKET_MEMORY.md)
+- Market Regimes: [docs/MARKET_REGIMES.md](docs/MARKET_REGIMES.md)
 - Event category system: [docs/EVENT_CATEGORY_SYSTEM.md](docs/EVENT_CATEGORY_SYSTEM.md)
 - Static landing page: [landing/](landing/)
 - Telegram Mini App preview: [miniapp/](miniapp/)
 - Avatar guide: [docs/brand/AVATAR_GUIDE.md](docs/brand/AVATAR_GUIDE.md)
 
-Recommended public channel username: `@PulseMarketAI`. If unavailable, use `@PulseMarketNews`, `@PulseMarketAlerts`, `@PulseMarketSignal`, `@PulseMarketRadar`, or `@PulseMarketDigest`.
+Recommended public channel username: `@PulseMarketAI`. If unavailable, use `@PulseMarketNews`, `@PulseMarketAlerts`, `@PulseMarketRadar`, or `@PulseMarketDigest`.
 
 ## What is PulseMarket Bot
 
@@ -72,9 +74,11 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 
 - Hot markets: shows 5 active Polymarket markets ranked by recent volume.
 - New markets: shows 5 newly created active markets.
-- Morning Briefing / Today's Pulse: shows a short daily selection of high-signal markets with why people care and what to watch.
+- Morning Briefing / Today's Pulse: shows a short daily selection of notable markets with why people care and what to watch.
 - AI Context Engine: optionally adds short market context, topic narratives, and what-changed summaries when `OPENAI_API_KEY` is configured.
-- AI Market Interpretation Layer: explains what activity means, separates attention from conviction, and labels public attention as noise, moderate, strong, or meaningful.
+- AI Market Interpretation Layer: explains what activity means, separates attention from conviction, and labels how strong the market read looks.
+- Market Memory: compares current markets with stored snapshots so PulseMarket can say whether activity is holding, cooling, or newly visible.
+- Market Regimes: labels behavior such as Quiet market, Short-term attention, Near resolution, Sustained interest, Weak confirmation, and More confident move.
 - Today’s Narrative: explains what public markets are reacting to today without making predictions.
 - Event categories: All, Politics, Crypto, AI, Sports, Esports, Global, and Culture help users filter the daily briefing and Activity Radar.
 - Human probability language: unlikely, possible, likely, and highly likely labels make raw percentages easier to read.
@@ -83,7 +87,7 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - Activity Radar: read-only view of unusual public activity, public leaderboard data, active market attention, and user-tracked public wallet addresses.
 - Sharp movements: compares stored market snapshots and surfaces probability changes above each user's selected threshold.
 - Why it moved: explains probability movement using public market data, volume, time to resolution, and risk flags.
-- Pulse Score: each market gets a 0-100 signal score based on movement, volume, time to close, and data quality.
+- Pulse Score: each market gets a 0-100 interest score based on movement, volume, time to close, and data quality.
 - Market Health Score: each market gets a separate 0-100 quality/activity score based on volume, data completeness, time to resolution, and optional liquidity signals when available.
 - Risk flags: market cards highlight low volume, missing data, ending soon, sharp move, and volatile-history risks.
 - Market search: users can search public Polymarket markets by topic, such as `bitcoin`, `fed`, `election`, or `ai`.
@@ -94,7 +98,7 @@ The bot currently runs as a polling Telegram bot with PostgreSQL-backed user set
 - Beginner mode: every market can be explained in plain language without trading advice.
 - Resolution explainer: users can ask how a market resolves and what rules should be checked.
 - Categories: politics, crypto, AI / tech, sports, and economy filters are available from the main menu.
-- Daily digest: users can opt into a daily digest of high-signal markets, personalized by topics when available.
+- Daily digest: users can opt into a daily digest of notable markets, personalized by topics when available.
 - Admin channel digest: admins can generate a ready-to-copy daily post for `@PulseMarketAI` with `/admin_digest`.
 - Safe channel publishing: admins can preview Today’s Pulse, publish to `@PulseMarketAI` only after approval, and rely on duplicate/cooldown protection.
 - X draft generation: admins can generate short X/Twitter drafts without automatic X posting.
@@ -153,8 +157,12 @@ When `OPENAI_API_KEY` is configured, the web API enriches market objects with sa
 - `attention_summary`
 - `topic_narrative`
 - `what_this_means`
-- `attention_signal`
+- `insight_strength`
 - `attention_vs_conviction`
+- `market_memory_summary`
+- `market_regime`
+- `regime_reason`
+- `changed_since_last_seen`
 - `related_topics`
 - `probability_interpretation`
 - `category`
@@ -177,7 +185,7 @@ Pulse Score is intentionally simple and transparent:
 
 Risk flags are guardrails for discovery. They are not trading advice.
 
-Market Health is separate from Pulse Score. It is a quality and activity signal based on public data completeness, volume, time to resolution, and optional liquidity data when available. Market Health is not financial advice.
+Market Health is separate from Pulse Score. It is a quality and activity read based on public data completeness, volume, time to resolution, and optional liquidity data when available. Market Health is not financial advice.
 
 ## Tech Stack
 
@@ -218,7 +226,7 @@ The bot provides market discovery, watchlists, alerts, and links back to Polymar
 
 PulseMarket AI gives new and casual users a low-friction way to discover Polymarket markets directly inside Telegram. It explains probabilities in plain language, highlights market movement, and sends users to the original Polymarket market pages instead of trying to replace the Polymarket experience.
 
-The bot can also help identify which topics users search for and which markets they open, creating useful product signals for future builder work.
+The bot can also help identify which topics users search for and which markets they open, creating useful product feedback for future builder work.
 
 ## Builder Program Alignment
 
@@ -246,7 +254,7 @@ Market Health is a 0-100 score with three labels:
 - `Medium`: 40-69
 - `Healthy`: 70-100
 
-It is based on public market quality signals such as volume, probability availability, end date availability, time to close, and optional liquidity fields if stable public CLOB data is available. If liquidity data is unavailable, the bot falls back to volume and data-completeness checks.
+It is based on public market quality inputs such as volume, probability availability, end date availability, time to close, and optional liquidity fields if stable public CLOB data is available. If liquidity data is unavailable, the bot falls back to volume and data-completeness checks.
 
 Market Health is not a recommendation to trade.
 
@@ -357,8 +365,9 @@ The Mini App and bot now prioritize meaning before metrics:
 - Market Mood explains whether a market feels Quiet, Active, Heating up, Volatile, or Ending soon.
 - Simple Read turns a market into plain language: what it asks, why people care, what to watch, and where to inspect rules.
 - Activity Radar focuses on where public attention is rising instead of leading with raw wallet data.
+- Market Memory and Market Regimes help PulseMarket read how behavior changes over time.
 
-See [docs/PRODUCT_STRATEGY_NEXT.md](docs/PRODUCT_STRATEGY_NEXT.md), [docs/MORNING_BRIEFING.md](docs/MORNING_BRIEFING.md), and [docs/MARKET_MOOD.md](docs/MARKET_MOOD.md).
+See [docs/PRODUCT_STRATEGY_NEXT.md](docs/PRODUCT_STRATEGY_NEXT.md), [docs/MORNING_BRIEFING.md](docs/MORNING_BRIEFING.md), [docs/MARKET_MOOD.md](docs/MARKET_MOOD.md), [docs/MARKET_MEMORY.md](docs/MARKET_MEMORY.md), and [docs/MARKET_REGIMES.md](docs/MARKET_REGIMES.md).
 
 ## Roadmap
 

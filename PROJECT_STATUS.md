@@ -178,6 +178,8 @@ PulseMarket AI now has an optional reasoning layer on top of ranking and filteri
 
 - AI Context Engine: [docs/AI_REASONING_LAYER.md](docs/AI_REASONING_LAYER.md)
 - AI Market Interpretation Layer: [docs/AI_INTERPRETATION_LAYER.md](docs/AI_INTERPRETATION_LAYER.md)
+- Market Memory: [docs/MARKET_MEMORY.md](docs/MARKET_MEMORY.md)
+- Market Regimes: [docs/MARKET_REGIMES.md](docs/MARKET_REGIMES.md)
 - AI Market Briefing: [docs/AI_MARKET_BRIEFING.md](docs/AI_MARKET_BRIEFING.md)
 - Event Category System: [docs/EVENT_CATEGORY_SYSTEM.md](docs/EVENT_CATEGORY_SYSTEM.md)
 - Mini App Today tab includes Today’s Narrative and category-aware briefing copy.

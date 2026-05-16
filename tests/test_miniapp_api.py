@@ -101,6 +101,13 @@ async def test_miniapp_hot_api_shape() -> None:
     assert payload["data"][0]["attention_vs_conviction"]
     assert payload["data"][0]["insight_strength"]
     assert payload["data"][0]["confidence_level"]
+    assert payload["data"][0]["market_memory_summary"]
+    assert payload["data"][0]["market_regime"]
+    assert payload["data"][0]["market_regime_key"]
+    assert payload["data"][0]["regime_reason"]
+    assert payload["data"][0]["memory_pattern"]
+    assert payload["data"][0]["changed_since_last_seen"]
+    assert payload["data"][0]["historical_context"]
     assert payload["data"][0]["resolution_note"]
     assert payload["data"][0]["category_voice"]
     assert isinstance(payload["data"][0]["related_topics"], list)
@@ -127,6 +134,7 @@ async def test_miniapp_today_api_shape() -> None:
     assert payload["narrative"]
     assert payload["interpretation"]
     assert payload["what_changed"]
+    assert payload["changed_since_last_brief"]
     assert isinstance(payload["category_summaries"], dict)
 
 
@@ -157,6 +165,8 @@ async def test_miniapp_smart_money_api_shape() -> None:
     assert active_payload["data"][0]["what_this_means"]
     assert active_payload["data"][0]["attention_vs_conviction"]
     assert active_payload["data"][0]["insight_strength"]
+    assert active_payload["data"][0]["market_memory_summary"]
+    assert active_payload["data"][0]["market_regime"]
     assert traders_payload["data"][0]["wallet"] == "0x1111...1111"
     assert traders_payload["data"][0]["why_it_matters"]
     assert traders_payload["data"][0]["trader_score"] == 74

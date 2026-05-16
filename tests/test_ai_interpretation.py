@@ -87,6 +87,12 @@ def test_explain_has_required_sections() -> None:
         "main_tension",
         "what_this_means",
         "attention_vs_conviction",
+        "market_memory_summary",
+        "market_regime",
+        "regime_reason",
+        "memory_pattern",
+        "changed_since_last_seen",
+        "historical_context",
         "insight_strength",
         "confidence_level",
         "strength_of_read",
@@ -209,3 +215,22 @@ def test_cross_market_divergence() -> None:
         ],
     }
     assert detect_divergence(group)
+
+
+def test_briefing_uses_memory_and_regime_fields() -> None:
+    briefing = generate_market_briefing(
+        _market(
+            market_memory_summary="Activity is holding, but probability barely changed.",
+            memory_pattern="Activity is holding for a second day",
+            changed_since_last_seen="Public volume grew faster than probability.",
+            historical_context="The attention pattern is repeating, while conviction has not caught up.",
+            market_regime="Short-term attention",
+            regime_reason="The market looks short-term active rather than sustainably repriced.",
+            has_market_memory=True,
+        ),
+        "en",
+    )
+
+    assert briefing["market_memory_summary"] == "Activity is holding, but probability barely changed."
+    assert briefing["market_regime"] == "Short-term attention"
+    assert briefing["regime_reason"]

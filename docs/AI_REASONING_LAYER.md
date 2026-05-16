@@ -14,6 +14,8 @@ The role of AI is not to predict outcomes. It acts as a calm market intelligence
 - Interprets what market activity means through `what_this_means`.
 - Separates attention from conviction so users can see whether activity changed expectations or only visibility.
 - Labels the read as Weak confirmation, Interest is present, More noticeable than usual, Strong attention, or More convincing than usual.
+- Adds Market Memory from stored snapshots so the read can compare today with earlier briefs.
+- Adds Market Regime labels such as Near resolution, Short-term attention, Sustained interest, and More confident move.
 - Produces a safe fallback when no AI key is configured.
 
 ## What It Does Not Do
@@ -45,6 +47,8 @@ Inputs:
 - Market Mood
 - time left
 - event category
+- previous market snapshots when available
+- market regime
 
 Outputs:
 
@@ -60,6 +64,10 @@ Outputs:
 - `confidence_level`
 - `attention_vs_conviction`
 - `related_topics`
+- `market_memory_summary`
+- `market_regime`
+- `regime_reason`
+- `changed_since_last_seen`
 - human probability interpretation
 
 See [AI_INTERPRETATION_LAYER.md](AI_INTERPRETATION_LAYER.md) for the product rules around interpretation.
