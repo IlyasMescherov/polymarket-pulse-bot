@@ -12,6 +12,7 @@ from bot.services.event_categories import category_label, classify_market_catego
 from bot.services.event_matching_engine import (
     MarketEventMatch,
     extract_market_terms,
+    is_related_news_match,
     match_events_to_market,
 )
 from bot.services.news_impact_engine import NewsImpact, classify_news_impact_from_matches
@@ -325,7 +326,9 @@ def _story_key_and_title(market: Any, events: Sequence[ExternalNewsItem]) -> tup
     terms = extract_market_terms(market)
     entities = sorted(terms.get("entities", set()))
     if not entities:
-        for match in match_events_to_market(market, events, limit=1, min_score=18):
+        for match in match_events_to_market(market, events, limit=3, min_score=18):
+            if not is_related_news_match(match):
+                continue
             entities = sorted(str(entity) for entity in match.event.entities[:3])
             if entities:
                 break
@@ -344,7 +347,9 @@ def _story_key_and_title(market: Any, events: Sequence[ExternalNewsItem]) -> tup
 def _cluster_matches(markets: Sequence[Any], events: Sequence[ExternalNewsItem]) -> list[MarketEventMatch]:
     by_url: dict[str, MarketEventMatch] = {}
     for market in markets:
-        for match in match_events_to_market(market, events, limit=5, min_score=18):
+        for match in match_events_to_market(market, events, limit=8, min_score=18):
+            if not is_related_news_match(match):
+                continue
             current = by_url.get(match.event.url)
             if current is None or match.relevance_score > current.relevance_score:
                 by_url[match.event.url] = match

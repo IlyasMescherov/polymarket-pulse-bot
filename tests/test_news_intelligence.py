@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from bot.services.event_matching_engine import match_events_to_market
+from bot.services.event_matching_engine import match_events_to_market, matched_terms_from_reason
 from bot.services.news_intelligence_engine import (
     NewsIntelligenceEngine,
     build_news_context,
@@ -46,6 +46,9 @@ def _market() -> dict:
         "title": 'Will Trump say "Iran" during events with Xi Jinping?',
         "category": "politics",
         "slug": "will-trump-say-iran-during-events-with-xi",
+        "pulse_score": 72,
+        "movement": 4,
+        "volume": 200_000,
     }
 
 
@@ -114,6 +117,94 @@ def test_market_gets_related_news_fields() -> None:
     assert data["why_moving_now"]
 
 
+def test_unrelated_official_source_is_not_attached_to_market_news() -> None:
+    market = {
+        "title": "Will Carlos Álvarez win the 2026 Peruvian presidential election?",
+        "category": "politics",
+        "slug": "carlos-alvarez-peru-president-2026",
+        "pulse_score": 82,
+        "movement": 5,
+        "volume": 300_000,
+    }
+    unrelated = ExternalNewsItem(
+        source_type="official",
+        source_name="White House Briefing Room",
+        source_url="https://example.com/feed",
+        title="Presidential Message on Armed Forces Day",
+        summary="The message discusses military service and national recognition.",
+        url="https://example.com/white-house",
+        published_at=datetime(2026, 5, 16, tzinfo=timezone.utc),
+        category="politics",
+        entities=("trump", "iran"),
+        topics=("military", "security"),
+        urgency_score=90,
+        credibility_score=95,
+    )
+
+    context = build_news_context(market, [unrelated], language="en")
+
+    assert context.latest_relevant_news == ()
+    assert context.related_news == ()
+    assert context.official_source_signal is False
+    assert context.confidence_from_news == "low"
+    assert context.official_source_status == "No official source matched yet."
+
+
+def test_stopword_only_overlap_does_not_create_related_news() -> None:
+    market = {
+        "title": "Who is known and the candidate in this election?",
+        "category": "politics",
+        "pulse_score": 75,
+        "movement": 5,
+        "volume": 200_000,
+    }
+    weak = ExternalNewsItem(
+        source_type="rss",
+        source_name="Example News",
+        source_url="https://example.com/feed",
+        title="Who is known and the latest public update",
+        summary="The article uses generic wording without a direct entity.",
+        url="https://example.com/weak",
+        published_at=datetime(2026, 5, 16, tzinfo=timezone.utc),
+        category="politics",
+        entities=(),
+        topics=(),
+        urgency_score=80,
+        credibility_score=80,
+    )
+
+    matches = match_events_to_market(market, [weak])
+    context = build_news_context(market, [weak], language="en")
+
+    assert matches == []
+    assert context.latest_relevant_news == ()
+    assert context.confidence_from_news == "low"
+
+
+def test_match_reason_excludes_stopwords_from_terms() -> None:
+    market = {"title": "Strait of Hormuz traffic returns", "category": "global"}
+    event = ExternalNewsItem(
+        source_type="rss",
+        source_name="CNBC",
+        source_url="https://example.com/feed",
+        title="Global oil stockpiles if Strait of Hormuz remains closed",
+        summary="Shipping traffic and oil context for the Strait of Hormuz.",
+        url="https://example.com/hormuz",
+        published_at=datetime(2026, 5, 16, tzinfo=timezone.utc),
+        category="global",
+        entities=(),
+        topics=("shipping", "oil"),
+        urgency_score=72,
+        credibility_score=78,
+    )
+    matches = match_events_to_market(market, [event])
+
+    assert matches
+    terms = matched_terms_from_reason(matches[0].match_reason)
+    assert {"strait", "hormuz"} <= set(terms)
+    assert not {"and", "the", "who", "known"} & set(terms)
+
+
 def test_official_source_increases_news_confidence() -> None:
     context = build_news_context(
         _market(),
@@ -123,6 +214,27 @@ def test_official_source_increases_news_confidence() -> None:
 
     assert context.official_source_signal is True
     assert context.confidence_from_news == "high"
+
+
+def test_high_confidence_requires_market_relevance_not_source_quality_alone() -> None:
+    market = {
+        "title": "Will Carlos Álvarez win the 2026 Peruvian presidential election?",
+        "category": "politics",
+        "pulse_score": 90,
+        "movement": 8,
+        "volume": 1_000_000,
+    }
+    unrelated = _event(
+        title="Federal Reserve announces bank supervision update",
+        source_type="official",
+        source_name="Federal Reserve",
+        credibility_score=98,
+    )
+
+    context = build_news_context(market, [unrelated], language="en")
+
+    assert context.official_source_signal is False
+    assert context.confidence_from_news != "high"
 
 
 def test_social_only_news_lowers_confidence() -> None:

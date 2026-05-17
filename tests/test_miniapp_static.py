@@ -1,8 +1,24 @@
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 from bot.services.health_server import miniapp_asset_path
+
+
+def _extract_js_function(script_text: str, name: str) -> str:
+    start = script_text.index(f"function {name}(")
+    brace = script_text.index("{", start)
+    depth = 0
+    for index in range(brace, len(script_text)):
+        char = script_text[index]
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return script_text[start : index + 1]
+    raise AssertionError(f"Could not extract JS function {name}")
 
 
 def test_miniapp_files_exist_and_include_telegram_script() -> None:
@@ -573,7 +589,16 @@ def test_miniapp_trust_polish_static_guards() -> None:
     assert "timeoutMs: 6500" in script_text
     assert "canonicalOutcomeLabel" in script_text
     assert "outcomeLabelForSentence" in script_text
+    assert "outcomeLabelForLinkedSentence" in script_text
+    assert "outcomeTokens" in script_text
+    assert "titleMatchedOutcomeLabel" in script_text
+    assert "story_linked_preview: true" in script_text
+    assert "neutralStoryOutcomeLine" in script_text
+    assert "Рынок связан с одним из вариантов." in script_text
+    assert "Рынок связан с ${label}." in script_text
     assert "варианту «" in script_text
+    assert "вариантом «" in script_text
+    assert 'eventDesk: "СОБЫТИЙНЫЙ РАДАР"' in script_text
     assert "Без приватных ключей" in script_text
     assert "Проверь свежие изменения в поддержке кандидатов и опросах." in script_text
 
@@ -588,6 +613,70 @@ def test_miniapp_trust_polish_static_guards() -> None:
     assert "state.moves.length ? t(\"movesSubtitle\") : t(\"movesEmpty\")" not in script_text
     assert "if (payload && payload.error)" in script_text
     assert "t(\"searchErrorCopy\")" in script_text
+
+
+def test_story_outcome_matcher_handles_connectors_and_uncertain_mapping() -> None:
+    root = Path(__file__).resolve().parents[1]
+    script_text = (root / "miniapp" / "app.js").read_text()
+    function_names = [
+        "canonicalOutcomeLabel",
+        "outcomeLabelForSentence",
+        "outcomeLabelForLinkedSentence",
+        "normalizedOutcomeText",
+        "outcomeTokens",
+        "shouldUseYesNo",
+        "yesNoValues",
+        "fallbackOutcomeList",
+        "outcomeList",
+        "titleMatchedOutcomeLabel",
+        "neutralStoryOutcomeLine",
+        "outcomeLeadLine",
+    ]
+    functions = "\n\n".join(_extract_js_function(script_text, name) for name in function_names)
+    js = f"""
+    function isRu() {{ return true; }}
+    function localizedText(value, fallback = "") {{ return value || fallback || ""; }}
+    function marketLeanLine() {{ return "Рынок связан с одним из вариантов."; }}
+    {functions}
+
+    function assertEqual(actual, expected, label) {{
+      if (actual !== expected) {{
+        throw new Error(`${{label}} expected "${{expected}}" but got "${{actual}}"`);
+      }}
+    }}
+
+    const baseOutcomes = [
+      {{ label: "Peng", short_label: "Peng", probability: 35 }},
+      {{ label: "Ship / Chip", short_label: "Ship / Chip", probability: 33 }},
+      {{ label: "Strait / Hormuz", short_label: "Strait / Hormuz", probability: 20 }},
+      {{ label: "Iran", short_label: "Iran", probability: 12 }},
+    ];
+
+    function market(title, overrides = {{}}) {{
+      return {{
+        title,
+        outcome_type: "multi_outcome",
+        should_use_yes_no: false,
+        display_outcomes: baseOutcomes,
+        dominant_outcome_label: "Peng",
+        outcome_balance_summary: "Peng leads narrowly.",
+        story_linked_preview: true,
+        ...overrides,
+      }};
+    }}
+
+    assertEqual(titleMatchedOutcomeLabel(market('Will Trump say "Iran" during events?')), "Iran", "exact Iran");
+    assertEqual(titleMatchedOutcomeLabel(market('Will Trump say "Strait" or "Hormuz" during events?')), "Strait / Hormuz", "or connector");
+    assertEqual(titleMatchedOutcomeLabel(market('Will Trump say Strait/Hormuz during events?')), "Strait / Hormuz", "slash connector");
+    assertEqual(titleMatchedOutcomeLabel(market('Will Trump say Strait - Hormuz during events?')), "Strait / Hormuz", "dash connector");
+    assertEqual(outcomeLeadLine(market('Will Trump say "Strait" or "Hormuz" during events?')), "Рынок связан с вариантом «Strait / Hormuz».", "safe Strait line");
+    assertEqual(outcomeLeadLine(market('Will Trump say "Iran" during events?')), "Рынок связан с вариантом «Iran».", "safe Iran line");
+    assertEqual(outcomeLeadLine(market('Will Trump say an unlisted phrase during events?')), "Рынок связан с одним из вариантов.", "uncertain mapping");
+    if (outcomeLeadLine(market('Will Trump say "Iran" during events?')).includes("Peng")) {{
+      throw new Error("Trump/Iran story preview must not display Peng");
+    }}
+    """
+    subprocess.run(["node", "-e", js], check=True, text=True, capture_output=True)
 
 
 def test_health_server_can_resolve_miniapp_assets() -> None:

@@ -15,7 +15,12 @@ from bot.database.repositories import (
     upsert_external_source,
 )
 from bot.services.event_categories import classify_market_category
-from bot.services.event_matching_engine import MarketEventMatch, match_events_to_market
+from bot.services.event_matching_engine import (
+    MarketEventMatch,
+    is_related_news_match,
+    match_events_to_market,
+)
+from bot.services.news_impact_engine import classify_news_impact_from_matches
 from bot.services.source_adapters.base import ExternalNewsItem
 from bot.services.source_adapters.news_api_adapter import NewsAPIAdapter
 from bot.services.source_adapters.official_sources_adapter import OfficialSourcesAdapter
@@ -25,7 +30,6 @@ from bot.services.source_adapters.x_adapter import XAdapter
 from bot.services.source_credibility_engine import (
     credible_source_count,
     news_confidence,
-    official_source_present,
     source_mix,
 )
 
@@ -278,7 +282,8 @@ def build_news_context(
     language: str | None = None,
 ) -> NewsContext:
     lang = _lang(language)
-    matches = match_events_to_market(market, events, limit=5)
+    raw_matches = match_events_to_market(market, events, limit=8)
+    matches = [match for match in raw_matches if is_related_news_match(match)][:5]
     if not matches:
         fallback = FALLBACK_NEWS[lang]
         return NewsContext(
@@ -296,16 +301,21 @@ def build_news_context(
 
     matched_events = [match.event for match in matches]
     mix = source_mix(matched_events)
-    official = official_source_present(matched_events)
+    impact = classify_news_impact_from_matches(
+        matches,
+        reaction_score=_context_reaction_score(market),
+        language=lang,
+    )
+    official = impact.official_source_signal
     credible_count = credible_source_count(matched_events)
-    confidence = news_confidence(matched_events)
+    confidence = impact.confidence_level
     latest = tuple(_event_dict(match) for match in matches[:3])
     news_count_24h = _count_recent(matched_events)
     source_count = len({event.source_name for event in matched_events})
     social_count = mix.get("x", 0) + mix.get("telegram", 0)
 
     return NewsContext(
-        news_context=_news_context_sentence(matches, lang),
+        news_context=_news_context_sentence(matches, lang, official=official),
         latest_relevant_news=latest,
         related_news=latest,
         source_count=source_count,
@@ -324,7 +334,7 @@ def build_news_context(
             else "Официального источника по теме пока нет."
         ),
         news_urgency=_urgency(matches),
-        why_moving_now=_why_moving_now(matches, lang),
+        why_moving_now=_why_moving_now(matches, lang, official=official),
         what_changed_outside_market=_what_changed(matches, lang),
         confidence_from_news=confidence,
         news_risk_note=_risk_note(official, confidence, lang),
@@ -398,6 +408,34 @@ def _count_recent(events: Sequence[ExternalNewsItem]) -> int:
     )
 
 
+def _context_reaction_score(market: Any) -> float:
+    pulse = _number(_get(market, "pulse_score")) or 0
+    movement = abs(_number(_get(market, "movement")) or 0) * 2
+    volume = _number(_get(market, "volume")) or _number(_get(market, "public_activity")) or 0
+    if volume >= 1_000_000:
+        pulse += 24
+    elif volume >= 250_000:
+        pulse += 16
+    elif volume >= 50_000:
+        pulse += 8
+    return min(100.0, pulse + movement)
+
+
+def _get(source: Any, key: str) -> Any:
+    if isinstance(source, dict):
+        return source.get(key)
+    return getattr(source, key, None)
+
+
+def _number(value: Any) -> float | None:
+    try:
+        if value is None:
+            return None
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def _category_title(category: str, lang: str) -> str:
     labels = {
         "en": {
@@ -453,31 +491,31 @@ def _theme_reason(category: str, lang: str) -> str:
     }.get(category, "This theme became more visible in the external backdrop.")
 
 
-def _news_context_sentence(matches: Sequence[MarketEventMatch], lang: str) -> str:
+def _news_context_sentence(matches: Sequence[MarketEventMatch], lang: str, *, official: bool) -> str:
     top = matches[0].event
     source_count = len({match.event.source_name for match in matches})
     if lang == "ru":
-        if top.source_type == "official":
+        if official:
             return f"Есть официальный источник по теме: {top.source_name}."
         if source_count >= 2:
             return f"Несколько источников пишут о той же теме."
         return f"Найден внешний материал по теме: {top.source_name}."
-    if top.source_type == "official":
+    if official:
         return f"An official source is part of the backdrop: {top.source_name}."
     if source_count >= 2:
         return "Several sources are covering the same theme."
     return f"External context matched from {top.source_name}."
 
 
-def _why_moving_now(matches: Sequence[MarketEventMatch], lang: str) -> str:
+def _why_moving_now(matches: Sequence[MarketEventMatch], lang: str, *, official: bool) -> str:
     top = matches[0].event
     if lang == "ru":
-        if top.source_type == "official":
+        if official:
             return "Внешний фон стал серьёзнее, потому что появился официальный источник."
         if top.urgency_score >= 70:
             return "Тема стала срочной во внешнем новостном фоне."
         return "Внешний фон добавляет контекст, но сильного официального подтверждения пока нет."
-    if top.source_type == "official":
+    if official:
         return "The outside backdrop is stronger because an official source is involved."
     if top.urgency_score >= 70:
         return "The topic became more urgent in the outside news backdrop."

@@ -331,7 +331,7 @@ const copy = {
     mainReason: "Утренний обзор",
     todayTitle: "Пульс дня",
     todaySubtitle: "Короткая картина дня.",
-    eventDesk: "Event intelligence desk",
+    eventDesk: "СОБЫТИЙНЫЙ РАДАР",
     topStory: "Главная история",
     storyContext: "Контекст истории",
     storyFrontPage: "Истории рынка сегодня",
@@ -839,6 +839,29 @@ function outcomeLabelForSentence(value) {
   return isRu() ? `варианту «${label}»` : label;
 }
 
+function outcomeLabelForLinkedSentence(value) {
+  const label = canonicalOutcomeLabel(value);
+  if (!label) return "";
+  if (label === "YES" || label === "NO") return label;
+  return isRu() ? `вариантом «${label}»` : label;
+}
+
+function normalizedOutcomeText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+}
+
+function outcomeTokens(value) {
+  const connectors = new Set(["and", "or", "vs", "v", "versus", "и", "или"]);
+  return normalizedOutcomeText(value)
+    .split(/\s+/)
+    .filter((token) => token && !connectors.has(token));
+}
+
 function sideConfidenceLabel(item) {
   const value = String((item && item.side_confidence) || "low").toLowerCase();
   if (value === "high") return t("sideConfidenceHigh");
@@ -965,6 +988,24 @@ function visibleOutcomeList(item, limit = 3) {
   return { outcomes: outcomes.slice(0, limit), remaining: outcomes.length - limit };
 }
 
+function titleMatchedOutcomeLabel(item) {
+  const titleTokens = new Set(outcomeTokens((item && item.title) || ""));
+  if (!titleTokens.size) return "";
+  const matches = outcomeList(item)
+    .map((outcome) => canonicalOutcomeLabel(outcome.label || outcome.short_label))
+    .filter((label) => label && label !== "YES" && label !== "NO")
+    .filter((label) => {
+      const tokens = outcomeTokens(label);
+      return tokens.length > 0 && tokens.every((token) => titleTokens.has(token));
+    });
+  const unique = [...new Set(matches)];
+  return unique.length === 1 ? unique[0] : "";
+}
+
+function neutralStoryOutcomeLine() {
+  return isRu() ? "Рынок связан с одним из вариантов." : "This market is tied to one outcome.";
+}
+
 function outcomeRoleClass(outcome) {
   const role = String((outcome && outcome.color_role) || "neutral");
   if (role === "yes" || role === "dominant") return "yes";
@@ -981,9 +1022,19 @@ function outcomeBalanceLabel(item) {
 }
 
 function outcomeLeadLine(item) {
+  const titleOutcome = titleMatchedOutcomeLabel(item);
+  const dominant = String((item && item.dominant_outcome_label) || "").trim();
+  if (titleOutcome && canonicalOutcomeLabel(titleOutcome) !== canonicalOutcomeLabel(dominant)) {
+    const label = outcomeLabelForLinkedSentence(titleOutcome);
+    return isRu()
+      ? `Рынок связан с ${label}.`
+      : `This market is tied to ${label}.`;
+  }
+  if (!titleOutcome && item && item.story_linked_preview && !shouldUseYesNo(item)) {
+    return neutralStoryOutcomeLine();
+  }
   const summary = localizedText(item && item.outcome_balance_summary, "");
   if (summary) return summary;
-  const dominant = String((item && item.dominant_outcome_label) || "").trim();
   if (dominant) {
     const label = outcomeLabelForSentence(dominant);
     return isRu() ? `Рынок сильнее склоняется к ${label}.` : `Market leans toward ${label}.`;
@@ -2326,7 +2377,7 @@ function storyPayloadForMarket(story) {
 
 function attachStoryPayloadToMarket(market, story) {
   const payload = storyPayloadForMarket(story);
-  return payload ? { ...market, ...payload } : market;
+  return payload ? { ...market, ...payload, story_linked_preview: true } : market;
 }
 
 function sameMarketIdentity(left, right) {

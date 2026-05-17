@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -9,36 +10,70 @@ from bot.services.source_adapters.base import ExternalNewsItem
 
 
 STOPWORDS = {
+    "a",
+    "and",
+    "an",
+    "any",
+    "are",
+    "according",
     "about",
     "after",
     "again",
     "against",
+    "all",
+    "been",
     "before",
+    "can",
+    "candidate",
+    "candidates",
+    "could",
     "during",
     "event",
     "events",
+    "for",
     "from",
+    "has",
     "have",
+    "how",
     "into",
+    "is",
+    "its",
+    "known",
+    "latest",
     "market",
     "markets",
-    "over",
-    "than",
-    "that",
-    "this",
-    "will",
-    "with",
-    "would",
-    "whether",
-    "candidate",
-    "candidates",
-    "latest",
+    "may",
+    "more",
+    "national",
     "news",
+    "not",
+    "office",
     "official",
     "officials",
+    "one",
+    "or",
+    "over",
     "presidential",
     "public",
+    "should",
     "source",
+    "than",
+    "that",
+    "the",
+    "this",
+    "through",
+    "under",
+    "was",
+    "were",
+    "what",
+    "when",
+    "where",
+    "who",
+    "will",
+    "with",
+    "whether",
+    "why",
+    "would",
     "что",
     "как",
     "или",
@@ -67,6 +102,37 @@ class MarketEventMatch:
     event: ExternalNewsItem
     relevance_score: float
     match_reason: str
+
+
+def matched_terms_from_reason(reason: str) -> tuple[str, ...]:
+    if "matched terms:" not in reason.lower():
+        return ()
+    raw = reason.split(":", 1)[1] if ":" in reason else ""
+    terms = [term.strip().lower() for term in raw.split(",")]
+    return tuple(term for term in terms if term and term not in STOPWORDS and len(term) >= 3)
+
+
+def has_entity_match(match: MarketEventMatch) -> bool:
+    return match.match_reason.lower().startswith("matched entities:")
+
+
+def is_strong_official_match(match: MarketEventMatch) -> bool:
+    return (
+        match.event.source_type == "official"
+        and has_entity_match(match)
+        and match.relevance_score >= 45
+    )
+
+
+def is_related_news_match(match: MarketEventMatch) -> bool:
+    if match.event.source_type == "official":
+        return is_strong_official_match(match)
+    if has_entity_match(match):
+        return match.relevance_score >= 30
+    terms = matched_terms_from_reason(match.match_reason)
+    if len(terms) >= 3 and match.relevance_score >= 32:
+        return True
+    return len(terms) >= 2 and match.relevance_score >= 18
 
 
 def _text_from_market(market: Any) -> str:
@@ -101,9 +167,20 @@ def _text_from_market(market: Any) -> str:
     return " ".join(str(part) for part in parts if part)
 
 
+def _normalize_text(text: str) -> str:
+    normalized = unicodedata.normalize("NFKD", text.lower())
+    return "".join(char for char in normalized if not unicodedata.combining(char))
+
+
 def _tokens(text: str) -> set[str]:
-    words = re.findall(r"[a-zA-ZА-Яа-я0-9][a-zA-ZА-Яа-я0-9_/-]{2,}", text.lower())
-    return {word.strip("_/-") for word in words if word not in STOPWORDS and len(word) >= 3}
+    words = re.findall(r"[\w/-]{2,}", _normalize_text(text), flags=re.UNICODE)
+    return {
+        word.strip("_/-")
+        for word in words
+        if word.strip("_/-")
+        and word.strip("_/-") not in STOPWORDS
+        and (len(word.strip("_/-")) >= 3 or word.strip("_/-") in {"ai", "us", "uk", "eu"})
+    }
 
 
 def _entities(tokens: set[str]) -> set[str]:
@@ -126,6 +203,15 @@ def _event_terms(event: ExternalNewsItem) -> dict[str, set[str]]:
     return {"tokens": tokens, "entities": entities}
 
 
+def overlap_terms(market: Any, event: ExternalNewsItem) -> dict[str, set[str]]:
+    market_terms = extract_market_terms(market)
+    event_terms = _event_terms(event)
+    return {
+        "tokens": market_terms["tokens"] & event_terms["tokens"],
+        "entities": market_terms["entities"] & event_terms["entities"],
+    }
+
+
 def score_event_relevance(market: Any, event: ExternalNewsItem) -> float:
     market_terms = extract_market_terms(market)
     event_terms = _event_terms(event)
@@ -136,6 +222,10 @@ def score_event_relevance(market: Any, event: ExternalNewsItem) -> float:
     # another topic is still a weak match for this market.
     if not token_overlap and not entity_overlap:
         return 0.0
+    if event.source_type == "official" and not entity_overlap:
+        return 0.0
+    if not entity_overlap and len(token_overlap) < 2:
+        return 0.0
 
     score = 0.0
     score += min(42.0, len(token_overlap) * 7.0)
@@ -145,7 +235,7 @@ def score_event_relevance(market: Any, event: ExternalNewsItem) -> float:
     if entity_overlap:
         score += min(8.0, event.urgency_score / 16)
         score += min(6.0, event.credibility_score / 20)
-    elif len(token_overlap) >= 2:
+    elif len(token_overlap) >= 3:
         score += min(5.0, event.urgency_score / 24)
         score += min(4.0, event.credibility_score / 28)
     return round(min(100.0, score), 2)
