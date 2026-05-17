@@ -197,6 +197,7 @@ PulseMarket AI now has an optional reasoning layer on top of ranking and filteri
 - Mini App Today now behaves more like an event intelligence front page while keeping Hot Markets, Search, Saved, and outcome cards additive.
 - `/api/today` now uses a PostgreSQL-backed last-good briefing cache with background refresh so Mini App opens do not wait on market/news/story/OpenAI generation.
 - AI output reliability now uses strict schemas, JSON extraction/repair, one retry on malformed model output, quality scoring, and deterministic fallback before data is saved into Today cache.
+- Story Intelligence 2.0 is live at `4ba6158`, with Story Context visibility, source relevance hardening, outcome label trust fixes, Hot/Search fallback protection, and RU localization polish. Production audit notes: [docs/STORY_INTELLIGENCE_2_PRODUCTION_AUDIT.md](docs/STORY_INTELLIGENCE_2_PRODUCTION_AUDIT.md).
 
 Telegram requires HTTPS for a real Mini App URL in BotFather. The current HTTP route is a browser preview until a domain and HTTPS are configured.
 

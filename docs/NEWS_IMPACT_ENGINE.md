@@ -42,11 +42,21 @@ RU:
 
 Confidence is based on:
 
-- official-source presence
-- number of distinct sources
-- source credibility
+- source-market relevance
+- meaningful entity/topic match
+- official-source presence only when it matches the market directly
+- number of distinct relevant sources
+- source credibility as a supporting factor, not a replacement for relevance
 - freshness
 - market reaction strength
+
+Source credibility and market relevance are separate. A trusted or official source must not become strong evidence by itself.
+
+`official_source_signal=true` only when an official source has strong relevance to the market and the classifier treats it as confirmed catalyst-level evidence. Weak official-source matches stay weak/background or are omitted from market-level related news.
+
+`confidence_from_news=high` requires confirmed catalyst-level relevance or strong possible catalyst relevance. It cannot be produced from source quality alone.
+
+Stopword-heavy matches are filtered before scoring. Terms such as `and`, `the`, `who`, and `known` must not create strong relevance or appear as meaningful matched terms.
 
 ## Product Use
 
