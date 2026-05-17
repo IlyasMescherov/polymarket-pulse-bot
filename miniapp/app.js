@@ -205,6 +205,7 @@ const copy = {
     recentEmpty: "No opened markets yet.",
     searchLoading: "Searching markets...",
     searchNoResults: "No markets found.",
+    searchErrorCopy: "Could not quickly find markets. Try another query.",
     veryLow: "Unlikely",
     lowButActive: "Low probability, but this market may still be active.",
     marketAttentionRising: "This market became more visible today.",
@@ -411,7 +412,7 @@ const copy = {
     support: "Поддержка",
     shareApp: "Поделиться",
     feedback: "Отзыв",
-    footerSafety: "Для анализа · Без торговли · Без кошельков · Без пополнений · Без private keys · Без финансовых советов",
+    footerSafety: "Для анализа · Без торговли · Без кошельков · Без пополнений · Без приватных ключей · Без финансовых советов",
     footerCopy: "PulseMarket AI помогает понимать публичные данные рынков. Бот не выполняет сделки.",
     mainStory: "Главное",
     secondaryStories: "Ещё стоит посмотреть",
@@ -452,6 +453,7 @@ const copy = {
     recentEmpty: "Открытых рынков пока нет.",
     searchLoading: "Ищу рынки...",
     searchNoResults: "Рынки не найдены.",
+    searchErrorCopy: "Не удалось быстро найти рынки. Попробуйте другой запрос.",
     veryLow: "Маловероятно",
     lowButActive: "Вероятность низкая, но рынок может быть активным.",
     marketAttentionRising: "Рынок стал заметнее сегодня.",
@@ -821,6 +823,22 @@ function sidePercent(value) {
   return `${Number.isInteger(bounded) ? bounded.toFixed(0) : bounded.toFixed(1)}%`;
 }
 
+function canonicalOutcomeLabel(value) {
+  const label = String(value || "").trim();
+  if (!label) return "";
+  const lower = label.toLowerCase();
+  if (lower === "yes") return "YES";
+  if (lower === "no") return "NO";
+  return label;
+}
+
+function outcomeLabelForSentence(value) {
+  const label = canonicalOutcomeLabel(value);
+  if (!label) return "";
+  if (label === "YES" || label === "NO") return label;
+  return isRu() ? `варианту «${label}»` : label;
+}
+
 function sideConfidenceLabel(item) {
   const value = String((item && item.side_confidence) || "low").toLowerCase();
   if (value === "high") return t("sideConfidenceHigh");
@@ -878,7 +896,13 @@ function humanRead(item) {
   const side = marketLeanLine(item);
   if (isRu()) {
     if (String((item && item.confirmation_level_key) || "") === "weak") {
-      return `${side} Рынок виден, но сильного подтверждения нет.`;
+      if (String((item && item.time_pressure_key) || "") === "ending_soon") {
+        return `${side} До закрытия мало времени, поэтому важны правила расчёта.`;
+      }
+      if (String((item && item.error_risk_key) || "") === "high") {
+        return `${side} Данных мало, вывод лучше читать осторожно.`;
+      }
+      return `${side} Процент пока не получил сильного подтверждения.`;
     }
     return side;
   }
@@ -916,8 +940,8 @@ function outcomeList(item) {
   const raw = Array.isArray(item && item.display_outcomes) ? item.display_outcomes : [];
   const outcomes = raw
     .map((outcome, index) => ({
-      label: String(outcome.label || outcome.short_label || `Outcome ${index + 1}`),
-      short_label: String(outcome.short_label || outcome.label || `#${index + 1}`),
+      label: canonicalOutcomeLabel(outcome.label || outcome.short_label || `Outcome ${index + 1}`),
+      short_label: canonicalOutcomeLabel(outcome.short_label || outcome.label || `#${index + 1}`),
       probability: outcome.probability,
       price: outcome.price,
       color_role: String(outcome.color_role || "neutral"),
@@ -961,7 +985,8 @@ function outcomeLeadLine(item) {
   if (summary) return summary;
   const dominant = String((item && item.dominant_outcome_label) || "").trim();
   if (dominant) {
-    return isRu() ? `Рынок сильнее склоняется к ${dominant}.` : `Market leans ${dominant}.`;
+    const label = outcomeLabelForSentence(dominant);
+    return isRu() ? `Рынок сильнее склоняется к ${label}.` : `Market leans toward ${label}.`;
   }
   return marketLeanLine(item);
 }
@@ -1125,6 +1150,11 @@ const RU_UI_LABELS = {
   "resolution rules": "правила расчёта",
   "official sources": "официальные источники",
   "related markets": "связанные рынки",
+  low: "низкая",
+  medium: "средняя",
+  high: "высокая",
+  "market reaction": "реакция рынка",
+  "Look for any changes in candidate support or polling data.": "Проверь свежие изменения в поддержке кандидатов и опросах.",
 };
 
 function localizedUiLabel(value) {
@@ -1263,13 +1293,21 @@ function dataFrom(payload) {
   return Array.isArray(payload && payload.data) ? payload.data : [];
 }
 
-async function loadJson(path) {
+async function loadJson(path, options = {}) {
+  const timeoutMs = Number(options.timeoutMs || 12000);
+  const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timeoutId = controller ? window.setTimeout(() => controller.abort(), timeoutMs) : null;
   try {
-    const response = await fetch(path, { headers: { Accept: "application/json" } });
+    const response = await fetch(path, {
+      headers: { Accept: "application/json" },
+      signal: controller ? controller.signal : undefined,
+    });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     return await response.json();
   } catch {
     return { data: [], message: t("apiErrorCopy"), error: true };
+  } finally {
+    if (timeoutId) window.clearTimeout(timeoutId);
   }
 }
 
@@ -1552,7 +1590,10 @@ function indicatorSummary(item) {
   if (isRu()) {
     if (risk === "high") return "Нужна осторожность: данных для уверенного вывода мало.";
     if (confirmation === "strong") return "Вероятность и объём смотрятся согласованно.";
-    return "Рынок виден, но сильного подтверждения нет.";
+    if (String((item && item.time_pressure_key) || "") === "ending_soon") {
+      return "Дедлайн близко; сначала проверь правила расчёта.";
+    }
+    return "Процент заметен, но подтверждение пока ограниченное.";
   }
   if (risk === "high") return "Caution is needed because data is limited.";
   if (confirmation === "strong") return "Probability and volume look aligned.";
@@ -1790,7 +1831,7 @@ function moodReason(key) {
   if (isRu()) {
     return {
       quiet: "Сильного движения пока нет.",
-      active: "Рынок виден, но сильного подтверждения нет.",
+      active: "Процент заметен, но подтверждение пока ограниченное.",
       heating_up: "Тема стала заметнее, но вывод ещё нужно проверять.",
       volatile: "Вероятность заметно изменилась, поэтому рынок выделяется.",
       ending_soon: "Дедлайн близко; правила разрешения особенно важны.",
@@ -1798,7 +1839,7 @@ function moodReason(key) {
   }
   return {
     quiet: "No strong movement yet.",
-    active: "The market is visible, but not strongly confirmed.",
+    active: "The percentage is visible, but confirmation is still limited.",
     heating_up: "The topic became more visible, but the read still needs review.",
     volatile: "Probability moved enough to make the market noticeable.",
     ending_soon: "The deadline is close; resolution rules matter more here.",
@@ -2201,8 +2242,8 @@ function weakNewsContextLine(item) {
   const category = categoryForItem(item || {});
   const hasSomeNews = Number((item && item.source_count) || 0) > 0 || Number((item && item.news_count_24h) || 0) > 0;
   if (isRu()) {
-    if (item && item.official_source_signal) return "Есть официальный источник, но реакцию рынка всё равно нужно сверить с правилами расчёта.";
-    if (hasSomeNews) return "Новости по теме есть, но они пока не дают ясного объяснения движению.";
+    if (item && item.official_source_signal) return "Источник есть; важно проверить, насколько он прямо связан с рынком.";
+    if (hasSomeNews) return "Фон по теме есть, но прямой причины движения пока не видно.";
     if (category === "sports") return "Для этого рынка важнее время события и правила расчёта, чем новостной фон.";
     if (category === "culture") return "Сильного внешнего повода пока не видно; культурные рынки часто зависят от единичных событий.";
     if (category === "crypto") return "Сильной новости не найдено; движение лучше сверить с динамикой рынка.";
@@ -2464,21 +2505,12 @@ function hasMarketStory(item) {
 
 function renderStoryContextPanel(item) {
   if (!hasMarketStory(item)) return "";
-  const affectedMarkets = Array.isArray(item.story_affected_markets)
-    ? item.story_affected_markets.map((title) => compactTitle(String(title), 52)).filter(Boolean).slice(0, 3).join(" · ")
-    : "";
   const rows = uniqueAnalysisRows([
     { label: t("storyWhatHappened"), value: localizedStoryText(item.story_what_happened, "") },
-    { label: t("storyChanged"), value: storyChangedLine(item) },
-    { label: t("likelyCatalyst"), value: localizedStoryText(item.likely_catalyst, "") },
+    { label: t("whyMovingNow"), value: localizedStoryText(item.likely_catalyst, newsContextLine(item)) },
     { label: t("catalystEvidence"), value: storyEvidenceLabel(item) || localizedText(item.catalyst_label, "") },
-    { label: t("movementTiming"), value: localizedStoryText(item.movement_timing, "") },
-    { label: t("priceProbabilityContext"), value: localizedStoryText(item.price_probability_context, "") },
-    { label: t("affectedMarkets"), value: affectedMarkets },
-    { label: t("newsContext"), value: storySummaryLine(item) },
-    { label: t("officialConfirmation"), value: localizedText(item.official_source_status, newsSourceLabel(item)) },
-    { label: t("linkedMarkets"), value: `${item.related_markets_count || 1}` },
     { label: t("whatToVerify"), value: storyVerifyLine(item) },
+    { label: t("resolutionRules"), value: localizedText(item.resolution_note, t("resolutionRulesCopy")) },
   ]);
   return `
     <section class="story-context-panel">
@@ -2493,6 +2525,7 @@ function renderStoryContextPanel(item) {
 
 function openExplain(item) {
   const normalized = enrichMarketWithLoadedStory(item);
+  const hasStory = hasMarketStory(normalized);
   state.lastExplained = normalized;
   const sheet = document.getElementById("explain-sheet");
   const title = document.getElementById("explain-title");
@@ -2503,31 +2536,41 @@ function openExplain(item) {
     : categoryLabel(normalized.category || "global");
   const memoryText = localizedText(normalized.market_memory_summary, t("memoryFallback"));
   const memoryIsWeak = isWeakMemoryText(memoryText);
-  const rows = uniqueAnalysisRows([
-    { label: t("quickTake"), value: localizedText(normalized.quick_take, normalized.why || shortReason(normalized)) },
-    { label: t("whyMovingNow"), value: newsContextLine(normalized) },
-    { label: t("latestImportantNews"), value: localizedText(normalized.what_changed_outside_market, "") },
-    { label: t("whatThisMeans"), value: localizedText(normalized.what_this_means, indicatorSummary(normalized)) },
-    { label: t("mainTension"), value: localizedText(normalized.main_tension, localizedText(normalized.attention_vs_conviction, indicatorSummary(normalized))) },
-    { label: t("attentionVsConviction"), value: localizedText(normalized.attention_vs_conviction, "") },
-    { label: t("officialConfirmation"), value: localizedText(normalized.official_source_status, newsSourceLabel(normalized)) },
-    { label: t("relatedTopics"), value: topics },
-    { label: t("resolutionRules"), value: localizedText(normalized.resolution_note, t("resolutionRulesCopy")) },
-  ]);
+  const rows = uniqueAnalysisRows(
+    hasStory
+      ? [
+          { label: t("whatThisMeans"), value: localizedText(normalized.what_this_means, indicatorSummary(normalized)) },
+          { label: t("mainTension"), value: localizedText(normalized.main_tension, localizedText(normalized.attention_vs_conviction, indicatorSummary(normalized))) },
+          { label: t("relatedTopics"), value: topics },
+        ]
+      : [
+          { label: t("quickTake"), value: localizedText(normalized.quick_take, normalized.why || shortReason(normalized)) },
+          { label: t("whyMovingNow"), value: newsContextLine(normalized) },
+          { label: t("latestImportantNews"), value: localizedText(normalized.what_changed_outside_market, "") },
+          { label: t("whatThisMeans"), value: localizedText(normalized.what_this_means, indicatorSummary(normalized)) },
+          { label: t("mainTension"), value: localizedText(normalized.main_tension, localizedText(normalized.attention_vs_conviction, indicatorSummary(normalized))) },
+          { label: t("attentionVsConviction"), value: localizedText(normalized.attention_vs_conviction, "") },
+          { label: t("officialConfirmation"), value: localizedText(normalized.official_source_status, newsSourceLabel(normalized)) },
+          { label: t("relatedTopics"), value: topics },
+          { label: t("resolutionRules"), value: localizedText(normalized.resolution_note, t("resolutionRulesCopy")) },
+        ],
+  );
 
   title.textContent = normalized.title;
   body.innerHTML = `
     ${renderMarketCard(normalized, "analysis")}
     ${renderStoryContextPanel(normalized)}
     <div class="detail-list">
-      <div>
-        <span>${escapeHtml(t("newsContext"))}</span>
-        <strong>${escapeHtml(newsContextLine(normalized))}</strong>
-      </div>
-      <div>
-        <span>${escapeHtml(t("whatInfluences"))}</span>
-        ${renderWhatToCheck(normalized)}
-      </div>
+      ${hasStory ? "" : `
+        <div>
+          <span>${escapeHtml(t("newsContext"))}</span>
+          <strong>${escapeHtml(newsContextLine(normalized))}</strong>
+        </div>
+        <div>
+          <span>${escapeHtml(t("whatInfluences"))}</span>
+          ${renderWhatToCheck(normalized)}
+        </div>
+      `}
       ${rows
         .map(
           (row) => `
@@ -2750,8 +2793,8 @@ function renderNewsThemeStrip() {
         .map(
           (theme) => `
             <span>
-              <em>${escapeHtml(theme.theme || t("newsContext"))}</em>
-              <strong>${escapeHtml(theme.confidence || "low")}</strong>
+              <em>${escapeHtml(categoryLabel(theme.theme) || localizedUiLabel(theme.theme) || t("newsContext"))}</em>
+              <strong>${escapeHtml(localizedUiLabel(theme.confidence || "low"))}</strong>
             </span>
           `,
         )
@@ -2858,7 +2901,7 @@ function renderSearch(payload) {
   state.searchMeta = { summary: payload && payload.summary };
   const target = document.getElementById("search-results");
   if (payload && payload.error) {
-    target.innerHTML = errorState(payload.message, true);
+    target.innerHTML = errorState(t("searchErrorCopy"), true);
     return;
   }
   const localizedSummary = localizedText(
@@ -2870,7 +2913,7 @@ function renderSearch(payload) {
     : "";
   target.innerHTML = state.searchResults.length
     ? summary + state.searchResults.slice(0, 5).map((item) => renderMarketCard(item, "compact", { showActions: true })).join("")
-    : emptyState(payload.message || t("searchNoResults"), true);
+    : emptyState(t("searchNoResults"), true);
 }
 
 function renderTodayExtras() {
@@ -2909,7 +2952,7 @@ function renderTodayExtras() {
     ${hotBody}
     <div class="subsection-heading subsection-heading--spaced">
       <h3>${escapeHtml(t("movesTitle"))}</h3>
-      <span>${escapeHtml(state.moves.length ? t("movesSubtitle") : t("movesEmpty"))}</span>
+      <span>${escapeHtml(t("movesSubtitle"))}</span>
     </div>
     ${movesBody}
   `;
@@ -3200,7 +3243,11 @@ async function runSearch(query) {
   saveRecentSearch(query);
   const target = document.getElementById("search-results");
   target.innerHTML = emptyState(t("searchLoading"), true);
-  const payload = await loadJson(`/api/search?q=${encodeURIComponent(query)}`);
+  const payload = await loadJson(`/api/search?q=${encodeURIComponent(query)}`, { timeoutMs: 6500 });
+  if (payload && payload.error) {
+    renderSearch({ ...payload, message: t("searchErrorCopy") });
+    return;
+  }
   renderSearch(payload);
 }
 

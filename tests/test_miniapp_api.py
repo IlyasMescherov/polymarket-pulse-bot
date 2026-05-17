@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import asyncio
 from datetime import datetime, timezone
 
 import pytest
@@ -54,6 +55,17 @@ class FakeNoStoryMarketAnalyzer:
 
     async def get_new_markets(self, limit: int = 5) -> list[Market]:
         return [_custom_market("new", "Will a football match go to extra time?", {"category": "Sports"})]
+
+
+class FakeTimeoutMarketAnalyzer:
+    async def get_hot_markets(self, limit: int = 5) -> list[Market]:
+        raise asyncio.TimeoutError
+
+    async def get_new_markets(self, limit: int = 5) -> list[Market]:
+        return []
+
+    async def search_markets(self, query: str, limit: int = 5) -> list[Market]:
+        raise asyncio.TimeoutError
 
 
 class FakeSmartMoneyAnalyzer:
@@ -324,3 +336,38 @@ async def test_miniapp_search_returns_ai_assisted_summary() -> None:
     assert payload["message"] == "ok"
     assert payload["summary"]
     assert payload["data"][0]["simple_read"]
+
+
+@pytest.mark.asyncio
+async def test_miniapp_search_timeout_returns_fast_error_state() -> None:
+    server = HealthServer(
+        "127.0.0.1",
+        0,
+        engine=object(),
+        market_analyzer=FakeTimeoutMarketAnalyzer(),
+    )
+
+    response = await server._api_search(make_mocked_request("GET", "/api/search?q=bitcoin"))
+    payload = _payload(response)
+
+    assert payload["data"] == []
+    assert payload["error"] is True
+    assert payload["fallback"] is True
+    assert "quickly find markets" in payload["message"]
+
+
+@pytest.mark.asyncio
+async def test_miniapp_hot_timeout_returns_fallback_shape() -> None:
+    server = HealthServer(
+        "127.0.0.1",
+        0,
+        engine=object(),
+        market_analyzer=FakeTimeoutMarketAnalyzer(),
+    )
+
+    response = await server._api_hot_markets(make_mocked_request("GET", "/api/markets/hot"))
+    payload = _payload(response)
+
+    assert payload["data"] == []
+    assert payload["fallback"] is True
+    assert payload["message"] == "hot markets unavailable"

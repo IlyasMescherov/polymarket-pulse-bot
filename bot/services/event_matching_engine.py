@@ -30,6 +30,15 @@ STOPWORDS = {
     "with",
     "would",
     "whether",
+    "candidate",
+    "candidates",
+    "latest",
+    "news",
+    "official",
+    "officials",
+    "presidential",
+    "public",
+    "source",
     "что",
     "как",
     "или",
@@ -49,6 +58,7 @@ ENTITY_ALIASES: dict[str, tuple[str, ...]] = {
     "anthropic": ("anthropic", "claude"),
     "nvidia": ("nvidia", "nvda"),
     "fed": ("fed", "federal reserve", "powell"),
+    "peru": ("peru", "peruvian"),
 }
 
 
@@ -121,13 +131,23 @@ def score_event_relevance(market: Any, event: ExternalNewsItem) -> float:
     event_terms = _event_terms(event)
     token_overlap = market_terms["tokens"] & event_terms["tokens"]
     entity_overlap = market_terms["entities"] & event_terms["entities"]
+
+    # Source quality must not create relevance by itself. A trusted source about
+    # another topic is still a weak match for this market.
+    if not token_overlap and not entity_overlap:
+        return 0.0
+
     score = 0.0
-    score += min(45.0, len(token_overlap) * 8.0)
-    score += min(35.0, len(entity_overlap) * 14.0)
+    score += min(42.0, len(token_overlap) * 7.0)
+    score += min(42.0, len(entity_overlap) * 18.0)
     if event.category and event.category in _text_from_market(market).lower():
-        score += 8.0
-    score += min(12.0, event.urgency_score / 10)
-    score += min(10.0, event.credibility_score / 12)
+        score += 5.0
+    if entity_overlap:
+        score += min(8.0, event.urgency_score / 16)
+        score += min(6.0, event.credibility_score / 20)
+    elif len(token_overlap) >= 2:
+        score += min(5.0, event.urgency_score / 24)
+        score += min(4.0, event.credibility_score / 28)
     return round(min(100.0, score), 2)
 
 

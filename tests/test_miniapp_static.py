@@ -564,6 +564,32 @@ def test_miniapp_loading_skeleton_and_error_states_exist() -> None:
     assert "@keyframes loadingBar" in styles_text
 
 
+def test_miniapp_trust_polish_static_guards() -> None:
+    root = Path(__file__).resolve().parents[1]
+    script_text = (root / "miniapp" / "app.js").read_text()
+
+    assert "Не удалось быстро найти рынки. Попробуйте другой запрос." in script_text
+    assert "AbortController" in script_text
+    assert "timeoutMs: 6500" in script_text
+    assert "canonicalOutcomeLabel" in script_text
+    assert "outcomeLabelForSentence" in script_text
+    assert "варианту «" in script_text
+    assert "Без приватных ключей" in script_text
+    assert "Проверь свежие изменения в поддержке кандидатов и опросах." in script_text
+
+    for phrase in (
+        "Рынок виден, но сильного подтверждения нет.",
+        "Новости по теме есть, но они пока не дают ясного объяснения движению.",
+        "Есть официальный источник, но реакцию рынка всё равно нужно сверить",
+        "Без private keys",
+    ):
+        assert phrase not in script_text
+
+    assert "state.moves.length ? t(\"movesSubtitle\") : t(\"movesEmpty\")" not in script_text
+    assert "if (payload && payload.error)" in script_text
+    assert "t(\"searchErrorCopy\")" in script_text
+
+
 def test_health_server_can_resolve_miniapp_assets() -> None:
     assert miniapp_asset_path("index.html").exists()
     assert miniapp_asset_path("styles.css").exists()

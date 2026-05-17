@@ -167,6 +167,22 @@ def test_single_market_with_official_source_can_be_top_story() -> None:
     assert stories[0].what_to_verify_next
 
 
+def test_unrelated_official_source_does_not_create_story_context() -> None:
+    market = _market(
+        "1",
+        "Will Carlos Álvarez win the 2026 Peruvian presidential election?",
+        category="politics",
+        pulse_score=78,
+        volume=200_000,
+    )
+    unrelated = _event()
+
+    stories = build_event_stories([market], market_api_objects=[_api_object(market)], events=[unrelated])
+
+    assert stories == []
+    assert select_top_story(stories) is None
+
+
 def test_weak_story_does_not_become_top_story() -> None:
     market = _market("1", "Will a niche culture event happen?", category="culture", pulse_score=28, volume=5_000)
     weak_event = _event(source_type="rss", source_name="Small Blog", url="https://example.com/weak", urgency_score=20)

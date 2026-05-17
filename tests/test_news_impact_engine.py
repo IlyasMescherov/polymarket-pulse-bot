@@ -6,7 +6,7 @@ from bot.services.news_impact_engine import (
     classify_news_impact,
     classify_news_impact_from_matches,
 )
-from bot.services.event_matching_engine import MarketEventMatch
+from bot.services.event_matching_engine import MarketEventMatch, score_event_relevance
 from bot.services.source_adapters.base import ExternalNewsItem
 
 
@@ -58,6 +58,30 @@ def test_official_news_impact_is_high_confidence() -> None:
     assert impact.what_to_verify_next
     assert impact.confidence_level == "high"
     assert impact.official_source_signal is True
+
+
+def test_unrelated_official_source_does_not_become_strong_evidence() -> None:
+    market = {
+        "title": "Will Carlos Álvarez win the 2026 Peruvian presidential election?",
+        "category": "politics",
+        "pulse_score": 78,
+        "movement": 4,
+        "volume": 200_000,
+    }
+    unrelated = _event(
+        title="White House comments on Iran diplomacy",
+        source_type="official",
+        source_name="White House Briefing Room",
+        urgency_score=88,
+        credibility_score=94,
+    )
+
+    assert score_event_relevance(market, unrelated) < 18
+    impact = classify_news_impact(market, events=[unrelated], language="en")
+
+    assert impact.impact_type != "official_confirmed"
+    assert impact.catalyst_type != "confirmed_catalyst"
+    assert impact.official_source_signal is False
 
 
 def test_stale_official_source_is_not_confirmed_catalyst() -> None:

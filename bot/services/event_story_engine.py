@@ -232,7 +232,7 @@ def _build_cluster(
         language=lang,
     )
     source_count = len({match.event.source_name for match in matches})
-    official = any(match.event.source_type == "official" for match in matches)
+    official = impact.official_source_signal
     urgency_score = max((match.event.urgency_score for match in matches), default=0)
     reaction = round(sum(_market_reaction_score(item) for item in linked) / max(1, len(linked)), 2)
     max_movement = max(abs(_number(item.get("movement")) or 0) for item in linked)
@@ -415,7 +415,7 @@ def _passes_story_threshold(
 ) -> bool:
     if linked_count >= 2:
         return True
-    if official:
+    if official and impact.catalyst_type == "confirmed_catalyst":
         return True
     strong_news = (
         impact.impact_type in {"official_confirmed", "multiple_sources"}

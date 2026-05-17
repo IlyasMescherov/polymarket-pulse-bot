@@ -7,11 +7,7 @@ from typing import Any
 
 from bot.services.event_matching_engine import MarketEventMatch, match_events_to_market
 from bot.services.source_adapters.base import ExternalNewsItem
-from bot.services.source_credibility_engine import (
-    credible_source_count,
-    news_confidence,
-    official_source_present,
-)
+from bot.services.source_credibility_engine import credibility_for_source, news_confidence
 from bot.utils.i18n import normalize_language
 
 
@@ -136,15 +132,25 @@ def classify_news_impact_from_matches(
     language: str | None = "en",
 ) -> NewsImpact:
     lang = normalize_language(language)
-    events = [match.event for match in matches]
+    material = list(matches)
+    events = [match.event for match in material]
+    plausible_matches = [match for match in material if _is_plausible_market_match(match)]
+    strong_matches = [match for match in material if _is_strong_market_match(match)]
+    plausible_events = [match.event for match in plausible_matches]
+    strong_events = [match.event for match in strong_matches]
     source_count = len({event.source_name for event in events})
-    official = official_source_present(events)
+    plausible_source_count = len({event.source_name for event in plausible_events})
+    strong_source_count = len({event.source_name for event in strong_events})
+    official = any(match.event.source_type == "official" for match in strong_matches)
     social_only = bool(events) and all(event.source_type in {"x", "telegram"} for event in events)
     stale = bool(events) and all(_is_stale(event) for event in events)
 
     if official:
         impact_type = "official_confirmed"
-    elif source_count >= 2 or credible_source_count(events) >= 2:
+    elif (
+        plausible_source_count >= 2
+        or sum(1 for match in plausible_matches if credibility_for_source(match.event) >= 75) >= 2
+    ):
         impact_type = "multiple_sources"
     elif social_only:
         impact_type = "social_only"
@@ -161,7 +167,7 @@ def classify_news_impact_from_matches(
         matches,
         reaction_score=reaction_score,
         official=official,
-        source_count=source_count,
+        source_count=plausible_source_count,
         social_only=social_only,
         stale=stale,
     )
@@ -169,7 +175,7 @@ def classify_news_impact_from_matches(
     return NewsImpact(
         impact_type=impact_type,
         impact_label=IMPACT_LABELS[lang][impact_type],
-        confidence_level=_impact_confidence(impact_type, events),
+        confidence_level=_impact_confidence(impact_type, strong_events if official else plausible_events),
         source_count=source_count,
         official_source_signal=official,
         reason=_impact_reason(impact_type, lang),
@@ -210,6 +216,22 @@ def _impact_confidence(impact_type: str, events: Sequence[ExternalNewsItem]) -> 
     if impact_type == "market_moved_without_news":
         return "low"
     return "medium"
+
+
+def _is_plausible_market_match(match: MarketEventMatch) -> bool:
+    reason = match.match_reason.lower()
+    return (
+        match.relevance_score >= 28
+        or reason.startswith("matched entities:")
+        or ("matched terms:" in reason and match.relevance_score >= 22)
+    )
+
+
+def _is_strong_market_match(match: MarketEventMatch) -> bool:
+    reason = match.match_reason.lower()
+    if reason.startswith("matched entities:") and match.relevance_score >= 35:
+        return True
+    return match.relevance_score >= 50
 
 
 def _impact_reason(impact_type: str, lang: str) -> str:

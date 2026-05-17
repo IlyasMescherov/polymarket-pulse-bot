@@ -60,6 +60,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 LANDING_DIR = PROJECT_ROOT / "landing"
 MINIAPP_DIR = PROJECT_ROOT / "miniapp"
 TODAY_CACHE_KEY = "today:global:en"
+DISCOVERY_TIMEOUT_SECONDS = 4.0
 CACHE_METADATA_KEYS = {
     "is_cached",
     "is_stale",
@@ -645,6 +646,47 @@ class HealthServer:
     def _api_empty(self, message: str) -> web.Response:
         return web.json_response({"data": [], "message": message})
 
+    async def _cached_today_data(self, limit: int = 5) -> list[dict[str, Any]]:
+        if self._session_factory is None:
+            return []
+        try:
+            async with self._session_factory() as session:
+                cache_item = await get_last_good_briefing_cache(session, TODAY_CACHE_KEY)
+        except Exception as exc:
+            logger.debug("Could not load cached today data: %s", exc)
+            return []
+        payload = cache_item.payload_json if cache_item is not None else {}
+        data = payload.get("data") if isinstance(payload, dict) else None
+        if not isinstance(data, list):
+            return []
+        return [dict(item) for item in data[:limit] if isinstance(item, dict)]
+
+    def _cached_search_results(
+        self,
+        items: list[dict[str, Any]],
+        query: str,
+        *,
+        limit: int = 5,
+    ) -> list[dict[str, Any]]:
+        terms = {term for term in re.findall(r"[a-zA-ZА-Яа-я0-9]{3,}", query.lower())}
+        if not terms:
+            return []
+        matches: list[dict[str, Any]] = []
+        for item in items:
+            haystack = " ".join(
+                str(value or "")
+                for value in (
+                    item.get("title"),
+                    item.get("story_title"),
+                    item.get("category"),
+                    item.get("category_label"),
+                    " ".join(str(topic) for topic in item.get("related_topics", []) if topic),
+                )
+            ).lower()
+            if any(term in haystack for term in terms):
+                matches.append(item)
+        return matches[:limit]
+
     async def _market_history(self, market_id: str) -> list[Any]:
         if self._session_factory is None:
             return []
@@ -691,6 +733,32 @@ class HealthServer:
         )
         result = _market_to_api_object(market, delta, context=context)
         result.update((await self._market_news_context(market)).as_dict())
+        result["why_it_matters"] = context.why_people_care
+        return result
+
+    async def _market_api_object_fast(
+        self,
+        market: Market,
+        delta: float | None = None,
+        *,
+        events: list[ExternalNewsItem] | None = None,
+    ) -> dict[str, Any]:
+        pulse = calculate_pulse_score(market, delta=delta)
+        mood = calculate_market_mood(market, delta=delta, language="en")
+        context = self._ai_context_engine.fallback_market_context(
+            market,
+            pulse,
+            mood,
+            delta=delta,
+            language="en",
+            history=[],
+        )
+        news_context = self._news_intelligence_engine.market_context(
+            market,
+            language="en",
+            events=events if events is not None else list(self._news_intelligence_engine.events),
+        )
+        result = _market_to_api_object(market, delta, context=context, news_context=news_context)
         result["why_it_matters"] = context.why_people_care
         return result
 
@@ -1133,13 +1201,41 @@ class HealthServer:
         if self._market_analyzer is None:
             return self._api_empty("market analyzer unavailable")
         try:
-            markets = await self._market_analyzer.get_hot_markets(limit=5)
-            data = [await self._market_api_object(market) for market in markets]
+            markets = await asyncio.wait_for(
+                self._market_analyzer.get_hot_markets(limit=5),
+                timeout=DISCOVERY_TIMEOUT_SECONDS,
+            )
+            events = await self._external_news_events()
+            data = [
+                await self._market_api_object_fast(market, events=events)
+                for market in markets
+            ]
             return web.json_response(
                 {"data": data, "message": "ok"}
             )
+        except asyncio.TimeoutError:
+            cached = await self._cached_today_data(limit=5)
+            logger.warning("Mini App hot markets API timed out; returning cached today fallback")
+            return web.json_response(
+                {
+                    "data": cached,
+                    "message": "cached market focus" if cached else "hot markets unavailable",
+                    "is_cached": bool(cached),
+                    "fallback": True,
+                }
+            )
         except Exception as exc:
             logger.warning("Mini App hot markets API failed: %s", exc)
+            cached = await self._cached_today_data(limit=5)
+            if cached:
+                return web.json_response(
+                    {
+                        "data": cached,
+                        "message": "cached market focus",
+                        "is_cached": True,
+                        "fallback": True,
+                    }
+                )
             return self._api_empty("hot markets unavailable")
 
     async def _api_new_markets(self, request: web.Request) -> web.Response:
@@ -1212,8 +1308,15 @@ class HealthServer:
         if not query:
             return self._api_empty("search query is empty")
         try:
-            markets = await self._market_analyzer.search_markets(query, limit=5)
-            data = [await self._market_api_object(market) for market in markets]
+            markets = await asyncio.wait_for(
+                self._market_analyzer.search_markets(query, limit=5),
+                timeout=DISCOVERY_TIMEOUT_SECONDS,
+            )
+            events = await self._external_news_events()
+            data = [
+                await self._market_api_object_fast(market, events=events)
+                for market in markets
+            ]
             return web.json_response(
                 {
                     "data": data,
@@ -1225,6 +1328,35 @@ class HealthServer:
                     ),
                 }
             )
+        except asyncio.TimeoutError:
+            cached = await self._cached_today_data(limit=20)
+            matches = self._cached_search_results(cached, query, limit=5)
+            logger.warning("Mini App search API timed out query=%s; returning cached fallback", query[:80])
+            return web.json_response(
+                {
+                    "data": matches,
+                    "message": (
+                        "cached market matches"
+                        if matches
+                        else "Could not quickly find markets. Try another query."
+                    ),
+                    "summary": (
+                        "Showing cached market matches while live search is slow."
+                        if matches
+                        else "Live search took too long and no cached match was found."
+                    ),
+                    "is_cached": bool(matches),
+                    "fallback": True,
+                    "error": not bool(matches),
+                }
+            )
         except Exception as exc:
             logger.warning("Mini App search API failed: %s", exc)
-            return self._api_empty("search unavailable")
+            return web.json_response(
+                {
+                    "data": [],
+                    "message": "Could not quickly find markets. Try another query.",
+                    "summary": "Search is temporarily unavailable.",
+                    "error": True,
+                }
+            )
